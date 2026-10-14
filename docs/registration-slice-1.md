@@ -341,3 +341,41 @@ round trip). The bound is amended to **1.5e−6 × (number of slices)** relative
 at 256², is 1.43e−6), with the cause recorded. Not done tonight, and why: a scalar compensation would over-correct
 DC-heavy fields (the plane wave's exit), and a frequency gain map or a compute-shader FFT with twiddles rounded from
 float64 is an acceleration lane of its own. The owner may overrule this amendment (board, waiting list).
+
+### 2026-10-15 01:40, Gate B: the refuter on the frozen commit `11bcdb4`, and the fixes it required
+
+One Gate B refuter (a Sonnet subagent) compared the port with abTEM 1.0.10 (float64, as the pins) on 247 inputs the
+fixtures do not hold: H to Lr (Z = 1 ... 103 sampled, mixtures of seven elements), 20 to 1000 keV, up to 306 slices,
+grids from 8 to 960 points including 24 × 960 and anisotropic sampling, atoms on slice edges (±1e−12), at the top-face
+threshold (±1e−13), negative, far outside the box, at 1e9 Å, probes at the corner and outside the box with C10 to ±1e6 Å
+and every order to C56, semiangles 0.5 mrad to infinity, uneven slicings and explicit lists, rotated SrTiO₃ and Pnma
+CaTiO₃ (720 atoms). **It could not break the registered agreement:** worst V 6.7e−14 × max (bound 1e−11), incident probe
+1.65e−15 (1e−12), exit wave 1.3e−13 (1e−10), intensity 1.65e−13, pattern 7.3e−14 (1e−10); the exact π within its 1e−7 /
+1e−6. Metal against CPU passed every case up to 102 slices (worst wave 4.4e−5, intensity 8.8e−5, pattern 1.59e−4 = 80 %
+of its bound, Σ|ψ|² 9.5e−7 per slice = 63 %).
+
+Fixed (tier 2, a test each, each test shown to fail without its fix):
+1. A requested thickness so small that ⌈Lz / s⌉ overflows (1e−320) trapped in `Int(n)`; now `invalidSliceThickness`, with a
+   ceiling of `Slicing.maximumSliceCount` = 10⁶ slices.
+2. `Multislice.run` compared grids with exact `==`, so a grid whose extent was computed along another path (9.600000000000001
+   against 9.6) was refused; now `Grid.matches` (equal counts, extents within 1e−12 relative).
+
+Recorded, not changed (no number of the registration moves):
+3. **Atoms past the last edge of a short explicit list.** A list may sum short of Lz within `isclose` (up to 1e−5 × Lz); an
+   atom in that gap is dropped by abTEM (`label_to_index(..., max_label=n−1)`, `core/utils.py`) and put into the last slice
+   by the port, as section 3.4 registered. Kept: the port never drops an atom of the box silently.
+4. **abTEM drops an atom at a tiny negative x or y in `Potential.build()` but not in `multislice(potential)`**: `wrap(eps=0)`
+   rounds a fractional −1e−20 to exactly 1.0, and `pad_atoms` → `atoms_in_cell` (`atoms.py` 954–956) requires < 1. The port
+   matches abTEM's multislice path. An abTEM inconsistency, reported here; ASE builders produce such −1e−16 coordinates.
+5. **`pbc`.** The port is periodic on all three axes (section 3.4); abTEM wraps only the axes ASE marks periodic and crops
+   the rest. Agreement holds for `pbc=True`; an ASE `Atoms` built with `pbc=False` (ASE's default) differs.
+6. **`ExitPlanes.afterSlices` always includes the last slice** (section 3.7 as ported); abTEM's tuple `(1, 3)` returns only
+   those planes.
+7. **Metal beyond the registered 100 slices.** At 304 slices (240², probe) the pattern error reaches 3.9e−4 against the 2e−4
+   bound, growing about 1.3e−6 per slice (float32 rounding through 2n FFTs; the Σ|ψ|² gain stays inside its bound). The
+   Metal bounds are registered for up to 100 slices; a longer run needs its own bound or a better FFT (the acceleration
+   lane of amendment 2).
+8. **Metal memory.** All transmission functions are held in float64 and again in float32: 960² × 100 slices peaked at
+   3.8 GB. A performance lane (transmissions built per slice on the GPU) is planned.
+
+The refuter's scripts, results and logs are in the session's scratchpad (not committed): 247 cases, `results.jsonl`.

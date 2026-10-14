@@ -116,6 +116,11 @@ struct PotentialPinsTests {
         #expect(throws: (any Error).self) { try ProjectedPotential(structure: ok, nx: 64, ny: 64, sliceThicknesses: [1, 0.5]) }
         #expect(throws: (any Error).self) { try ProjectedPotential(structure: ok, nx: 100, ny: 64, sliceThickness: 1) }
         #expect(throws: (any Error).self) { try AtomicStructure(box: SIMD3(0, 10, 2), atoms: []) }
+        // Refuter finding: a thickness so small that ⌈Lz / s⌉ overflows is a named refusal, not a trap.
+        #expect(throws: SimulatoError.invalidSliceThickness(1e-320)) {
+            try ProjectedPotential(structure: ok, nx: 64, ny: 64, sliceThickness: 1e-320)
+        }
+        #expect(throws: SimulatoError.invalidSliceThickness(1e-7)) { try Slicing.thicknesses(depth: 2, requested: 1e-7) }
         #expect(throws: (any Error).self) {
             try AtomicStructure(box: SIMD3(10, 10, 2), atoms: [.init(atomicNumber: 13, position: SIMD3(.nan, 1, 1))])
         }

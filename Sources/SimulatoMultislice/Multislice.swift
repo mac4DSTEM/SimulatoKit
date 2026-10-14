@@ -50,7 +50,7 @@ public enum Multislice {
     /// Propagates `incident` through `potential` and returns the waves at the requested exit planes, in plane order.
     public static func run(_ incident: Waves, through potential: ProjectedPotential, exitPlanes: ExitPlanes = .last,
                            backend: Backend = .cpu) throws -> [Waves] {
-        guard incident.grid == potential.grid else { throw SimulatoError.gridMismatch }
+        guard incident.grid.matches(potential.grid) else { throw SimulatoError.gridMismatch }
         let planes = try exitPlanes.planes(sliceCount: potential.slices.count)
         let transmissions = try transmissionFunctions(potential, beam: incident.beam)
         switch backend {

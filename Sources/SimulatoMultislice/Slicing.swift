@@ -10,16 +10,21 @@ import SimulatoCore
 
 /// How a structure is cut into slices along the beam.
 public enum Slicing {
+    /// The most slices one potential may have (a guard against a requested thickness so small that the count overflows).
+    public static let maximumSliceCount = 1_000_000
+
     /// n = ⌈Lz / s⌉ slices of Lz / n each (abTEM's rule for a single requested thickness).
     public static func thicknesses(depth: Double, requested s: Double) throws -> [Double] {
         guard s.isFinite, s > 0 else { throw SimulatoError.invalidSliceThickness(s) }
         let n = (depth / s).rounded(.up)
+        // Refuter finding (2026-10-15): a tiny s overflowed Int(n) and trapped. More than a million slices is refused.
+        guard n.isFinite, n >= 1, n <= Double(Slicing.maximumSliceCount) else { throw SimulatoError.invalidSliceThickness(s) }
         return [Double](repeating: depth / n, count: Int(n))
     }
 
     /// A list of thicknesses, which must sum to the depth within NumPy's `isclose` (rtol 1e−5, atol 1e−8).
     public static func validated(_ list: [Double], depth: Double) throws -> [Double] {
-        guard !list.isEmpty else { throw SimulatoError.invalidSliceThickness(0) }
+        guard !list.isEmpty, list.count <= maximumSliceCount else { throw SimulatoError.invalidSliceThickness(0) }
         for s in list where !(s.isFinite && s > 0) { throw SimulatoError.invalidSliceThickness(s) }
         let sum = list.reduce(0, +)
         guard abs(sum - depth) <= 1e-8 + 1e-5 * abs(depth) else {

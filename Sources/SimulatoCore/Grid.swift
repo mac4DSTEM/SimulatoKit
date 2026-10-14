@@ -44,6 +44,14 @@ public struct Grid: Sendable, Hashable {
         return [1, 3, 5, 15].contains(m) && power >= 3
     }
 
+    /// The same grid within rounding: equal point counts and extents within 1e−12 relative (exact `==` refuses a grid
+    /// whose extent was computed along another path, e.g. 9.600000000000001 against 9.6; refuter finding, 2026-10-15).
+    public func matches(_ other: Grid) -> Bool {
+        nx == other.nx && ny == other.ny
+            && abs(extentX - other.extentX) <= 1e-12 * max(abs(extentX), abs(other.extentX))
+            && abs(extentY - other.extentY) <= 1e-12 * max(abs(extentY), abs(other.extentY))
+    }
+
     /// NumPy's `fftfreq(n, d)`: integers [0, 1, ..., ⌈n/2⌉ − 1, −⌊n/2⌋, ..., −1] times 1 / (n d), bit for bit.
     public static func fftfreq(_ n: Int, _ d: Double) -> [Double] {
         let val = 1.0 / (Double(n) * d)

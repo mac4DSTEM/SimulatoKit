@@ -77,6 +77,20 @@ struct TruthTests {
         }
     }
 
+    /// Refuter finding: a grid equal within rounding (an extent 1 ulp off) is accepted; a different grid is refused.
+    @Test func gridsEqualWithinRoundingAreAccepted() throws {
+        let s = try AtomicStructure(box: SIMD3(9.6, 12.8, 4), atoms: [.init(atomicNumber: 6, position: SIMD3(1, 2, 1))])
+        let p = try ProjectedPotential(structure: s, nx: 96, ny: 128, sliceThickness: 2)
+        let beam = try ElectronBeam(energy: 200e3)
+        let nearly = try Grid(nx: 96, ny: 128, extentX: 9.600000000000001, extentY: 12.8)
+        #expect(nearly != p.grid)
+        let a = try Multislice.run(.planeWave(beam: beam, grid: nearly), through: p)
+        let b = try Multislice.run(.planeWave(beam: beam, grid: p.grid), through: p)
+        #expect(a[0].field == b[0].field)
+        let other = try Grid(nx: 96, ny: 128, extentX: 9.7, extentY: 12.8)
+        #expect(throws: SimulatoError.gridMismatch) { try Multislice.run(.planeWave(beam: beam, grid: other), through: p) }
+    }
+
     // MARK: 5, the symmetry of Al [001]
 
     /// Truth 5 (amendment 2): slices of a/2 are C-centred, so the pattern lives on h + k even; one slice per cell has

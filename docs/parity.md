@@ -20,9 +20,9 @@ State at 2026-10-15, slice 1 (`docs/registration-slice-1.md`): 17 entries ported
 
 | abTEM | SimulatoKit | State |
 |---|---|---|
-| `Potential(atoms, gpts, sampling, slice_thickness, parametrization="lobato", projection="infinite")` | `ProjectedPotential(structure:nx:ny:sliceThickness:parameterization:)` | partial: `gpts` only (no `sampling` argument), orthogonal cells only, `plane="xy"`, `origin` 0, no `box` |
+| `Potential(atoms, gpts, sampling, slice_thickness, parametrization="lobato", projection="infinite")` | `ProjectedPotential(structure:nx:ny:sliceThickness:parameterization:)` | partial: `gpts` only (no `sampling` argument), orthogonal cells only, `plane="xy"`, `origin` 0, no `box`; periodic on all axes (abTEM honours ASE's `pbc`: amendment 3, item 5); an atom in the gap of a short slice list is kept, abTEM drops it (item 3) |
 | `Potential(..., projection="finite")` (`QuadratureProjectionIntegrals`) | | planned (a later slice: finite projections for thick slices) |
-| `Potential(..., exit_planes=)` | `ExitPlanes` on `Multislice.run` | ported (`.every(m)` includes the entrance plane as abTEM does) |
+| `Potential(..., exit_planes=)` | `ExitPlanes` on `Multislice.run` | ported (`.every(m)` includes the entrance plane as abTEM does; `.afterSlices` always adds the last slice, abTEM's tuple does not: amendment 3, item 6) |
 | `Potential(..., periodic=False)` (cut cell with margins) | | planned |
 | `Potential(..., plane, origin, box)` (rotated and cut cells, `orthogonalize_cell`) | | planned (after DiffractoKit's cell types) |
 | `LobatoParametrization` (`projected_scattering_factor`, `scaled_parameters`) | `LobatoParameterization` | ported (`.abTEMFloat32` bit-close; `.exact` default, registered 1e−7) |
