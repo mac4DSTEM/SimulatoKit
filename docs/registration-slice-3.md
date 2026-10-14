@@ -118,3 +118,10 @@ As slices 1 and 2: abTEM's algorithms (GPL-3.0-or-later), ported.
    −sign(β) turns the envelope into exp(+(β/2)²(…)), which overflows to infinity at large angles (the generator's comparison
    met NaN): there is no meaningful number to pin. K2 now has β = 0.4 mrad (no aperture, no focal spread); the port refuses
    β < 0 and Δ < 0 with a named error. Section 4's table is read with that change.
+
+### 2026-10-15 ~01:50 CEST, at the first slice-3 test run: truth 2's range
+
+Truth 2 said both envelopes lie in (0, 1] for β, Δ > 0. Mathematically true; in float64 the spatial envelope underflows to
+exactly 0 at large angles (α = 40 mrad with Cs 1.2 mm, C50 3 × 10⁹ Å and β 0.6 mrad: the exponent is below −745). The
+truth is now [0, 1], abTEM's numbers alike. Every pin passed on the first run (kernels, the HRTEM images under both π
+choices, the closed forms); the weak-phase prediction deviates by 0.017 of max |I − 1| (bound 0.1, predicted ~0.04).

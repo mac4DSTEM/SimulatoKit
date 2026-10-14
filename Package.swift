@@ -34,7 +34,8 @@ let package = Package(
         // Slice 1: the Lobato parameterisation, slicing, the projected potential (infinite projection), transmission,
         // Fresnel propagation and the multislice loop on two backends (CPU float64, Metal float32).
         .target(name: "SimulatoMultislice", dependencies: ["SimulatoCore"], swiftSettings: settings),
-        // Slice 1: the soft aperture, the polar aberrations C10 ... C56 and the probe at a position.
+        // Slice 1: the soft aperture, the polar aberrations C10 ... C56 and the probe at a position; slice 2: scan
+        // grids; slice 3: the CTF with its envelopes and the closed forms, applied to waves for HRTEM images.
         .target(name: "SimulatoProbe", dependencies: ["SimulatoCore"], swiftSettings: settings),
         // Slice 2: annular (BF, ADF, HAADF), pixelated and segmented detectors and the STEM driver, averaged over
         // frozen-phonon configurations (docs/registration-slice-2.md).
@@ -46,7 +47,8 @@ let package = Package(
         .testTarget(name: "SimulatoCoreTests", dependencies: ["SimulatoCore"], swiftSettings: settings),
         .testTarget(name: "SimulatoMultisliceTests", dependencies: ["SimulatoMultislice", "SimulatoProbe"],
                     exclude: ["Fixtures"], swiftSettings: settings),
-        .testTarget(name: "SimulatoProbeTests", dependencies: ["SimulatoProbe"], swiftSettings: settings),
+        .testTarget(name: "SimulatoProbeTests", dependencies: ["SimulatoProbe", "SimulatoMultislice", "SimulatoCore"],
+                    exclude: ["Fixtures"], swiftSettings: settings),
         .testTarget(name: "SimulatoDetectorTests",
                     dependencies: ["SimulatoDetector", "SimulatoMultislice", "SimulatoProbe", "SimulatoCore"],
                     exclude: ["Fixtures"], swiftSettings: settings),
