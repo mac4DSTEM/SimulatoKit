@@ -42,7 +42,7 @@ m1.MUTANTS = [
      "        if waves.normalization == .reciprocalSpace {\n            let n = Double(waves.grid.count)",
      "STEMPinsTests|DetectorTruthTests", "the probe's pattern divided by N"),
     ("N10", DET, "guard let o = outer else { let c = p.cutoffAngles; return floor(min(c.x, c.y)) }",
-     "guard let o = outer else { let c = p.cutoffAngles; return min(c.x, c.y) }", "STEMPinsTests",
+     "guard let o = outer else { let c = p.cutoffAngles; return min(c.x, c.y) }", "STEMPinsTests|DetectorTruthTests",
      "outer = nil without the floor"),
     ("N11", DET, "var k = Int(floor(DiffractionIntensity.roundToDecimals(Double(m) / 2.0.squareRoot(), 7)))",
      "var k = Int(floor(DiffractionIntensity.roundToDecimals(Double(m) / 1.5, 7)))", "STEMPinsTests",
@@ -68,6 +68,13 @@ m1.MUTANTS = [
     ("N20", "Sources/SimulatoDetector/SimulatoDetector.swift",
      "        \"bright-field, annular (ADF, HAADF), pixelated (4D) and segmented detectors with frozen phonons (slice 2)\"",
      "        \"\"", "DetectorTruthTests", "the module's scope emptied"),
+    ("N21", "Sources/SimulatoMultislice/ProjectedPotential.swift", "            let k = try kernel(z)\n",
+     "            let k = try kernel(6)\n", "DetectorTruthTests", "every element scattered as carbon"),
+    ("N22", STEM, "for k in 0..<v.count { sums[d][q * counts[d] + k] += v[k] }",
+     "for k in 0..<v.count { sums[d][q * counts[d] + k] += v[k] * Double(q + 1) }", "DetectorTruthTests",
+     "the scan weighted by position"),
+    ("N23", FP, "position: $0.0.position + $0.1)", "position: $0.0.position + $0.1 + SIMD3(1e-9, 0, 0))",
+     "FrozenPhononsTests", "every configuration offset by 1e-9 Å"),
 ]
 m1.EXTRA = {}
 
