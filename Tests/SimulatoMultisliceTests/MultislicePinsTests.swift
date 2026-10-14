@@ -5,70 +5,73 @@
 //        1e−12) and with the exact π (1e−6).
 //
 
-import XCTest
+import Testing
 import SimulatoCore
 import SimulatoMultislice
 import SimulatoProbe
 
-final class MultislicePinsTests: XCTestCase {
-    static let runs: [(String, String)] = [("A1", "plane"), ("A2", "plane"), ("B1", "plane"), ("B2", "probe"),
-                                           ("C1", "plane"), ("C1", "probe"), ("D1", "plane"), ("D1", "probe")]
-
+/// One pinned case and beam, e.g. "B2/probe".
+struct CaseBeam: Sendable, CustomTestStringConvertible {
+    let id: String
+    let label: String
+    var testDescription: String { "\(id)/\(label)" }
     /// B2 uses B1's structure and potential.
-    static func potentialCase(_ id: String) -> String { id == "B2" ? "B1" : id }
+    var potentialCase: String { id == "B2" ? "B1" : id }
 
-    func run(_ id: String, _ label: String, pi: LobatoParameterization.PiConstant,
-             backend: Backend = .cpu) throws -> (waves: [Waves], beam: [String: Any]) {
-        let c = Pins.case(id)
-        let b = (c["beams"] as! [String: Any])[label] as! [String: Any]
-        let potential = try Pins.potential(Self.potentialCase(id), pi: pi)
-        let incident = try Pins.incident(id, label, grid: potential.grid)
-        let waves = try Multislice.run(incident, through: potential,
-                                       exitPlanes: .afterSlices(c["exit_planes"] as! [Int]), backend: backend)
-        XCTAssertEqual(waves.count, (c["exit_planes"] as! [Int]).count, "\(id)/\(label) plane count")
+    static let all = [CaseBeam(id: "A1", label: "plane"), CaseBeam(id: "A2", label: "plane"),
+                      CaseBeam(id: "B1", label: "plane"), CaseBeam(id: "B2", label: "probe"),
+                      CaseBeam(id: "C1", label: "plane"), CaseBeam(id: "C1", label: "probe"),
+                      CaseBeam(id: "D1", label: "plane"), CaseBeam(id: "D1", label: "probe")]
+}
+
+@Suite("Multislice against abTEM")
+struct MultislicePinsTests {
+    func run(_ r: CaseBeam, pi: LobatoParameterization.PiConstant) throws -> (waves: [Waves], beam: [String: Any]) {
+        let c = Pins.case(r.id)
+        let b = (c["beams"] as! [String: Any])[r.label] as! [String: Any]
+        let potential = try Pins.potential(r.potentialCase, pi: pi)
+        let incident = try Pins.incident(r.id, r.label, grid: potential.grid)
+        let waves = try Multislice.run(incident, through: potential, exitPlanes: .afterSlices(c["exit_planes"] as! [Int]))
+        #expect(waves.count == (c["exit_planes"] as! [Int]).count, "\(r.id)/\(r.label) plane count")
         return (waves, b)
     }
 
-    func testIncidentProbeEqualsAbTEM() throws {
-        for (id, label) in Self.runs where label == "probe" {
-            let potential = try Pins.potential(Self.potentialCase(id), pi: .exact)
-            let probe = try Pins.incident(id, label, grid: potential.grid)
-            XCTAssertLessThanOrEqual(relMax(probe.field, Pins.complex("\(id)/\(label).incident")), 1e-12, "\(id) probe")
-        }
+    @Test(arguments: CaseBeam.all.filter { $0.label == "probe" })
+    func incidentProbeEqualsAbTEM(r: CaseBeam) throws {
+        let potential = try Pins.potential(r.potentialCase, pi: .exact)
+        let probe = try Pins.incident(r.id, r.label, grid: potential.grid)
+        #expect(relMax(probe.field, Pins.complex("\(r.id)/\(r.label).incident")) <= 1e-12, "\(r.id) probe")
     }
 
-    func testExitWavesPatternsAndScalarsEqualAbTEM() throws {
-        for (id, label) in Self.runs {
-            let (waves, b) = try run(id, label, pi: .abTEMFloat32)
-            try compare(id, label, waves, b, bound: 1e-10)
-        }
+    @Test(arguments: CaseBeam.all)
+    func exitWavesPatternsAndScalarsEqualAbTEM(r: CaseBeam) throws {
+        let (waves, b) = try run(r, pi: .abTEMFloat32)
+        try compare(r, waves, b, bound: 1e-10)
     }
 
-    func testExactPiStaysWithinTheRegisteredDifference() throws {
-        for (id, label) in Self.runs {
-            let (waves, b) = try run(id, label, pi: .exact)
-            try compare(id, label, waves, b, bound: 1e-6)
-        }
+    @Test(arguments: CaseBeam.all)
+    func exactPiStaysWithinTheRegisteredDifference(r: CaseBeam) throws {
+        let (waves, b) = try run(r, pi: .exact)
+        try compare(r, waves, b, bound: 1e-6)
     }
 
-    func compare(_ id: String, _ label: String, _ waves: [Waves], _ b: [String: Any], bound: Double) throws {
+    func compare(_ r: CaseBeam, _ waves: [Waves], _ b: [String: Any], bound: Double) throws {
         let totals = b["total_intensity"] as! [Double], sums = b["pattern_sum"] as! [Double]
         let maxima = b["exit_max_abs"] as! [Double], centres = b["pattern_center"] as! [Double]
+        let tag = "\(r.id)/\(r.label)"
         for (q, w) in waves.enumerated() {
             let pattern = try w.diffractionPattern(maxAngle: .cutoff)
-            XCTAssertEqual([pattern.nx, pattern.ny], b["pattern_gpts"] as! [Int], "\(id)/\(label) pattern size")
-            XCTAssertLessThanOrEqual(relDiff(w.totalIntensity, totals[q]), bound, "\(id)/\(label) plane \(q) Σ|ψ|²")
-            XCTAssertLessThanOrEqual(relDiff(pattern.sum, sums[q]), bound, "\(id)/\(label) plane \(q) Σ pattern")
-            XCTAssertLessThanOrEqual(relDiff(w.field.maxMagnitude, maxima[q]), bound, "\(id)/\(label) plane \(q) max|ψ|")
-            XCTAssertLessThanOrEqual(abs(pattern[pattern.nx / 2, pattern.ny / 2] - centres[q]), bound * pattern.max,
-                                     "\(id)/\(label) plane \(q) pattern centre")
+            #expect([pattern.nx, pattern.ny] == b["pattern_gpts"] as! [Int], "\(tag) pattern size")
+            #expect(relDiff(w.totalIntensity, totals[q]) <= bound, "\(tag) plane \(q) Σ|ψ|²")
+            #expect(relDiff(pattern.sum, sums[q]) <= bound, "\(tag) plane \(q) Σ pattern")
+            #expect(relDiff(w.field.maxMagnitude, maxima[q]) <= bound, "\(tag) plane \(q) max|ψ|")
+            #expect(abs(pattern[pattern.nx / 2, pattern.ny / 2] - centres[q]) <= bound * pattern.max,
+                    "\(tag) plane \(q) pattern centre")
             if (b["stored_planes"] as! [Int]).contains(q) {
-                XCTAssertLessThanOrEqual(relMax(w.field, Pins.complex("\(id)/\(label).exit.\(q)")), bound,
-                                         "\(id)/\(label) exit wave plane \(q)")
+                #expect(relMax(w.field, Pins.complex("\(tag).exit.\(q)")) <= bound, "\(tag) exit wave plane \(q)")
             }
             if (b["stored_pattern_planes"] as! [Int]).contains(q) {
-                XCTAssertLessThanOrEqual(relMax(pattern.values, Pins.doubles("\(id)/\(label).pattern.\(q)")), bound,
-                                         "\(id)/\(label) pattern plane \(q)")
+                #expect(relMax(pattern.values, Pins.doubles("\(tag).pattern.\(q)")) <= bound, "\(tag) pattern plane \(q)")
             }
         }
     }

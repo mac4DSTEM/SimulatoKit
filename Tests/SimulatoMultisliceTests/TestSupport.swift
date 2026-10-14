@@ -6,7 +6,6 @@
 
 import CryptoKit
 import Foundation
-import XCTest
 import SimulatoCore
 import SimulatoMultislice
 import SimulatoProbe

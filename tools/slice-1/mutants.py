@@ -6,7 +6,8 @@ for it must fail (a compile error does not count). Usage, from any directory, wi
     python3 tools/slice-1/mutants.py <clone> > mutants.log
 
 The clone is reset (`git checkout -- .`) before every mutant. One mutant at a time, `swift test -c release --filter`.
-Prints one line per mutant: KILLED (the named tests failed), SURVIVED, or BUILD-FAILED, and the test cases that failed.
+Prints one line per mutant: KILLED (the named tests failed), SURVIVED, or BUILD-FAILED, and the tests that failed (Swift
+Testing's "✘ Test name(" lines).
 """
 
 import re
@@ -91,7 +92,7 @@ MUTANTS = [
      "BeamAndScatteringTests", "Swift's Float.pi (rounded toward zero) for the float32 π"),
     ("M24", "Sources/SimulatoMultislice/LobatoParameterization.swift",
      "case .exact: (pi, pi2) = (Double.pi, Double.pi * Double.pi)",
-     "case .exact: (pi, pi2) = (Self.float32Pi, Self.float32PiSquared)", "PotentialPinsTests",
+     "case .exact: (pi, pi2) = (Self.float32Pi, Self.float32PiSquared)", "PotentialPinsTests|BeamAndScatteringTests",
      "the exact π replaced by abTEM's"),
     ("M25", "Sources/SimulatoCore/ElectronBeam.swift",
      "guard energy.isFinite, energy > 0 else", "guard energy.isFinite, energy >= 0 else", "BeamAndScatteringTests",
@@ -178,8 +179,9 @@ def main():
             apply(clone, *EXTRA[mid])
         r = sh(f"swift test -c release --filter '{flt}' 2>&1", clone)
         out = r.stdout
-        failed = sorted(set(re.findall(r"Test Case '-\[\S+ (\w+)\]' failed", out)))
-        if "error: compile" in out or ("error:" in out and "Test Case" not in out and not failed):
+        # Swift Testing (the kits' standard since 2026-10-15): "✘ Test name(args) ... failed" / "recorded an issue".
+        failed = sorted(set(re.findall(r"✘ Test (\w+)\(", out)))
+        if "error: compile" in out or ("error:" in out and "Test run with" not in out and not failed):
             verdict = "BUILD-FAILED"
         elif r.returncode != 0 and failed:
             verdict = "KILLED"
