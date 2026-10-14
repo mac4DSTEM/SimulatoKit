@@ -126,7 +126,7 @@ exactly 0 at large angles (α = 40 mrad with Cs 1.2 mm, C50 3 × 10⁹ Å and β
 truth is now [0, 1], abTEM's numbers alike. Every pin passed on the first run (kernels, the HRTEM images under both π
 choices, the closed forms); the weak-phase prediction deviates by 0.017 of max |I − 1| (bound 0.1, predicted ~0.04).
 
-### 2026-10-15 01:45 CEST, Gate B: the refuter on the frozen commit `9033206`
+### 2026-10-15 01:41 CEST, Gate B: the refuter on the frozen commit `9033206`
 
 One Gate B refuter (a Sonnet subagent) compared the port with abTEM 1.0.10: about 6700 kernels (every coefficient alone with
 five angles and five magnitudes, envelopes from 1e−12 to 500 Å and 10 mrad, apertures soft and hard from 1e−3 mrad to 5 ×
