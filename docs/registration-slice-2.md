@@ -1,6 +1,6 @@
 # SimulatoKit slice 2: frozen phonons, STEM scans and detectors (registration)
 
-Registered 2026-10-15 (about 01:20 CEST), before any slice-2 Swift, by the SimulatoKit session on the owner's instruction of
+Registered 2026-10-15 (about 00:57 CEST), before any slice-2 Swift, by the SimulatoKit session on the owner's instruction of
 00:55 ("we have time and usage to build slice 2 everywhere"). Tier 1: the numbers are images and patterns a scientist reads
 (HAADF, ADF and BF intensities, a 4D-STEM pattern, DPC segments) and the thermal averaging that makes them comparable to
 experiment. Slice 1's definitions (`docs/registration-slice-1.md`, sections 3.1–3.10 and amendments 1–3) hold unchanged;
@@ -158,7 +158,7 @@ As slice 1: the algorithms are abTEM's (GPL-3.0-or-later), ported; xoshiro256** 
 
 ## 9. Amendments
 
-### 2026-10-15 01:45, after the pin generator ran, before any slice-2 Swift
+### 2026-10-15 ~01:00 CEST, after the pin generator ran, before any slice-2 Swift
 
 `tools/slice-2/pins.py`: 98 self-checks pass (largest text-against-abTEM difference 1.1e−14 outside the segmented
 detector), deterministic (sha256 equal on two runs), 1.48 MB. Two readings are settled here.
@@ -173,7 +173,7 @@ detector), deterministic (sha256 equal on two runs), 1.48 MB. Two readings are s
    image's maximum and the scan's total intensity (the maximum of the annular image with outer = nil), stored per detector
    as `scale`.
 
-### 2026-10-15 02:05, at the first slice-2 test run: truth 7 corrected, and the kit generator's seeds
+### 2026-10-15 ~01:05 CEST, at the first slice-2 test run: truth 7 corrected, and the kit generator's seeds
 
 1. **Truth 7 was false as written, and is corrected.** "In vacuum the four segments of a centred, aberration-free probe are
    equal" fails with inner = 0: the zero frequency has φ = atan2(0, 0) = 0, so it belongs to the first segment alone, and it

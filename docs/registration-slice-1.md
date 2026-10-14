@@ -289,7 +289,7 @@ Van Dyck); an app built on it must be GPL-compatible.
 
 ## 9. Amendments
 
-### 2026-10-15 00:10, after the pin generator ran, before any Swift: what the generator found
+### 2026-10-15 ~00:07 CEST, after the pin generator ran, before any Swift: what the generator found
 
 `tools/slice-1/pins.py` re-derives every quantity of section 3 from this text in NumPy and asserts it equals abTEM's
 float64 output. 310 self-checks passed; the largest differences between the text and abTEM: V 1.5e−14 × max, the
@@ -317,7 +317,7 @@ The generator is deterministic (the arrays' sha256 equal on two runs). Three rea
    pinned by its scalars (Σ|ψ|², Σ pattern, max |ψ|, the pattern's centre). Intensities are not stored: they are |ψ|² of
    the stored exit waves. Grids and cases are unchanged.
 
-### 2026-10-15 00:20, at the first full test run: truth 5 corrected, and the Metal path's total intensity (Gate D)
+### 2026-10-15 ~00:16 CEST, at the first full test run: truth 5 corrected, and the Metal path's total intensity (Gate D)
 
 **Truth 5 was wrong physics, and is corrected.** The registration said the projected potential of Al [001] has period
 a/2, so every exit wave lives on the 2/a lattice. The projection has period a/2, but a 2.025 Å slice holds only half the
@@ -343,7 +343,7 @@ DC-heavy fields (the plane wave's exit), and a frequency gain map or a compute-s
 float64 is an acceleration lane of its own. **The owner accepted this amended bound on 2026-10-15** (the board's waiting
 list); the compute-shader FFT stays an optional acceleration lane, not a correction owed.
 
-### 2026-10-15 01:40, Gate B: the refuter on the frozen commit `11bcdb4`, and the fixes it required
+### 2026-10-15 ~00:40 CEST, Gate B: the refuter on the frozen commit `11bcdb4`, and the fixes it required
 
 One Gate B refuter (a Sonnet subagent) compared the port with abTEM 1.0.10 (float64, as the pins) on 247 inputs the
 fixtures do not hold: H to Lr (Z = 1 ... 103 sampled, mixtures of seven elements), 20 to 1000 keV, up to 306 slices,
