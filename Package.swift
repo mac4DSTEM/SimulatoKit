@@ -39,12 +39,13 @@ let package = Package(
         .target(name: "SimulatoDetector", dependencies: ["SimulatoCore"], swiftSettings: settings),
         // The first ten minutes: simulate one image from a CIF, write a PNG and the numbers (not a product).
         .executableTarget(name: "SimulatoExample", dependencies: ["SimulatoCore", "SimulatoMultislice", "SimulatoProbe"],
-                          path: "Examples/SimulatoExample", swiftSettings: settings),
+                          path: "Examples/SimulatoExample", exclude: ["Al.cif"], swiftSettings: settings),
         .testTarget(name: "SimulatoCoreTests", dependencies: ["SimulatoCore"], swiftSettings: settings),
         .testTarget(name: "SimulatoMultisliceTests", dependencies: ["SimulatoMultislice", "SimulatoProbe"],
                     exclude: ["Fixtures"], swiftSettings: settings),
         .testTarget(name: "SimulatoProbeTests", dependencies: ["SimulatoProbe"], swiftSettings: settings),
         .testTarget(name: "SimulatoDetectorTests", dependencies: ["SimulatoDetector"], swiftSettings: settings),
+        .testTarget(name: "SimulatoExampleTests", dependencies: ["SimulatoExample", "SimulatoCore"], swiftSettings: settings),
     ],
     swiftLanguageModes: [.v6]
 )
