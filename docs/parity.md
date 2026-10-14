@@ -5,8 +5,8 @@ behind it) against SimulatoKit, so "complete" is a measured claim (suite `ROADMA
 tag and at every slice. States: **ported** (same numbers within the registered tolerance, pinned by tests), **partial**
 (the default path ported, options not), **planned** (a named slice), **not planned** (with the reason).
 
-State at 2026-10-15, slices 1 and 2 (`docs/registration-slice-1.md`, `docs/registration-slice-2.md`): 22 entries ported or
-partial, 19 planned, 7 not planned.
+State at 2026-10-15, slices 1 to 3 (`docs/registration-slice-<n>.md`): 26 entries ported or partial, 16 planned, 7 not
+planned.
 
 ## Beam and constants
 
@@ -49,7 +49,7 @@ partial, 19 planned, 7 not planned.
 | `Waves.intensity()` | `Waves.intensity()` | ported |
 | `Waves.diffraction_patterns(max_angle="cutoff" or "full", fftshift=True)` | `Waves.diffractionPattern(maxAngle:)` | ported (`"valid"`, a numeric angle, `block_direct`, `return_complex`, `parity` other than "odd" not offered) |
 | `Waves.phase()`, `.real()`, `.imag()`, `.complex_images()` | `ComplexField` (real, imaginary) | partial (raw arrays; no phase helper) |
-| `Waves.apply_ctf(ctf)` (HRTEM image formation) | | planned (with `CTF`) |
+| `Waves.apply_ctf(ctf)` (HRTEM image formation) | `Waves.applying(_:)` | ported (slice 3) |
 | `Waves.normalize()`, `.tile()`, `.interpolate()` | | planned as needed |
 
 ## Transfer
@@ -58,10 +58,11 @@ partial, 19 planned, 7 not planned.
 |---|---|---|
 | `Aperture(semiangle_cutoff, soft=True)` | `Aperture(semiangleCutoff:soft:)` | ported |
 | `Aberrations` (C10 ... C56, φ, the aliases `defocus` = −C10, `Cs`) | `Aberrations` | ported (aliases `defocus`, `Cs`; the others by symbol) |
-| `CTF` | | planned (HRTEM images from a plane-wave exit) |
-| `SpatialEnvelope`, `TemporalEnvelope` (partial coherence) | | planned |
+| `CTF(semiangle_cutoff, soft, focal_spread, angular_spread, aberrations)` | `ContrastTransferFunction` | ported (slice 3; Wiener filter, phase flip, point-spread functions and distributions not offered; negative spreads refused: abTEM overflows) |
+| `SpatialEnvelope`, `TemporalEnvelope` (partial coherence) | `ContrastTransferFunction.spatialEnvelope`, `.temporalEnvelope` | ported (slice 3; the quasi-coherent approximation, as abTEM) |
 | `Bullseye`, `Vortex`, `AnnularAperture`, `Zernike`, `RadialPhasePlate` | | planned as needed |
-| `transfer.scherzer_defocus`, `point_resolution`, `nyquist_sampling`, `polar2cartesian` | | planned (small closed forms) |
+| `transfer.scherzer_defocus`, `point_resolution`, `nyquist_sampling` | `ContrastTransferFunction.scherzerDefocus`, `.pointResolution`, `.nyquistSampling` | ported (slice 3) |
+| `transfer.polar2cartesian`, `cartesian2polar` | | planned |
 
 ## Detectors and measurements (slice 2)
 

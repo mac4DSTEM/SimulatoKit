@@ -1,10 +1,10 @@
 # CLAUDE.md — start here
 
 SimulatoKit: the macEM suite's electron-scattering simulation library, a Swift port of abTEM (projected potentials,
-multislice, probes; frozen phonons, scans and detectors; the CTF next), checked against abTEM 1.0.10 in float64, the truth source for the
+multislice, probes, frozen phonons, scans, detectors and the CTF for HRTEM), checked against abTEM 1.0.10 in float64, the truth source for the
 other kits' tests. GPL-3.0, crediting abTEM. Modules: `SimulatoCore` (beam, grid, fields, waves, the vDSP float64 FFT,
 the antialias aperture, the local structure type), `SimulatoMultislice` (slice 1: Lobato, slicing, potential, multislice on
-`.cpu` and `.metal`; slice 2: frozen phonons, batched propagation), `SimulatoProbe` (slice 1; slice 2: `GridScan`),
+`.cpu` and `.metal`; slice 2: frozen phonons, batched propagation), `SimulatoProbe` (slice 1; slice 2: `GridScan`; slice 3: `ContrastTransferFunction`),
 `SimulatoDetector` (slice 2: annular, pixelated, segmented detectors and the STEM driver). Rules only here; state in
 `docs/status.md`.
 
@@ -12,7 +12,7 @@ the antialias aperture, the local structure type), `SimulatoMultislice` (slice 1
 
 1. The suite's `../CLAUDE.md` (board, tiers, how we work) and `../ROADMAP.md`, "Kits" (the vision, the Apple-hardware rule,
    phase 5).
-2. `docs/registration-slice-1.md` and `docs/registration-slice-2.md`: the definitions, the pins, the truth, the gates,
+2. `docs/registration-slice-1.md`, `-2.md` and `-3.md`: the definitions, the pins, the truth, the gates,
    the amendments.
 3. `docs/status.md`: what is live, the hand-off, what is unverified. `docs/parity.md`: abTEM's API, ported or not.
 4. `../SpectroKit/CLAUDE.md`: the model for a kit repo (this file follows it).
@@ -50,6 +50,9 @@ the antialias aperture, the local structure type), `SimulatoMultislice` (slice 1
 - **Frozen phonons**: abTEM's displacements come from NumPy's PCG64 normals, which the kit does not reproduce; tests against
   abTEM give the port abTEM's displacements (`FrozenPhonons(structure:displacements:)`), and the kit's `GaussianGenerator`
   is registered by its statistics only.
+- **Pins carry exact doubles.** Arrays travel as float64 bits in the sidecars; a scalar parameter that the code amplifies
+  (an aberration angle under a large χ) must travel as exact bits too, not as a long decimal in the JSON (Foundation's
+  `JSONSerialization` can read those a few ulp off; slice-3 refuter).
 - **Segmented detectors** sum in float64; abTEM sums them in float32 (slice-2 amendment 1), so they agree to ~2e−7.
 - **Names**: domain + `Kit`, modules with the prefix: `SimulatoCore`, `SimulatoMultislice`, `SimulatoProbe`,
   `SimulatoDetector`.

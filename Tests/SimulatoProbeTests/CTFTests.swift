@@ -249,5 +249,7 @@ struct CTFTruthTests {
         #expect(throws: (any Error).self) { try ContrastTransferFunction(angularSpread: -0.4) }
         #expect(throws: (any Error).self) { try ContrastTransferFunction(semiangleCutoff: 0) }
         #expect(throws: (any Error).self) { try ContrastTransferFunction(focalSpread: .nan) }
+        #expect(throws: (any Error).self) { try ContrastTransferFunction.nyquistSampling(semiangleCutoff: 0, energy: 200e3) }
+        #expect(throws: (any Error).self) { try ContrastTransferFunction.nyquistSampling(semiangleCutoff: -5, energy: 200e3) }
     }
 }

@@ -123,6 +123,8 @@ public struct ContrastTransferFunction: Sendable, Hashable {
 
     /// Nyquist sampling [Å] for a semiangle α_c [mrad]: 1 / (4 α_c / λ · 10⁻³).
     public static func nyquistSampling(semiangleCutoff: Double, energy: Double) throws -> Double {
+        // abTEM raises ZeroDivisionError at 0; a semiangle must be finite and positive (slice-3 refuter).
+        guard semiangleCutoff.isFinite, semiangleCutoff > 0 else { throw SimulatoError.invalidAperture(semiangleCutoff) }
         let lambda = try ElectronBeam(energy: energy).wavelength
         return 1 / (4 * semiangleCutoff / lambda * 1e-3)
     }

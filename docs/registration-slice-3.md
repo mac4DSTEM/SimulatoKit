@@ -125,3 +125,18 @@ Truth 2 said both envelopes lie in (0, 1] for β, Δ > 0. Mathematically true; i
 exactly 0 at large angles (α = 40 mrad with Cs 1.2 mm, C50 3 × 10⁹ Å and β 0.6 mrad: the exponent is below −745). The
 truth is now [0, 1], abTEM's numbers alike. Every pin passed on the first run (kernels, the HRTEM images under both π
 choices, the closed forms); the weak-phase prediction deviates by 0.017 of max |I − 1| (bound 0.1, predicted ~0.04).
+
+### 2026-10-15 01:45 CEST, Gate B: the refuter on the frozen commit `9033206`
+
+One Gate B refuter (a Sonnet subagent) compared the port with abTEM 1.0.10: about 6700 kernels (every coefficient alone with
+five angles and five magnitudes, envelopes from 1e−12 to 500 Å and 10 mrad, apertures soft and hard from 1e−3 mrad to 5 ×
+the grid's angle and placed exactly on pixel radii, grids from 8² to 24 × 960, 5 keV to 2 MeV, 3000 random kernels, |χ| up to
+5.6e12 rad), 738 HRTEM images (SrTiO₃ and Au, 1 to 20 cells, plane wave and probe, random complex waves) and 2184 closed-form
+values. **It could not break the port:** kernels ≤ 3.7e−16 × max (bound 1e−12), images ≤ 2.2e−15 (1e−10), closed forms
+bit-equal (1e−15). No crash.
+
+Fixed: `nyquistSampling(semiangleCutoff: 0)` returned +∞ where abTEM raises; a semiangle must be finite and positive.
+Recorded, kept: the port refuses negative spreads and cutoffs, non-finite coefficients, extents ≤ 0 and grid lengths
+outside f · 2^m, where abTEM computes (or overflows). A caution from the refuter's harness, not the port: Foundation's
+`JSONSerialization` read some long decimal doubles a few ulp off, which χ amplified at |χ| ~ 10⁵ rad; today's pins are short
+decimals and pass, but parameters that χ amplifies should travel as exact bits in future pins (CLAUDE.md).

@@ -10,7 +10,7 @@ also runs on the GPU in float32 (Metal, MPSGraph) behind the same API, within a 
 |---|---|---|
 | `SimulatoCore` | the beam (λ, σ), grids, fields, waves, intensity and diffraction patterns, the antialias aperture, structures | slice 1 |
 | `SimulatoMultislice` | the Lobato parameterisation, slicing, the projected potential, transmission, Fresnel propagation, multislice on `.cpu` and `.metal`, frozen phonons, batched propagation | slices 1, 2 |
-| `SimulatoProbe` | the soft aperture, polar aberrations C10 ... C56, the probe at a position, scan grids | slices 1, 2 |
+| `SimulatoProbe` | the soft aperture, polar aberrations C10 ... C56, the probe at a position, scan grids, the CTF with partial coherence for HRTEM images | slices 1–3 |
 | `SimulatoDetector` | annular (BF, ADF, HAADF), pixelated (4D-STEM) and segmented (DPC) detectors, the STEM driver averaged over frozen phonons | slice 2 |
 
 ```swift
