@@ -1,6 +1,6 @@
 # SimulatoKit slice 3: the contrast transfer function, partial coherence and HRTEM images (registration)
 
-Registered 2026-10-15 (about 01:35 CEST), before any slice-3 Swift, by the SimulatoKit session under the owner's standing
+Registered 2026-10-15 (01:26 CEST, commit d01dfad), before any slice-3 Swift, by the SimulatoKit session under the owner's standing
 instruction for the night (a kit that closes a slice before 05:00 with budget left takes its next slice). Tier 1: the
 numbers are HRTEM image intensities, the transfer function a microscopist reads off (Scherzer defocus, point resolution) and
 the envelopes that set the information limit. Slices 1 and 2 hold unchanged; this file adds to them.
@@ -109,7 +109,7 @@ As slices 1 and 2: abTEM's algorithms (GPL-3.0-or-later), ported.
 
 ## 9. Amendments
 
-### 2026-10-15 ~01:40 CEST, after the pin generator ran, before any slice-3 Swift
+### 2026-10-15 01:27 CEST, after the pin generator ran, before any slice-3 Swift
 
 `tools/slice-3/pins.py`: 35 self-checks pass (kernels bit-equal to the text, images within 5.7e−16), deterministic,
 1.54 MB; the closed forms gave the predicted 671.9 Å, 2.37 Å and 0.3135 Å. One case is changed:
@@ -119,7 +119,7 @@ As slices 1 and 2: abTEM's algorithms (GPL-3.0-or-later), ported.
    met NaN): there is no meaningful number to pin. K2 now has β = 0.4 mrad (no aperture, no focal spread); the port refuses
    β < 0 and Δ < 0 with a named error. Section 4's table is read with that change.
 
-### 2026-10-15 ~01:50 CEST, at the first slice-3 test run: truth 2's range
+### 2026-10-15 01:30 CEST, at the first slice-3 test run: truth 2's range
 
 Truth 2 said both envelopes lie in (0, 1] for β, Δ > 0. Mathematically true; in float64 the spatial envelope underflows to
 exactly 0 at large angles (α = 40 mrad with Cs 1.2 mm, C50 3 × 10⁹ Å and β 0.6 mrad: the exponent is below −745). The
