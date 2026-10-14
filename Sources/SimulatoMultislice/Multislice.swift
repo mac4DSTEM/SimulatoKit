@@ -102,7 +102,7 @@ public enum Multislice {
         return p
     }
 
-    static func runCPU(_ incident: Waves, potential: ProjectedPotential, transmissions: [ComplexField],
+    package static func runCPU(_ incident: Waves, potential: ProjectedPotential, transmissions: [ComplexField],
                        planes: [Int]) throws -> [Waves] {
         let grid = potential.grid
         let fft = try FFT2D(nx: grid.nx, ny: grid.ny)

@@ -19,6 +19,9 @@ public enum SimulatoError: Error, Sendable, Equatable, CustomStringConvertible {
     case invalidAberration(String)
     case metalUnavailable(String)
     case metalFailure(String)
+    case invalidFrozenPhonons(String)
+    case invalidScan(String)
+    case invalidDetector(String)
 
     public var description: String {
         switch self {
@@ -37,6 +40,9 @@ public enum SimulatoError: Error, Sendable, Equatable, CustomStringConvertible {
         case .invalidAberration(let why): return "invalid aberration: \(why)"
         case .metalUnavailable(let why): return "the Metal backend is unavailable: \(why)"
         case .metalFailure(let why): return "the Metal backend failed: \(why)"
+        case .invalidFrozenPhonons(let why): return "invalid frozen phonons: \(why)"
+        case .invalidScan(let why): return "invalid scan: \(why)"
+        case .invalidDetector(let why): return "invalid detector: \(why)"
         }
     }
 }

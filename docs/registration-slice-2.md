@@ -172,3 +172,19 @@ detector), deterministic (sha256 equal on two runs), 1.48 MB. Two readings are s
    ~1e−32) cannot be judged relative to its own maximum. Every detector bound of section 4 is relative to the larger of the
    image's maximum and the scan's total intensity (the maximum of the annular image with outer = nil), stored per detector
    as `scale`.
+
+### 2026-10-15 02:05, at the first slice-2 test run: truth 7 corrected, and the kit generator's seeds
+
+1. **Truth 7 was false as written, and is corrected.** "In vacuum the four segments of a centred, aberration-free probe are
+   equal" fails with inner = 0: the zero frequency has φ = atan2(0, 0) = 0, so it belongs to the first segment alone, and it
+   carries the probe's largest value (abTEM's rule and the port's alike; the pins against abTEM passed). The truth is now:
+   with inner > 0 (2 mrad, which excludes only the origin), the four segments are equal within 1e−12; with inner = 0 the
+   first is larger and the other three are equal within 1e−12. My first reading, that −π/2 mod 2π rounds into the third
+   quadrant, was checked and is wrong (it lands in the fourth, as it should).
+2. **The kit generator's configurations** (section 3.2, made concrete): configuration c uses the generator seeded with
+   seed + c (wrapping); three normals per atom in atom order (x, y, z); an axis not in the directions is set to zero after
+   drawing (so the streams do not depend on the directions); an element absent from σ is not displaced.
+
+All other slice-2 tests passed on the first run: frozen phonons (F1, four configurations, the averaged pattern), every
+detector on S1–S3 under both π choices, the scan positions bit-equal, S4's HAADF on C, Si, Cu and Au, and the batched Metal
+scan against the CPU scan.

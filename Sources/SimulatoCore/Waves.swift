@@ -81,7 +81,7 @@ public struct Waves: Sendable, Hashable {
 
     /// The source index of each kept frequency, in FFT order (abTEM's `_fft_interpolation_masks_1d` for m ≤ n):
     /// the first ⌊m/2⌋ + 1 (m odd) or m/2 (m even), then the last ⌊m/2⌋.
-    static func cropIndices(n: Int, m: Int) -> [Int] {
+    package static func cropIndices(n: Int, m: Int) -> [Int] {
         precondition(m <= n || m == n + 1, "crop larger than the grid")
         if m >= n { return Array(0..<n) }
         let low = m % 2 == 1 ? m / 2 + 1 : m / 2
