@@ -36,7 +36,7 @@
 
 - **MPSGraph's float32 FFT is not exactly unitary** (Gate D, amendment 2, `tools/metal-fft-gain/`): each round trip loses
   1.4e−7 to 1.4e−6 of Σ|ψ|² on the non-zero frequencies, so the Metal path's total intensity drifts ~8e−7 per slice below
-  the CPU path's. Re-measure after OS updates.
+  the CPU path's; the amended bound of 1.5e−6 per slice is accepted by the owner (2026-10-15). Re-measure after OS updates.
 - **Metal is not yet faster.** At 512² and 102 slices the example took 2.81 s on the CPU and 2.35 s on Metal, both
   dominated by the potential, which the CPU path builds for both. One MPSGraph run per slice, with host round trips for
   the transmission functions, is the slice-1 design (correctness first); a performance lane (one executable for all

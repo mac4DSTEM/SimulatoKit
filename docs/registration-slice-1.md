@@ -340,7 +340,8 @@ frequencies of each MPSGraph FFT pair, a property of the framework on this OS an
 round trip). The bound is amended to **1.5e−6 × (number of slices)** relative (the measured worst per round trip, a delta
 at 256², is 1.43e−6), with the cause recorded. Not done tonight, and why: a scalar compensation would over-correct
 DC-heavy fields (the plane wave's exit), and a frequency gain map or a compute-shader FFT with twiddles rounded from
-float64 is an acceleration lane of its own. The owner may overrule this amendment (board, waiting list).
+float64 is an acceleration lane of its own. **The owner accepted this amended bound on 2026-10-15** (the board's waiting
+list); the compute-shader FFT stays an optional acceleration lane, not a correction owed.
 
 ### 2026-10-15 01:40, Gate B: the refuter on the frozen commit `11bcdb4`, and the fixes it required
 
