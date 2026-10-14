@@ -1,17 +1,19 @@
 # CLAUDE.md — start here
 
 SimulatoKit: the macEM suite's electron-scattering simulation library, a Swift port of abTEM (projected potentials,
-multislice, probes; detectors and frozen phonons next), checked against abTEM 1.0.10 in float64, the truth source for the
+multislice, probes; frozen phonons, scans and detectors; the CTF next), checked against abTEM 1.0.10 in float64, the truth source for the
 other kits' tests. GPL-3.0, crediting abTEM. Modules: `SimulatoCore` (beam, grid, fields, waves, the vDSP float64 FFT,
 the antialias aperture, the local structure type), `SimulatoMultislice` (slice 1: Lobato, slicing, potential, multislice on
-`.cpu` and `.metal`), `SimulatoProbe` (slice 1), `SimulatoDetector` (placeholder, slice 2). Rules only here; state in
+`.cpu` and `.metal`; slice 2: frozen phonons, batched propagation), `SimulatoProbe` (slice 1; slice 2: `GridScan`),
+`SimulatoDetector` (slice 2: annular, pixelated, segmented detectors and the STEM driver). Rules only here; state in
 `docs/status.md`.
 
 ## Read first
 
 1. The suite's `../CLAUDE.md` (board, tiers, how we work) and `../ROADMAP.md`, "Kits" (the vision, the Apple-hardware rule,
    phase 5).
-2. `docs/registration-slice-1.md`: the definitions, the pins, the truth, the gates, the two amendments.
+2. `docs/registration-slice-1.md` and `docs/registration-slice-2.md`: the definitions, the pins, the truth, the gates,
+   the amendments.
 3. `docs/status.md`: what is live, the hand-off, what is unverified. `docs/parity.md`: abTEM's API, ported or not.
 4. `../SpectroKit/CLAUDE.md`: the model for a kit repo (this file follows it).
 
@@ -32,7 +34,7 @@ the antialias aperture, the local structure type), `SimulatoMultislice` (slice 1
   References/abtem-164e644`, `python3 -m venv References/abtem-venv`, `References/abtem-venv/bin/python -m pip install
   abtem==1.0.10`, then compare with the freeze file. An unpinned copy is never a reference. Agreement with abTEM is
   agreement, not truth: truth is a closed form, a symmetry, a conservation law or a convergence (registration section 5).
-- **Pins are generated before the Swift**, by `tools/slice-1/pins.py`, which also re-derives every quantity from the
+- **Pins are generated before the Swift**, by `tools/slice-<n>/pins.py`, which also re-derives every quantity from the
   registration's text; a difference is a failure of the port, never a tolerance to widen.
 - **The π choice.** abTEM evaluates π in the Lobato factor as float32; `LobatoParameterization(piConstant: .exact)` is the
   default, `.abTEMFloat32` reproduces abTEM bit-closely. Tests against the pins use `.abTEMFloat32`.
@@ -42,9 +44,13 @@ the antialias aperture, the local structure type), `SimulatoMultislice` (slice 1
   example's CIF reader likewise by DiffractoKit's `CIFImport`.
 - **Public API only, no app types**; error messages never name an app.
 - **Rigour follows risk** (`../CLAUDE.md`): tier in every commit; tier 1 is registration, every new test broken once
-  (`tools/slice-1/mutants.py`, one mutant at a time on a clone), one Gate B refuter on the frozen commit, Gate D when a cause
+  (`tools/slice-<n>/mutants.py`, one mutant at a time on a clone), one Gate B refuter on the frozen commit, Gate D when a cause
   is unproven, a fixture.
 - **Heavy work**: at most 8 jobs; the 100-slice 512² Metal test is the heaviest test (about 6 s).
+- **Frozen phonons**: abTEM's displacements come from NumPy's PCG64 normals, which the kit does not reproduce; tests against
+  abTEM give the port abTEM's displacements (`FrozenPhonons(structure:displacements:)`), and the kit's `GaussianGenerator`
+  is registered by its statistics only.
+- **Segmented detectors** sum in float64; abTEM sums them in float32 (slice-2 amendment 1), so they agree to ~2e−7.
 - **Names**: domain + `Kit`, modules with the prefix: `SimulatoCore`, `SimulatoMultislice`, `SimulatoProbe`,
   `SimulatoDetector`.
 - **Pushing, tagging and creating the remote are the owner's.** One session per repo; `main` only; commit by explicit paths

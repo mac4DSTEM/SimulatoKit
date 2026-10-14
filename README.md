@@ -9,9 +9,9 @@ also runs on the GPU in float32 (Metal, MPSGraph) behind the same API, within a 
 | Module | Scope | State |
 |---|---|---|
 | `SimulatoCore` | the beam (λ, σ), grids, fields, waves, intensity and diffraction patterns, the antialias aperture, structures | slice 1 |
-| `SimulatoMultislice` | the Lobato parameterisation, slicing, the projected potential, transmission, Fresnel propagation, multislice on `.cpu` and `.metal` | slice 1 |
-| `SimulatoProbe` | the soft aperture, polar aberrations C10 ... C56, the probe at a position | slice 1 |
-| `SimulatoDetector` | bright-field, annular, pixelated and segmented detectors, frozen phonons | slice 2, to be registered |
+| `SimulatoMultislice` | the Lobato parameterisation, slicing, the projected potential, transmission, Fresnel propagation, multislice on `.cpu` and `.metal`, frozen phonons, batched propagation | slices 1, 2 |
+| `SimulatoProbe` | the soft aperture, polar aberrations C10 ... C56, the probe at a position, scan grids | slices 1, 2 |
+| `SimulatoDetector` | annular (BF, ADF, HAADF), pixelated (4D-STEM) and segmented (DPC) detectors, the STEM driver averaged over frozen phonons | slice 2 |
 
 ```swift
 import SimulatoCore

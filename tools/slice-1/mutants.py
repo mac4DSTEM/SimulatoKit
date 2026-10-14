@@ -181,7 +181,10 @@ def main():
         out = r.stdout
         # Swift Testing (the kits' standard since 2026-10-15): "✘ Test name(args) ... failed" / "recorded an issue".
         failed = sorted(set(re.findall(r"✘ Test (\w+)\(", out)))
-        if "error: compile" in out or ("error:" in out and "Test run with" not in out and not failed):
+        if "Test run started" in out and r.returncode != 0 and not failed:
+            verdict = "KILLED"  # the test process crashed after the run started: the tests did not pass
+            failed = ["(test process crashed)"]
+        elif "error: compile" in out or ("error:" in out and "Test run with" not in out and not failed):
             verdict = "BUILD-FAILED"
         elif r.returncode != 0 and failed:
             verdict = "KILLED"

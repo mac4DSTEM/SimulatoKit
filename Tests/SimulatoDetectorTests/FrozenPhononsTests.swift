@@ -71,6 +71,11 @@ struct FrozenPhononsTests {
         #expect(fp.displacements[0] != fp.displacements[1], "configurations differ")
         let again = try FrozenPhonons(structure: s, sigmas: [13: 0.1], configurations: 2, seed: 42, directions: [.x, .y])
         #expect(again.displacements == fp.displacements, "seeded: reproducible")
+        let zOnly = try FrozenPhonons(structure: s, sigmas: [13: 0.1], configurations: 1, seed: 42, directions: [.z])
+        #expect(zOnly.displacements[0].allSatisfy { $0.x == 0 && $0.y == 0 }, "only z is displaced")
+        #expect(zOnly.displacements[0].map(\.z) == (try FrozenPhonons(structure: s, sigmas: [13: 0.1], configurations: 1,
+                                                                       seed: 42)).displacements[0].map(\.z),
+                "the streams do not depend on the directions")
     }
 
     /// Truth 2: σ = 0 is slice 1, to the last bit; the mean of identical configurations is the single result.

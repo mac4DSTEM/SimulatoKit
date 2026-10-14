@@ -5,7 +5,8 @@ behind it) against SimulatoKit, so "complete" is a measured claim (suite `ROADMA
 tag and at every slice. States: **ported** (same numbers within the registered tolerance, pinned by tests), **partial**
 (the default path ported, options not), **planned** (a named slice), **not planned** (with the reason).
 
-State at 2026-10-15, slice 1 (`docs/registration-slice-1.md`): 17 entries ported or partial, 19 planned, 7 not planned.
+State at 2026-10-15, slices 1 and 2 (`docs/registration-slice-1.md`, `docs/registration-slice-2.md`): 22 entries ported or
+partial, 19 planned, 7 not planned.
 
 ## Beam and constants
 
@@ -40,7 +41,8 @@ State at 2026-10-15, slice 1 (`docs/registration-slice-1.md`): 17 entries ported
 | `PlaneWave(energy, normalize=False)` | `Waves.planeWave(beam:grid:)` | ported (`normalize=True` not offered) |
 | `PlaneWave(tilt=)`, `Probe(tilt=)` | | planned |
 | `Probe(semiangle_cutoff, energy, aberrations, soft=True)`, `.build(scan=position)` | `Probe(beam:grid:aperture:aberrations:)`, `.build(at:)` | ported (one position; distributions of parameters not offered) |
-| `Probe.build(scan=GridScan/LineScan)`, `CustomScan`, `GridScan`, `LineScan` | | planned (slice 2, with the detectors) |
+| `GridScan(start, end, gpts, endpoint)`, `Probe.scan(potential, scan, detectors)` | `GridScan`, `STEM.scan(probe:potentials:scan:detectors:backend:)` | ported (slice 2; positions bit-equal; `sampling` instead of `gpts`, fractional and Atom start/end not offered) |
+| `LineScan`, `CustomScan` | | planned |
 | `multislice_and_detect`, `FourierMultislice(order=1)` | `Multislice.run(_:through:exitPlanes:backend:)` | ported, `.cpu` float64 and `.metal` float32 |
 | `FourierMultislice(order=2)`, `conjugate`, `transpose` | | planned |
 | `RealSpaceMultislice` (finite differences, backscattering) | | not planned for now (a research option) |
@@ -65,8 +67,12 @@ State at 2026-10-15, slice 1 (`docs/registration-slice-1.md`): 17 entries ported
 
 | abTEM | SimulatoKit | State |
 |---|---|---|
-| `AnnularDetector`, `FlexibleAnnularDetector`, `SegmentedDetector`, `PixelatedDetector`, `WavesDetector` | `SimulatoDetector` | planned (slice 2) |
-| `FrozenPhonons`, `AtomsEnsemble` | | planned (slice 2) |
+| `AnnularDetector(inner, outer)` | `AnnularDetector` | ported (slice 2; `offset` not offered) |
+| `PixelatedDetector(max_angle)` | `PixelatedDetector(maxAngle:)` | partial ("cutoff", "valid", "full"; numeric angles, `resample` and real-space detection not offered) |
+| `SegmentedDetector(nbins_radial, nbins_azimuthal, inner, outer, rotation)` | `SegmentedDetector` | ported (summed in float64; abTEM sums in float32: slice-2 amendment 1) |
+| `FlexibleAnnularDetector`, `WavesDetector` | | planned |
+| `FrozenPhonons(atoms, num_configs, sigmas, seed, directions)`, `ensemble_mean` | `FrozenPhonons` (given displacements, or the kit's seeded generator), averaged in `STEM.scan` | partial (abTEM's displacements reproduced only when given: NumPy's PCG64 normals are not ported, the kit's generator agrees in distribution; anisotropic σ not offered) |
+| `AtomsEnsemble` | | planned |
 | `Images`, `DiffractionPatterns`, `PolarMeasurements`, line profiles (`measurements.py`) | `RealField` | partial (arrays with their sampling; the measurement operations are planned with the detectors) |
 | `IndexedDiffractionPatterns` | | planned (with DiffractoKit's indexing) |
 
@@ -82,6 +88,6 @@ State at 2026-10-15, slice 1 (`docs/registration-slice-1.md`): 17 entries ported
 
 ## Not abTEM's, SimulatoKit's own
 
-- The Metal backend (`Backend.metal`), registered against the CPU path; MPSGraph's float32 FFT gain is a known limit
+- The Metal backend (`Backend.metal`) and the batched scan (`Multislice.runBatch`), registered against the CPU path; MPSGraph's float32 FFT gain is a known limit
   (registration amendment 2).
 - `LobatoParameterization.PiConstant`: the exact π by default, abTEM's float32 π on request.

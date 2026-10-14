@@ -106,13 +106,15 @@ enum Pins2 {
 }
 
 /// max |a − b| / scale.
+/// A size mismatch is reported as +infinity, so the expectation fails (rather than the test process crashing).
 func scaledMax(_ a: [Double], _ b: [Double], scale: Double) -> Double {
-    precondition(a.count == b.count, "scaledMax: \(a.count) vs \(b.count)")
+    guard a.count == b.count else { return .infinity }
     var d = 0.0
     for i in a.indices { d = max(d, abs(a[i] - b[i])) }
     return d / scale
 }
 
 func relMax2(_ a: [Double], _ b: [Double]) -> Double {
-    scaledMax(a, b, scale: max(b.map(abs).max() ?? 0, 1e-300))
+    guard a.count == b.count else { return .infinity }
+    return scaledMax(a, b, scale: max(b.map(abs).max() ?? 0, 1e-300))
 }
