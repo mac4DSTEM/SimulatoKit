@@ -31,9 +31,11 @@ public struct Grid: Sendable, Hashable {
     public var samplingY: Double { extentY / Double(ny) }
     public var count: Int { nx * ny }
 
-    /// Reciprocal-space sampling [1/Å] (1 / extent).
-    public var reciprocalSamplingX: Double { 1 / extentX }
-    public var reciprocalSamplingY: Double { 1 / extentY }
+    /// Reciprocal-space sampling [1/Å]: 1 / (n · (extent / n)), as abTEM computes it (`core/grid.py`
+    /// `reciprocal_space_sampling`); on some grids this differs from 1 / extent by one ulp, enough to move a pixel across a
+    /// detector limit placed at a whole number of pixels (slice-2 refuter, finding B1).
+    public var reciprocalSamplingX: Double { 1 / (Double(nx) * samplingX) }
+    public var reciprocalSamplingY: Double { 1 / (Double(ny) * samplingY) }
 
     /// The lengths both backends accept: f · 2^m with f ∈ {1, 3, 5, 15} and m ≥ 3 (vDSP's DFT lengths).
     public static func isSupportedLength(_ n: Int) -> Bool {

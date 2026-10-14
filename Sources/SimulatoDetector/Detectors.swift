@@ -106,7 +106,8 @@ public struct AnnularDetector: Detector, Hashable {
         let a = p.angularSampling
         let maximum = min(Double(p.grid.nx / 2) * a.x, Double(p.grid.ny / 2) * a.y)
         guard let o = outer else { let c = p.cutoffAngles; return floor(min(c.x, c.y)) }
-        if o > maximum && abs(o - maximum) > 1e-5 + 1e-8 * abs(maximum) {
+        // abTEM: np.isclose(maximum, outer, atol=1e-5), whose default rtol 1e-5 applies to outer (measurements.py 2933).
+        if o > maximum && abs(o - maximum) > 1e-5 + 1e-5 * abs(o) {
             throw SimulatoError.invalidDetector("outer \(o) mrad exceeds the maximum simulated angle \(maximum) mrad")
         }
         return o
@@ -114,6 +115,9 @@ public struct AnnularDetector: Detector, Hashable {
 
     public func detect(_ p: DiffractionIntensity) throws -> [Double] {
         let o = try outerAngle(p)
+        guard inner <= o else {
+            throw SimulatoError.invalidDetector("inner \(inner) mrad exceeds the outer angle \(o) mrad")
+        }
         let a = p.angularSampling
         let ax = DiffractionIntensity.angles(p.grid.nx, a.x), ay = DiffractionIntensity.angles(p.grid.ny, a.y)
         let i2 = inner * inner, o2 = o * o
@@ -204,6 +208,9 @@ public struct SegmentedDetector: Detector, Hashable {
                 var phi = (atan2(ay[cy], ax[cx]) - rotation).truncatingRemainder(dividingBy: twoPi)
                 if phi < 0 { phi += twoPi }
                 let r = Int((Double(radialBins) * (alpha - inner) / (outer - inner)).rounded(.down))
+                // α just below outer can round to r = n_r; abTEM's bin label then exceeds n_r n_φ − 1 and the pixel is
+                // dropped (`label_to_index`); so is it here (slice-2 refuter, finding A: it used to index past the end).
+                guard r < radialBins else { continue }
                 let f = (Double(azimuthalBins) * (phi / twoPi)).rounded(.down)
                 let az = Int(min(max(f, 0), Double(azimuthalBins - 1)))
                 out[az + r * azimuthalBins] += p.values[sx[cx] * p.grid.ny + sy[cy]]

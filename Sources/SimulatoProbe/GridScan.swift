@@ -19,6 +19,9 @@ public struct GridScan: Sendable, Hashable {
         guard start.x.isFinite, start.y.isFinite, end.x.isFinite, end.y.isFinite else {
             throw SimulatoError.invalidScan("start and end must be finite")
         }
+        guard end.x - start.x > 0 || end.y - start.y > 0 else {
+            throw SimulatoError.invalidScan("scan extent must be positive on at least one axis (abTEM's rule)")
+        }
         self.start = start
         self.end = end
         self.nx = nx

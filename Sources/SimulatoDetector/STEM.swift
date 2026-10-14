@@ -42,15 +42,21 @@ public enum STEM {
         let shapes = try detectors.map { try $0.shape(for: probe.grid, beam: probe.beam) }
         let counts = shapes.map { $0.reduce(1, *) }
         var sums = counts.map { [Double](repeating: 0, count: $0 * positions.count) }
-        let incidents = try positions.map { try probe.build(at: $0) }
-        for potential in potentials {
-            let exits = try Multislice.runBatch(incidents, through: potential, backend: backend)
-            for (q, exit) in exits.enumerated() {
-                let intensity = try DiffractionIntensity(exit)
-                for (d, detector) in detectors.enumerated() {
-                    let v = try detector.detect(intensity)
-                    precondition(v.count == counts[d], "a detector returned the wrong number of values")
-                    for k in 0..<v.count { sums[d][q * counts[d] + k] += v[k] }
+        // Positions in chunks, so the waves of one chunk only are held (slice-2 refuter: 13 MB per position at 480²).
+        let chunk = max(1, (256 << 20) / (probe.grid.count * 16 * 2))
+        for first in stride(from: 0, to: positions.count, by: chunk) {
+            let range = first..<min(first + chunk, positions.count)
+            let incidents = try range.map { try probe.build(at: positions[$0]) }
+            for potential in potentials {
+                let exits = try Multislice.runBatch(incidents, through: potential, backend: backend)
+                for (offset, exit) in exits.enumerated() {
+                    let q = first + offset
+                    let intensity = try DiffractionIntensity(exit)
+                    for (d, detector) in detectors.enumerated() {
+                        let v = try detector.detect(intensity)
+                        precondition(v.count == counts[d], "a detector returned the wrong number of values")
+                        for k in 0..<v.count { sums[d][q * counts[d] + k] += v[k] }
+                    }
                 }
             }
         }

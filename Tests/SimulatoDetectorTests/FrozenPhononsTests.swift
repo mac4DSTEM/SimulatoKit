@@ -32,7 +32,7 @@ struct FrozenPhononsTests {
     }
 
     /// Truth 1: the kit's generator, by its statistics.
-    @Test func generatorStatistics() {
+    @Test func generatorStatistics() throws {
         var g = GaussianGenerator(seed: 1)
         let n = 1_000_000
         var s1 = 0.0, s2 = 0.0, s4 = 0.0, lag = 0.0, previous = 0.0
@@ -52,6 +52,11 @@ struct FrozenPhononsTests {
         let sc = (0..<16).map { _ in c.nextNormal() }
         #expect(sa == sb, "the same seed, the same stream")
         #expect(sa != sc, "another seed, another stream")
+        // Consecutive seeds share no configuration (the refuter found seed + c did).
+        let one = try AtomicStructure(box: SIMD3(5, 5, 5), atoms: [.init(atomicNumber: 6, position: SIMD3(1, 1, 1))])
+        let e1 = try FrozenPhonons(structure: one, sigmas: [6: 0.1], configurations: 3, seed: 10)
+        let e2 = try FrozenPhonons(structure: one, sigmas: [6: 0.1], configurations: 3, seed: 11)
+        #expect(Set(e1.displacements.map { $0[0].x }).isDisjoint(with: Set(e2.displacements.map { $0[0].x })))
     }
 
     /// Truth 1: σ per axis and the directions.
@@ -94,5 +99,6 @@ struct FrozenPhononsTests {
         #expect(throws: (any Error).self) { try FrozenPhonons(structure: s, displacements: [[SIMD3(.nan, 0, 0)]]) }
         #expect(throws: (any Error).self) { try FrozenPhonons(structure: s, sigmas: [6: -0.1], configurations: 1, seed: 0) }
         #expect(throws: (any Error).self) { try FrozenPhonons(structure: s, sigmas: [6: 0.1], configurations: 0, seed: 0) }
+        #expect(throws: (any Error).self) { try FrozenPhonons(structure: s, sigmas: [13: 0.1], configurations: 1, seed: 0) }
     }
 }

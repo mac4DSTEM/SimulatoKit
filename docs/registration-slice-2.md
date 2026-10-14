@@ -188,3 +188,34 @@ detector), deterministic (sha256 equal on two runs), 1.48 MB. Two readings are s
 All other slice-2 tests passed on the first run: frozen phonons (F1, four configurations, the averaged pattern), every
 detector on S1–S3 under both π choices, the scan positions bit-equal, S4's HAADF on C, Si, Cu and Au, and the batched Metal
 scan against the CPU scan.
+
+### 2026-10-15 ~01:50 CEST, Gate B: the refuter on the frozen commit `52fc2ab`, and the fixes it required
+
+One Gate B refuter (a Sonnet subagent) compared the port with abTEM 1.0.10 on 65 new CPU cases plus Metal: SrTiO₃ with
+eight configurations, Si, Au with σ up to 0.4 Å (atoms leaving the box), UO₂, LiH, orthorhombic Ti, a 36-atom random box
+from H to U, every direction set, 1 to 16 configurations, grids from 8 to 480 including non-square and anisotropic
+sampling, segmented detectors from 1 × 1 to 10 × 10 bins with 20 rotations, scans reversed, single, outside the box, and
+plane-wave detection. 1843 comparisons passed (annular 4.3e−15, pixelated 6.6e−15, segmented 3.8e−7 against abTEM's float32
+sums and 2e−15 against the float64 sums, Metal against CPU 8.6e−6, batches across the 512 MB split in order); 10 failed, and
+one input trapped. The kit's generator passed its statistics on seven seeds (KS·√N 0.46 to 0.96, limit 1.63).
+
+Fixed (each with a test shown to fail when the fix is reverted):
+- **A. A trap in `SegmentedDetector`.** A pixel just below `outer` can give n_r (α − inner)/(outer − inner) rounding to n_r,
+  and the bin index ran past the end (1375 grid/limit combinations found). abTEM's bin label is then beyond n_r n_φ − 1 and
+  `label_to_index` drops the pixel; the port now drops it too. Truth 4 (segments sum to their annulus) therefore holds
+  except for such a pixel, which the annulus counts and the segments do not, in abTEM as in the port.
+- **B1. Δα one ulp off.** The port took the reciprocal sampling as 1 / extent, abTEM as 1 / (n · (extent / n))
+  (`core/grid.py`); on grids where the two differ (7.81 Å on 96 points: 3.211183139222595 against abTEM's
+  3.211183139222596 mrad), a limit placed at a whole number of pixels moved a pixel across it (annular differences up to
+  2.3e−2 of the total). `Grid.reciprocalSampling` is now abTEM's expression; slice 1's pins pass unchanged.
+- **B2. The outer-angle tolerance.** abTEM's `np.isclose(maximum, outer, atol=1e−5)` carries the default rtol 1e−5 on outer;
+  the port had 1e−8. Now abTEM's.
+- **Refusals matched to abTEM:** an annular inner beyond the default outer is refused (it returned 0); an element of the
+  structure without a σ is refused ("Property must be provided for all atomic species"); a scan whose extent is ≤ 0 on both
+  axes is refused. Kept stricter than abTEM, on purpose: a negative annular inner, a segmented inner = outer, and grid
+  lengths outside f · 2^m (registration-slice-1 3.9).
+- **The generator's configuration seeds.** `seed + c` made configuration c of seed s equal configuration c − 1 of seed s + 1;
+  now `configurationSeed(seed, c)` = SplitMix64's finaliser of (finaliser(seed) + c) (registration 3.2 and amendment 2
+  made concrete again). The statistics are unchanged.
+- **Memory.** `STEM.scan` held every incident and exit wave of the scan (13 MB per position at 480²); it now runs the
+  positions in chunks of at most 256 MB of waves.

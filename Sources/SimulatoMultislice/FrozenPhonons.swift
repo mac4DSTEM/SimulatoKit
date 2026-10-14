@@ -88,18 +88,22 @@ public struct FrozenPhonons: Sendable, Hashable {
         self.displacements = displacements
     }
 
-    /// Displacements drawn by the kit's generator: for configuration c the generator seeded with `seed + c`, three
+    /// Displacements drawn by the kit's generator: for configuration c the generator seeded with
+    /// `configurationSeed(seed, c)`, three
     /// normals per atom in atom order (x, y, z), each axis not in `directions` left at zero, scaled by σ of the atom's Z
-    /// (Å; an element absent from `sigmas` is not displaced).
+    /// (Å; every element of the structure must have a σ, as abTEM requires; 0 leaves it still).
     public init(structure: AtomicStructure, sigmas: [Int: Double], configurations: Int, seed: UInt64,
                 directions: Directions = .all) throws {
         guard configurations >= 1 else { throw SimulatoError.invalidFrozenPhonons("configurations must be at least 1") }
+        for z in Set(structure.atoms.map(\.atomicNumber)) where sigmas[z] == nil {
+            throw SimulatoError.invalidFrozenPhonons("σ must be given for every element; Z = \(z) has none")
+        }
         for (z, s) in sigmas where !(s.isFinite && s >= 0) {
             throw SimulatoError.invalidFrozenPhonons("σ of Z = \(z) must be finite and non-negative, got \(s)")
         }
         var all: [[SIMD3<Double>]] = []
         for c in 0..<configurations {
-            var g = GaussianGenerator(seed: seed &+ UInt64(c))
+            var g = GaussianGenerator(seed: Self.configurationSeed(seed, c))
             all.append(structure.atoms.map { atom in
                 let r = SIMD3(g.nextNormal(), g.nextNormal(), g.nextNormal())
                 let s = sigmas[atom.atomicNumber] ?? 0
@@ -111,6 +115,19 @@ public struct FrozenPhonons: Sendable, Hashable {
     }
 
     public var count: Int { displacements.count }
+
+    /// The generator seed of configuration c: the SplitMix64 finaliser of the finalised seed plus c, so the
+    /// configurations of consecutive seeds do not coincide (seed + c made configuration c of seed s equal configuration
+    /// c − 1 of seed s + 1; slice-2 refuter).
+    public static func configurationSeed(_ seed: UInt64, _ c: Int) -> UInt64 {
+        func mix(_ v: UInt64) -> UInt64 {
+            var z = v &+ 0x9E37_79B9_7F4A_7C15
+            z = (z ^ (z >> 30)) &* 0xBF58_476D_1CE4_E5B9
+            z = (z ^ (z >> 27)) &* 0x94D0_49BB_1331_11EB
+            return z ^ (z >> 31)
+        }
+        return mix(mix(seed) &+ UInt64(c))
+    }
 
     /// Configuration c: every atom at its position plus its displacement (not wrapped; the potential wraps it).
     public func configuration(_ c: Int) throws -> AtomicStructure {
