@@ -75,6 +75,23 @@ struct STEMPinsTests {
         return try AnnularDetector(inner: 70, outer: 130).detect(DiffractionIntensity(exit))[0]
     }
 
+    /// The parallel CPU batch equals one sequential run per position, bit for bit, and its time is printed.
+    @Test func parallelCPUBatchEqualsSequentialRuns() throws {
+        let potentials = try Pins2.potentials("S1", pi: .exact)
+        let probe = try Pins2.probe("S1", grid: potentials[0].grid)
+        let incidents = try Pins2.scan("S1").positions.map { try probe.build(at: $0) }
+        let clock = ContinuousClock()
+        var batch: [Waves] = []
+        let parallel = try clock.measure { batch = try Multislice.runBatch(incidents, through: potentials[0]) }
+        var single: [Waves] = []
+        let sequential = try clock.measure {
+            single = try incidents.map { try Multislice.run($0, through: potentials[0])[0] }
+        }
+        #expect(batch.count == single.count)
+        for (a, b) in zip(batch, single) { #expect(a.field == b.field, "bit for bit") }
+        print("CPU batch of \(incidents.count) positions: parallel \(parallel), sequential \(sequential)")
+    }
+
     @Test(.enabled(if: Multislice.metalIsAvailable, "no Metal device: the batched Metal scan is not tested here"),
           arguments: ["S1", "S3"])
     func metalScanMatchesTheCPUScan(id: String) throws {

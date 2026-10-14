@@ -8,6 +8,7 @@
 
 import Foundation
 import Metal
+import Synchronization
 import MetalPerformanceShadersGraph
 import SimulatoCore
 
@@ -164,6 +165,31 @@ extension MetalMultislice {
 }
 
 extension Multislice {
+    /// The CPU batch on at most `maximumCPUThreads` threads (the suite's 8-job cap): each thread runs whole positions
+    /// with its own FFT plan; every exit wave is computed exactly as one sequential run computes it (bit for bit).
+    public static let maximumCPUThreads = 8
+
+    static func runCPUParallel(_ incidents: [Waves], potential: ProjectedPotential, transmissions: [ComplexField],
+                               last: Int) throws -> [Waves] {
+        let count = incidents.count
+        let workers = max(1, min(maximumCPUThreads, ProcessInfo.processInfo.activeProcessorCount, count))
+        let results = Mutex<[Int: Waves]>([:])
+        let failure = Mutex<(any Error)?>(nil)
+        DispatchQueue.concurrentPerform(iterations: workers) { worker in
+            for q in stride(from: worker, to: count, by: workers) {
+                do {
+                    let w = try runCPU(incidents[q], potential: potential, transmissions: transmissions, planes: [last])[0]
+                    results.withLock { $0[q] = w }
+                } catch {
+                    failure.withLock { if $0 == nil { $0 = error } }
+                    return
+                }
+            }
+        }
+        if let error = failure.withLock({ $0 }) { throw error }
+        return results.withLock { r in (0..<count).map { r[$0]! } }
+    }
+
     /// The exit waves (after the last slice) of a batch of incident waves through one potential: on `.cpu` one at a time
     /// from the shared transmission functions, on `.metal` in batches whose waves fit in 512 MB (registration-slice-2.md
     /// 3.6). The transmission functions are computed once.
@@ -175,9 +201,7 @@ extension Multislice {
         let last = potential.slices.count - 1
         switch backend {
         case .cpu:
-            return try incidents.map {
-                try runCPU($0, potential: potential, transmissions: transmissions, planes: [last])[0]
-            }
+            return try runCPUParallel(incidents, potential: potential, transmissions: transmissions, last: last)
         case .metal:
             let perWave = potential.grid.count * 8 * 3  // the wave, its spectrum and the product, complex64
             let batch = max(1, (512 << 20) / perWave)
