@@ -81,6 +81,28 @@ final class PotentialPinsTests: XCTestCase {
         }
     }
 
+    /// Section 3.4, the top-face rule: an atom within 1e−10 Å of the top face is put at z = 0 (slice 0), so its potential
+    /// equals that of the same atom at z = 0.
+    func testTopFaceAtomGoesToTheFirstSlice() throws {
+        let top = try AtomicStructure(box: SIMD3(8, 8, 4), atoms: [.init(atomicNumber: 29, position: SIMD3(2.3, 5.1, 4 - 1e-11))])
+        let bottom = try AtomicStructure(box: SIMD3(8, 8, 4), atoms: [.init(atomicNumber: 29, position: SIMD3(2.3, 5.1, 0))])
+        let a = try ProjectedPotential(structure: top, nx: 64, ny: 64, sliceThickness: 1)
+        let b = try ProjectedPotential(structure: bottom, nx: 64, ny: 64, sliceThickness: 1)
+        XCTAssertEqual(a.sliceOfAtom, [0])
+        XCTAssertEqual(a.slices[0].values, b.slices[0].values)
+        XCTAssertEqual(a.slices[3].values.map(abs).max(), 0)
+    }
+
+    /// Section 3.4, the nudged edges: 30 slices of 0.1 Å accumulate to 0.30000000000000004 after three, so without the
+    /// −1e−12 an atom at z = 0.3 would fall into slice 2; abTEM puts it into slice 3 (the next slice).
+    func testAtomOnADriftedSliceBoundaryGoesToTheNextSlice() throws {
+        XCTAssertGreaterThan(0.1 + 0.1 + 0.1, 0.3, "the premise: the cumulative sum overshoots")
+        let s = try AtomicStructure(box: SIMD3(8, 8, 3), atoms: [.init(atomicNumber: 6, position: SIMD3(1, 1, 0.3))])
+        let p = try ProjectedPotential(structure: s, nx: 64, ny: 64, sliceThickness: 0.1)
+        XCTAssertEqual(p.slices.count, 30)
+        XCTAssertEqual(p.sliceOfAtom, [3])
+    }
+
     func testRefusals() throws {
         let s = try AtomicStructure(box: SIMD3(10, 10, 2), atoms: [.init(atomicNumber: 104, position: SIMD3(1, 1, 1))])
         XCTAssertThrowsError(try ProjectedPotential(structure: s, nx: 64, ny: 64, sliceThickness: 1))
