@@ -5,13 +5,20 @@
 - **Repo created 2026-10-14/15 night** by the SimulatoKit session (the coordinator's side session). The owner created
   `github.com/mac4DSTEM/SimulatoKit` (private until 0.1.0) and pushed through `79dc601`; the later commits wait for the
   owner's push (board, waiting list). No tag.
+- **Slice 2 is ported, refuted and green** (2026-10-15, owner's instruction of 00:55): frozen phonons (abTEM's
+  displacements given, or the kit's seeded `GaussianGenerator`), `GridScan`, the STEM driver averaged over configurations,
+  `AnnularDetector` (BF, ADF, HAADF), `PixelatedDetector` (4D-STEM), `SegmentedDetector` (DPC), the scan batched on Metal.
+  Registration: `docs/registration-slice-2.md` (three amendments). Pins: 98 self-checks against abTEM. Break-once 22 of 23
+  (one equivalent, `docs/slice-2-mutants-2026-10-15.md`). Gate B: 1843 comparisons passed; its trap, two convention
+  differences and four refusals fixed (amendment 3).
 - **Slice 1 is ported, refuted and green**: the projected potential (Lobato, abTEM's default infinite projection) and
   multislice for a plane wave and a convergent probe, on the CPU (float64, Accelerate) and on Metal (float32, MPSGraph),
   against abTEM 1.0.10 (`164e644`) in float64. Registration: `docs/registration-slice-1.md` (sections 1–8 and three
   amendments in section 9).
-- **Gate** at `a61b736`: `tools/test.sh` green and stamped, 37 test functions in 9 suites (Swift Testing, the kits'
+- **Gate** at `e2afa7c`: `tools/test.sh` green and stamped, 52 test functions in 11 suites, a cold release build with 0
+  warnings. (Slice 1's gate was at `a61b736`: 37 test functions in 9 suites (Swift Testing, the kits'
   standard since 2026-10-15; parameterised per case and beam), the Metal suite run on the M5 Pro; a cold release build with
-  0 warnings. Break-once: 40 of 40 mutants killed (`docs/slice-1-mutants-2026-10-15.md`). Gate B: the refuter could not
+  0 warnings.) Slice 1 break-once: 40 of 40 mutants killed (`docs/slice-1-mutants-2026-10-15.md`). Gate B: the refuter could not
   break the agreement on 247 new inputs (amendment 3); its two fixes are in.
 - **The name** passed the clash check on 2026-10-14 night: no Apple framework, no Swift Package Index package and no
   GitHub Swift repository is called SimulatoKit or Simulato (one JavaScript model-based testing tool, GannettDigital/simulato,
@@ -31,6 +38,9 @@
 | Metal against CPU, Σ\|ψ\|² | 1.5e−6 × slices (amendment 2) | 8.4e−7 to 9.2e−7 per slice |
 | refuter, 247 new inputs, CPU `.abTEMFloat32` | as above | V 6.7e−14, probe 1.65e−15, exit 1.3e−13, pattern 7.3e−14 |
 | refuter, Metal to 102 slices | as above | wave 4.4e−5, pattern 1.59e−4 (80 % of the bound), Σ\|ψ\|² 9.5e−7 per slice |
+| slice 2: frozen phonons, every detector, `.abTEMFloat32` | V 1e−11, annular and pixelated 1e−10 × scale | ~1e−14 (pins and refuter) |
+| slice 2: segmented against abTEM | 1e−6 (abTEM sums in float32) | 3.8e−7; against the float64 sum 2e−15 |
+| slice 2: Metal batched scan against CPU | 2e−4 × scale | 8.6e−6 (refuter, 480², 225 positions) |
 
 ## Known limits
 
@@ -48,10 +58,16 @@
   and abTEM's own `build()` / `multislice()` disagreement on atoms at a tiny negative x or y.
 - **Orthogonal cells only; `AtomicStructure` is a local type** marked for replacement by DiffractoKit's cell types at
   DiffractoKit's first tag (no tag on 2026-10-15). The example's CIF reader likewise.
-- **No detector, no frozen phonons, no partial coherence**: an exit wave and its pattern are not a micrograph (registration
-  section 7).
+- **No partial coherence and no CTF yet** (slice 3): a simulated HAADF image is not yet a micrograph; frozen phonons use
+  Einstein-model σ given by the caller (no Debye–Waller table).
+- **Frozen phonons agree with abTEM only when abTEM's displacements are given**; the kit's generator agrees in distribution.
+- **Segmented detectors** sum in float64 where abTEM sums in float32: they agree with abTEM to ~2e−7.
+- **The STEM driver runs on one CPU thread** on `.cpu` (positions in sequence) and batches positions on `.metal`; the
+  potential is built on the CPU for both.
 
 ## Hand-off
 
-Next: slice 2, frozen phonons and detectors (`SimulatoDetector`), registered before code, against abTEM 1.0.10 at the same
-pin. The board's `lanes/simulatokit` row holds the exact prompt.
+Next: slice 3, the CTF and partial coherence (spatial and temporal envelopes) for HRTEM images from a plane-wave exit wave,
+registered before code against abTEM 1.0.10; then the Metal performance lane (the potential on the GPU, one graph over all
+slices, CPU scans in parallel), which also tries to tighten amendment 2's intensity bound. The board's `lanes/simulatokit`
+row holds the exact prompt.

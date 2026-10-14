@@ -67,9 +67,9 @@ partial, 19 planned, 7 not planned.
 
 | abTEM | SimulatoKit | State |
 |---|---|---|
-| `AnnularDetector(inner, outer)` | `AnnularDetector` | ported (slice 2; `offset` not offered) |
+| `AnnularDetector(inner, outer)` | `AnnularDetector` | ported (slice 2; `offset` not offered; a negative inner is refused, abTEM squares it) |
 | `PixelatedDetector(max_angle)` | `PixelatedDetector(maxAngle:)` | partial ("cutoff", "valid", "full"; numeric angles, `resample` and real-space detection not offered) |
-| `SegmentedDetector(nbins_radial, nbins_azimuthal, inner, outer, rotation)` | `SegmentedDetector` | ported (summed in float64; abTEM sums in float32: slice-2 amendment 1) |
+| `SegmentedDetector(nbins_radial, nbins_azimuthal, inner, outer, rotation)` | `SegmentedDetector` | ported (summed in float64; abTEM sums in float32: slice-2 amendment 1; inner = outer refused) |
 | `FlexibleAnnularDetector`, `WavesDetector` | | planned |
 | `FrozenPhonons(atoms, num_configs, sigmas, seed, directions)`, `ensemble_mean` | `FrozenPhonons` (given displacements, or the kit's seeded generator), averaged in `STEM.scan` | partial (abTEM's displacements reproduced only when given: NumPy's PCG64 normals are not ported, the kit's generator agrees in distribution; anisotropic σ not offered) |
 | `AtomsEnsemble` | | planned |

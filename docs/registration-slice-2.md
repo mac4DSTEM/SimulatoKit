@@ -189,7 +189,7 @@ All other slice-2 tests passed on the first run: frozen phonons (F1, four config
 detector on S1–S3 under both π choices, the scan positions bit-equal, S4's HAADF on C, Si, Cu and Au, and the batched Metal
 scan against the CPU scan.
 
-### 2026-10-15 ~01:50 CEST, Gate B: the refuter on the frozen commit `52fc2ab`, and the fixes it required
+### 2026-10-15 ~01:20 CEST, Gate B: the refuter on the frozen commit `52fc2ab`, and the fixes it required
 
 One Gate B refuter (a Sonnet subagent) compared the port with abTEM 1.0.10 on 65 new CPU cases plus Metal: SrTiO₃ with
 eight configurations, Si, Au with σ up to 0.4 Å (atoms leaving the box), UO₂, LiH, orthorhombic Ti, a 36-atom random box
