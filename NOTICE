@@ -1,0 +1,63 @@
+SimulatoKit
+Copyright (C) 2026 Paul Lobpreis
+
+This program is free software: you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free Software
+Foundation, either version 3 of the License, or (at your option) any later
+version (LICENSE).
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+No simulated image or pattern in this library is validated against a
+micrograph: slice 1 has no frozen phonons, no partial coherence and no
+detector (docs/registration-slice-1.md, section 7).
+
+
+================================================================================
+abTEM (the reference; the algorithms of slice 1 are ported from it)
+================================================================================
+
+The projected potential (the infinite projection of the Lobato
+parameterisation with abTEM's bilinear deltas and compensation function), the
+slicing rules, the transmission function, the Fresnel propagator with its
+antialias aperture, the multislice step, the probe (soft aperture, polar
+aberrations, position kernel, normalisation), the diffraction-pattern crop and
+the CODATA 2014 constants and evaluation order of the wavelength and the
+interaction parameter are ported from abTEM 1.0.10 (tag v1.0.10, commit
+164e644ff411167db23ec4ef26aeb4fe8f384b26), and checked against it by
+tools/slice-1/pins.py. The Lobato table in
+Sources/SimulatoMultislice/LobatoTable.swift is generated from abTEM's
+abtem/parametrizations/data/lobato.json.
+
+    abTEM - https://github.com/abtem/abtem
+    Copyright (C) The abTEM developers (J. Madsen, T. Susi and contributors)
+    Licensed under the GNU General Public License v3.0 or later
+    J. Madsen, T. Susi, "The abTEM code: transmission electron microscopy from
+    first principles", Open Research Europe 1, 24 (2021).
+
+================================================================================
+The Lobato and Van Dyck parameterisation
+================================================================================
+
+    I. Lobato, D. Van Dyck, "An accurate parameterization for scattering
+    factors, electron densities and electrostatic potentials for neutral atoms
+    that obey all physical constraints", Acta Cryst. A 70, 636-649 (2014),
+    doi:10.1107/S205327331401643X. Parameters are published numbers, cited as
+    such.
+
+================================================================================
+Text
+================================================================================
+
+    E. J. Kirkland, Advanced Computing in Electron Microscopy, 2nd ed.,
+    Springer (2010): the method, and the tabulated wavelengths and interaction
+    parameters used as truth (registration section 5, item 1).
+
+================================================================================
+Constants
+================================================================================
+
+    CODATA 2014 values as ASE 3.29.0 carries them (ase.units; ASE is
+    LGPL-2.1-or-later, https://gitlab.com/ase/ase). Only the numbers are used.
