@@ -158,4 +158,17 @@ As slice 1: the algorithms are abTEM's (GPL-3.0-or-later), ported; xoshiro256** 
 
 ## 9. Amendments
 
-None yet.
+### 2026-10-15 01:45, after the pin generator ran, before any slice-2 Swift
+
+`tools/slice-2/pins.py`: 98 self-checks pass (largest text-against-abTEM difference 1.1e−14 outside the segmented
+detector), deterministic (sha256 equal on two runs), 1.48 MB. Two readings are settled here.
+
+1. **abTEM's segmented detector accumulates in float32.** `_radial_binning` sums the segments into a `float32` array with
+   numba `fastmath` (`measurements.py` 3056–3061), even in float64 mode; summing the same pattern over abTEM's own bins in
+   float64 equals the text exactly. The segmented values therefore agree with abTEM only to float32 rounding (measured
+   2e−7 × max). The port sums in float64. Pins: the port against the text's float64 sum (stored as `<case>.<det>.float64`)
+   within 1e−10, and against abTEM's output within 1e−6 × the scale below.
+2. **The scale of a detector bound.** An image that is pure rounding noise (vacuum ADF and HAADF outside a 20 mrad probe,
+   ~1e−32) cannot be judged relative to its own maximum. Every detector bound of section 4 is relative to the larger of the
+   image's maximum and the scan's total intensity (the maximum of the annular image with outer = nil), stored per detector
+   as `scale`.
