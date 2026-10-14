@@ -289,4 +289,30 @@ Van Dyck); an app built on it must be GPL-compatible.
 
 ## 9. Amendments
 
-None yet.
+### 2026-10-15 00:10, after the pin generator ran, before any Swift: what the generator found
+
+`tools/slice-1/pins.py` re-derives every quantity of section 3 from this text in NumPy and asserts it equals abTEM's
+float64 output. 310 self-checks passed; the largest differences between the text and abTEM: V 1.5e−14 × max, the
+bandlimited t 2.2e−16, the incident probe 3.0e−16, exit waves 1.0e−14, patterns 6.6e−16, f and λ 0 (bit-equal), the k = 0
+identity of truth 2 3.7e−16. The exact-π V differs from abTEM's by at most 5.7e−8 × max, inside the registered 1e−7.
+The generator is deterministic (the arrays' sha256 equal on two runs). Three readings are settled here.
+
+1. **Section 3.10, the crop, read in full.** `diffraction_patterns` has `parity="odd"` by default, and its cutoff size goes
+   through two parity steps: n' = ⌊round((2/3) / max(Δ) × L, 7)⌋ is first moved by +1 to the grid's own parity
+   (`_antialias_cutoff_gpts`, parity "same"), then by +1 again if it is even (parity "odd"). So the pattern is always odd,
+   with the zero frequency at its centre after `fftshift`; the crop keeps the first ⌊n'/2⌋ + 1 and the last ⌊n'/2⌋
+   frequencies (`_fft_interpolation_masks_1d`). Example: 128 px of 0.078125 Å gives 85.33 → 85 → 86 → 87. Section 3.10's
+   "adjusted to n's parity by +1" was half of the rule. Also section 3.7: abTEM's integer `exit_planes = m` includes the
+   entrance plane, so the planes are (incident, after slice m, 2m, ..., n) and B1's ten cells give eleven planes.
+2. **Truth 3 is replaced by a three-part form.** Measured, the FFT method's error against the analytic V(r) is an absolute
+   aliasing error of order 1e−2 V·Å (the f ∝ 1/k² tail beyond the Nyquist frequency is missing), which grows relative to
+   V(r) as V(r) decays (27 % at 4 Å on the 512² grid), so "1e−2 relative for 1 ≤ r ≤ 4 Å" was the wrong form for a true
+   statement. The truth is now: (a) on 512² at 0.05 Å, within 2e−2 relative for 0.25 ≤ r ≤ 2 Å (measured 9.5e−3); (b) within
+   3e−2 V·Å absolute for 2 < r ≤ 4 Å (measured 1.8e−2; this bound was set after the measurement, so it is weak on its own);
+   (c) halving the pixel (1024², 0.025 Å) at least halves the largest absolute error over 0.25 ≤ r ≤ 4 Å (measured ratio
+   0.28). (c) carries the weight: it is the method converging to the closed form, which abTEM's code cannot supply.
+3. **What the fixtures hold.** To keep the repository small (13.3 MB instead of 30), the stored arrays are: V of slices 0
+   and 1 and the bandlimited t of slice 0 for A1, A2, B1 and D1 (B2 and C1 reuse B1's and vacuum's, recomputed); exit waves at
+   the last plane (A1, A2, D1 their only plane); B1's patterns at planes 1, 5 and 10 (cells 1, 5, 10); every other plane is
+   pinned by its scalars (Σ|ψ|², Σ pattern, max |ψ|, the pattern's centre). Intensities are not stored: they are |ψ|² of
+   the stored exit waves. Grids and cases are unchanged.
