@@ -109,4 +109,12 @@ As slices 1 and 2: abTEM's algorithms (GPL-3.0-or-later), ported.
 
 ## 9. Amendments
 
-None yet.
+### 2026-10-15 ~01:40 CEST, after the pin generator ran, before any slice-3 Swift
+
+`tools/slice-3/pins.py`: 35 self-checks pass (kernels bit-equal to the text, images within 5.7e−16), deterministic,
+1.54 MB; the closed forms gave the predicted 671.9 Å, 2.37 Å and 0.3135 Å. One case is changed:
+
+1. **K2's negative angular spread is dropped, and a negative spread is refused by the port.** With β < 0, abTEM's
+   −sign(β) turns the envelope into exp(+(β/2)²(…)), which overflows to infinity at large angles (the generator's comparison
+   met NaN): there is no meaningful number to pin. K2 now has β = 0.4 mrad (no aperture, no focal spread); the port refuses
+   β < 0 and Δ < 0 with a named error. Section 4's table is read with that change.

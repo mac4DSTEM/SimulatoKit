@@ -1,0 +1,354 @@
+{
+ "arrays": {
+  "bytes": 1544704,
+  "file": "slice-3-arrays.bin",
+  "index": {
+   "H1.image": {
+    "count": 14400,
+    "kind": "f8",
+    "offset": 230400,
+    "shape": [
+     120,
+     120
+    ]
+   },
+   "H1.kernel": {
+    "count": 14400,
+    "kind": "c16",
+    "offset": 0,
+    "shape": [
+     120,
+     120
+    ]
+   },
+   "H2.image": {
+    "count": 14400,
+    "kind": "f8",
+    "offset": 576000,
+    "shape": [
+     120,
+     120
+    ]
+   },
+   "H2.kernel": {
+    "count": 14400,
+    "kind": "c16",
+    "offset": 345600,
+    "shape": [
+     120,
+     120
+    ]
+   },
+   "H3.image": {
+    "count": 14400,
+    "kind": "f8",
+    "offset": 921600,
+    "shape": [
+     120,
+     120
+    ]
+   },
+   "H3.kernel": {
+    "count": 14400,
+    "kind": "c16",
+    "offset": 691200,
+    "shape": [
+     120,
+     120
+    ]
+   },
+   "K1.kernel": {
+    "count": 15360,
+    "kind": "c16",
+    "offset": 1036800,
+    "shape": [
+     96,
+     160
+    ]
+   },
+   "K2.kernel": {
+    "count": 16384,
+    "kind": "c16",
+    "offset": 1282560,
+    "shape": [
+     128,
+     128
+    ]
+   }
+  },
+  "sha256": "6b09972e1f0d20122650b23ea1cee0a25a7a7803ce428c8538404e8362be654f"
+ },
+ "cases": {
+  "H1": {
+   "aberrations": {
+    "C10": -595.2938771389288,
+    "C30": 12000000.0
+   },
+   "angular_spread": 0.0,
+   "cutoff_mrad": 20.0,
+   "energy": 300000.0,
+   "extent": [
+    11.715,
+    11.715
+   ],
+   "focal_spread": 0.0,
+   "gpts": [
+    120,
+    120
+   ],
+   "image_from": "SrTiO3 3x3x5, slice 1.9525",
+   "soft": true
+  },
+  "H2": {
+   "aberrations": {
+    "C10": -595.2938771389288,
+    "C30": 12000000.0
+   },
+   "angular_spread": 0.5,
+   "cutoff_mrad": 20.0,
+   "energy": 300000.0,
+   "extent": [
+    11.715,
+    11.715
+   ],
+   "focal_spread": 30.0,
+   "gpts": [
+    120,
+    120
+   ],
+   "image_from": "SrTiO3 3x3x5, slice 1.9525",
+   "soft": true
+  },
+  "H3": {
+   "aberrations": {
+    "C10": -80.0,
+    "C12": 50.0,
+    "C21": 300.0,
+    "C23": 200.0,
+    "C30": 12000000.0,
+    "phi12": 0.4,
+    "phi21": 1.1,
+    "phi23": 0.1
+   },
+   "angular_spread": 0.3,
+   "cutoff_mrad": null,
+   "energy": 300000.0,
+   "extent": [
+    11.715,
+    11.715
+   ],
+   "focal_spread": 40.0,
+   "gpts": [
+    120,
+    120
+   ],
+   "image_from": "SrTiO3 3x3x5, slice 1.9525",
+   "soft": true
+  },
+  "K1": {
+   "aberrations": {
+    "C10": 35.0,
+    "C12": 12.0,
+    "C21": 150.0,
+    "C23": 90.0,
+    "C30": -400000.0,
+    "C32": 20000.0,
+    "C34": 10000.0,
+    "C41": 3000000.0,
+    "C43": 2000000.0,
+    "C45": 1000000.0,
+    "C50": 500000000.0,
+    "C52": 200000000.0,
+    "C54": 100000000.0,
+    "C56": 50000000.0,
+    "phi12": 0.3,
+    "phi21": -0.7,
+    "phi23": 1.9,
+    "phi32": 0.6,
+    "phi34": -1.2,
+    "phi41": 0.2,
+    "phi43": 2.5,
+    "phi45": -0.4,
+    "phi52": 0.9,
+    "phi54": -2.0,
+    "phi56": 0.05
+   },
+   "angular_spread": 0.8,
+   "cutoff_mrad": 35.0,
+   "energy": 80000.0,
+   "extent": [
+    9.6,
+    14.4
+   ],
+   "focal_spread": 25.0,
+   "gpts": [
+    96,
+    160
+   ],
+   "soft": false
+  },
+  "K2": {
+   "aberrations": {
+    "C10": -120.0,
+    "C30": 1000000.0
+   },
+   "angular_spread": 0.4,
+   "cutoff_mrad": null,
+   "energy": 200000.0,
+   "extent": [
+    12.8,
+    12.8
+   ],
+   "focal_spread": 0.0,
+   "gpts": [
+    128,
+    128
+   ],
+   "soft": true
+  }
+ },
+ "closed_forms": [
+  {
+   "Cs": -500000.0,
+   "energy": 80000.0,
+   "point_resolution": 1.569469600417934,
+   "scherzer": -176.96855772614026
+  },
+  {
+   "Cs": -500000.0,
+   "energy": 200000.0,
+   "point_resolution": 1.0707590901767008,
+   "scherzer": -137.14774966435414
+  },
+  {
+   "Cs": -500000.0,
+   "energy": 300000.0,
+   "point_resolution": 0.8929917222933038,
+   "scherzer": -121.5138538327863
+  },
+  {
+   "Cs": 1000000.0,
+   "energy": 80000.0,
+   "point_resolution": 1.8664244155974847,
+   "scherzer": 250.27133444991352
+  },
+  {
+   "Cs": 1000000.0,
+   "energy": 200000.0,
+   "point_resolution": 1.2733543284919728,
+   "scherzer": 193.9562076242797
+  },
+  {
+   "Cs": 1000000.0,
+   "energy": 300000.0,
+   "point_resolution": 1.0619521097897309,
+   "scherzer": 171.84654010654828
+  },
+  {
+   "Cs": 12000000.0,
+   "energy": 80000.0,
+   "point_resolution": 3.473807260603632,
+   "scherzer": 866.9653338906267
+  },
+  {
+   "Cs": 12000000.0,
+   "energy": 200000.0,
+   "point_resolution": 2.369979450906642,
+   "scherzer": 671.884012097261
+  },
+  {
+   "Cs": 12000000.0,
+   "energy": 300000.0,
+   "point_resolution": 1.9765155870081,
+   "scherzer": 595.2938771389288
+  }
+ ],
+ "nyquist": [
+  {
+   "energy": 80000.0,
+   "sampling": 1.0439290141223412,
+   "semiangle": 10.0
+  },
+  {
+   "energy": 200000.0,
+   "sampling": 0.6269835079332117,
+   "semiangle": 10.0
+  },
+  {
+   "energy": 300000.0,
+   "sampling": 0.49218722244319174,
+   "semiangle": 10.0
+  },
+  {
+   "energy": 80000.0,
+   "sampling": 0.5219645070611706,
+   "semiangle": 20.0
+  },
+  {
+   "energy": 200000.0,
+   "sampling": 0.31349175396660584,
+   "semiangle": 20.0
+  },
+  {
+   "energy": 300000.0,
+   "sampling": 0.24609361122159587,
+   "semiangle": 20.0
+  },
+  {
+   "energy": 80000.0,
+   "sampling": 0.34797633804078043,
+   "semiangle": 30.0
+  },
+  {
+   "energy": 200000.0,
+   "sampling": 0.20899450264440392,
+   "semiangle": 30.0
+  },
+  {
+   "energy": 300000.0,
+   "sampling": 0.1640624074810639,
+   "semiangle": 30.0
+  }
+ ],
+ "self_checks": [
+  "ok  scherzer -500000.0 80000.0: 0.000e+00 <= 1e-15",
+  "ok  point resolution -500000.0 80000.0: 0.000e+00 <= 1e-15",
+  "ok  scherzer -500000.0 200000.0: 0.000e+00 <= 1e-15",
+  "ok  point resolution -500000.0 200000.0: 0.000e+00 <= 1e-15",
+  "ok  scherzer -500000.0 300000.0: 0.000e+00 <= 1e-15",
+  "ok  point resolution -500000.0 300000.0: 0.000e+00 <= 1e-15",
+  "ok  scherzer 1000000.0 80000.0: 0.000e+00 <= 1e-15",
+  "ok  point resolution 1000000.0 80000.0: 0.000e+00 <= 1e-15",
+  "ok  scherzer 1000000.0 200000.0: 0.000e+00 <= 1e-15",
+  "ok  point resolution 1000000.0 200000.0: 0.000e+00 <= 1e-15",
+  "ok  scherzer 1000000.0 300000.0: 0.000e+00 <= 1e-15",
+  "ok  point resolution 1000000.0 300000.0: 0.000e+00 <= 1e-15",
+  "ok  scherzer 12000000.0 80000.0: 0.000e+00 <= 1e-15",
+  "ok  point resolution 12000000.0 80000.0: 0.000e+00 <= 1e-15",
+  "ok  scherzer 12000000.0 200000.0: 0.000e+00 <= 1e-15",
+  "ok  point resolution 12000000.0 200000.0: 0.000e+00 <= 1e-15",
+  "ok  scherzer 12000000.0 300000.0: 0.000e+00 <= 1e-15",
+  "ok  point resolution 12000000.0 300000.0: 0.000e+00 <= 1e-15",
+  "ok  nyquist 10.0 80000.0: 0.000e+00 <= 1e-15",
+  "ok  nyquist 10.0 200000.0: 0.000e+00 <= 1e-15",
+  "ok  nyquist 10.0 300000.0: 0.000e+00 <= 1e-15",
+  "ok  nyquist 20.0 80000.0: 0.000e+00 <= 1e-15",
+  "ok  nyquist 20.0 200000.0: 0.000e+00 <= 1e-15",
+  "ok  nyquist 20.0 300000.0: 0.000e+00 <= 1e-15",
+  "ok  nyquist 30.0 80000.0: 0.000e+00 <= 1e-15",
+  "ok  nyquist 30.0 200000.0: 0.000e+00 <= 1e-15",
+  "ok  nyquist 30.0 300000.0: 0.000e+00 <= 1e-15",
+  "ok  H1 kernel text vs abTEM: 0.000e+00 <= 1e-13",
+  "ok  H1 image text vs abTEM: 3.738e-16 <= 1e-12",
+  "ok  H2 kernel text vs abTEM: 0.000e+00 <= 1e-13",
+  "ok  H2 image text vs abTEM: 5.676e-16 <= 1e-12",
+  "ok  H3 kernel text vs abTEM: 1.110e-16 <= 1e-13",
+  "ok  H3 image text vs abTEM: 4.756e-16 <= 1e-12",
+  "ok  K1 kernel text vs abTEM: 0.000e+00 <= 1e-13",
+  "ok  K2 kernel text vs abTEM: 0.000e+00 <= 1e-13"
+ ],
+ "versions": {
+  "abtem": "1.0.10",
+  "abtem_commit": "164e644ff411167db23ec4ef26aeb4fe8f384b26"
+ }
+}
