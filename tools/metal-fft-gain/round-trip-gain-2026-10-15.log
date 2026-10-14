@@ -1,0 +1,12 @@
+random 256x256: s-1 = -4.755e-07 -1.177e-09i   residual energy / energy = 3.765e-13   |s|^2-1 = -9.509e-07
+smooth 256x256: s-1 = -4.803e-07 +3.207e-09i   residual energy / energy = 3.656e-13   |s|^2-1 = -9.606e-07
+delta  256x256: s-1 = -7.153e-07 -4.400e-08i   residual energy / energy = 3.103e-13   |s|^2-1 = -1.431e-06
+ones   256x256: s-1 = +0.000e+00 +0.000e+00i   residual energy / energy = 0.000e+00   |s|^2-1 = +0.000e+00
+random 512x512: s-1 = -4.139e-07 +2.754e-10i   residual energy / energy = 1.451e-13   |s|^2-1 = -8.278e-07
+smooth 512x512: s-1 = -4.085e-07 +1.731e-09i   residual energy / energy = 1.429e-13   |s|^2-1 = -8.171e-07
+delta  512x512: s-1 = -4.768e-07 +2.549e-08i   residual energy / energy = 9.525e-14   |s|^2-1 = -9.537e-07
+ones   512x512: s-1 = +0.000e+00 +0.000e+00i   residual energy / energy = 0.000e+00   |s|^2-1 = +0.000e+00
+random 120x160: s-1 = -6.651e-08 +1.481e-09i   residual energy / energy = 1.293e-13   |s|^2-1 = -1.330e-07
+smooth 120x160: s-1 = -1.554e-08 -3.591e-09i   residual energy / energy = 1.219e-13   |s|^2-1 = -3.109e-08
+delta  120x160: s-1 = -1.192e-07 -1.582e-07i   residual energy / energy = 1.137e-13   |s|^2-1 = -2.384e-07
+ones   120x160: s-1 = +0.000e+00 -1.172e-18i   residual energy / energy = 2.424e-30   |s|^2-1 = +0.000e+00

@@ -1,0 +1,50 @@
+// swift-tools-version: 6.2
+// SimulatoKit — the macEM suite's electron-scattering simulation library: projected potentials and multislice
+// propagation (SimulatoMultislice), probes and aberrations (SimulatoProbe), detectors (SimulatoDetector, slice 2) on a
+// shared core of beams, grids, structures and waves (SimulatoCore). A Swift port of abTEM (GPL-3.0-or-later), checked
+// against abTEM 1.0.10 (164e644) in float64; docs/registration-slice-1.md is the first registration.
+//
+// Every accelerated path keeps a CPU reference path with a registered tolerance: the CPU path is float64 on Accelerate
+// (vDSP), the Metal path float32 on MPSGraph, one API with the backend as a parameter.
+//
+// Swift 6 language mode, nonisolated by default, the three upcoming features the suite's packages enable, no unsafe flags
+// (a versioned dependency cannot carry them): tools/test.sh runs the tests with `-c release`. One product per module.
+import PackageDescription
+
+let settings: [SwiftSetting] = [
+    .enableUpcomingFeature("NonisolatedNonsendingByDefault"),
+    .enableUpcomingFeature("InferIsolatedConformances"),
+    .enableUpcomingFeature("MemberImportVisibility"),
+]
+
+let package = Package(
+    name: "SimulatoKit",
+    platforms: [.macOS("27.0")],
+    products: [
+        .library(name: "SimulatoCore", targets: ["SimulatoCore"]),
+        .library(name: "SimulatoMultislice", targets: ["SimulatoMultislice"]),
+        .library(name: "SimulatoProbe", targets: ["SimulatoProbe"]),
+        .library(name: "SimulatoDetector", targets: ["SimulatoDetector"]),
+    ],
+    targets: [
+        // Constants, the electron beam, structures (a minimal local type until DiffractoKit's first tag), grids, complex
+        // fields, waves with their intensity and diffraction pattern, the antialias aperture, the float64 CPU FFT.
+        .target(name: "SimulatoCore", swiftSettings: settings),
+        // Slice 1: the Lobato parameterisation, slicing, the projected potential (infinite projection), transmission,
+        // Fresnel propagation and the multislice loop on two backends (CPU float64, Metal float32).
+        .target(name: "SimulatoMultislice", dependencies: ["SimulatoCore"], swiftSettings: settings),
+        // Slice 1: the soft aperture, the polar aberrations C10 ... C56 and the probe at a position.
+        .target(name: "SimulatoProbe", dependencies: ["SimulatoCore"], swiftSettings: settings),
+        // Slice 2 (to be registered): bright-field, annular, pixelated and segmented detectors with frozen phonons.
+        .target(name: "SimulatoDetector", dependencies: ["SimulatoCore"], swiftSettings: settings),
+        // The first ten minutes: simulate one image from a CIF, write a PNG and the numbers (not a product).
+        .executableTarget(name: "SimulatoExample", dependencies: ["SimulatoCore", "SimulatoMultislice", "SimulatoProbe"],
+                          path: "Examples/SimulatoExample", swiftSettings: settings),
+        .testTarget(name: "SimulatoCoreTests", dependencies: ["SimulatoCore"], swiftSettings: settings),
+        .testTarget(name: "SimulatoMultisliceTests", dependencies: ["SimulatoMultislice", "SimulatoProbe"],
+                    exclude: ["Fixtures"], swiftSettings: settings),
+        .testTarget(name: "SimulatoProbeTests", dependencies: ["SimulatoProbe"], swiftSettings: settings),
+        .testTarget(name: "SimulatoDetectorTests", dependencies: ["SimulatoDetector"], swiftSettings: settings),
+    ],
+    swiftLanguageModes: [.v6]
+)

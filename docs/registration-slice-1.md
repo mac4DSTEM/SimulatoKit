@@ -218,7 +218,7 @@ CPU path in float64, cast to float32 transmission functions once), for every cas
 | exit wave | 1e−4 × max |ψ| | ≤ 3e−5 |
 | intensity | 2e−4 × max | ≤ 5e−5 |
 | diffraction pattern (cutoff) | 2e−4 × max | ≤ 5e−5 |
-| total intensity Σ|ψ|² | 1e−5 relative | ≤ 3e−6 |
+| total intensity Σ|ψ|² | 1e−5 relative; amended to 1.5e−6 × slices (amendment 2) | ≤ 3e−6 (measured 8e−7 per slice) |
 
 These are float32 rounding through 2n FFTs: about 1e−7 × log₂(N) per transform, √(2n) accumulation. A Metal result beyond
 the bound is a failure of the Metal path.
@@ -238,10 +238,10 @@ the bound is a failure of the Metal path.
 4. **Vacuum.** With no atoms: the plane wave's exit wave equals 1 at every pixel within 1e−14; the probe after a vacuum slab
    of thickness T equals the probe built with C10 + T within 1e−12 × max (P_Δz = exp(−iπλΔz k²) = exp(−iχ) with C10 = Δz),
    for T = 20 Å and every exit plane of C1.
-5. **The symmetry of Al [001].** With the extent a whole number of cells and the sampling dividing a/2 (B1: a/2 = 32
-   pixels), the projected potential has period a/2 in x and y, so every exit wave and diffraction pattern has its weight
-   only on reciprocal-lattice points (h, k) with h, k multiples of 2/a: off-lattice pattern intensity ≤ 1e−20 × max. The
-   pattern has the projection's 4mm symmetry: I(h, k) = I(k, h) = I(−h, k) within 1e−12 × max.
+5. **The symmetry of Al [001]** (corrected by amendment 2). With the extent a whole number of cells and the sampling
+   dividing a/2 (B1: a/2 = 32 pixels): with slices of a/2 every pattern has its weight only on (h, k) with h + k even (in
+   units of 1/a), and with one slice per cell only on h and k both even; off-lattice intensity ≤ 1e−20 × max. The pattern
+   has the 4mm symmetry: I(h, k) = I(k, h) = I(−h, k) within 1e−12 × max.
 6. **The probe.** In vacuum Σ_k |Ψ(k)|² = 1 within 1e−14; an aberration-free probe (C10 = 0, α_c 20 mrad) is
    centrosymmetric about its position, |ψ(r₀ + d)|² = |ψ(r₀ − d)|² within 1e−12 × max, when r₀ is on a pixel; a probe
    placed at r₀ + (p Δx, q Δy) equals the probe at r₀ circularly shifted by (p, q) pixels within 1e−12 × max.
@@ -316,3 +316,28 @@ The generator is deterministic (the arrays' sha256 equal on two runs). Three rea
    the last plane (A1, A2, D1 their only plane); B1's patterns at planes 1, 5 and 10 (cells 1, 5, 10); every other plane is
    pinned by its scalars (Σ|ψ|², Σ pattern, max |ψ|, the pattern's centre). Intensities are not stored: they are |ψ|² of
    the stored exit waves. Grids and cases are unchanged.
+
+### 2026-10-15 00:20, at the first full test run: truth 5 corrected, and the Metal path's total intensity (Gate D)
+
+**Truth 5 was wrong physics, and is corrected.** The registration said the projected potential of Al [001] has period
+a/2, so every exit wave lives on the 2/a lattice. The projection has period a/2, but a 2.025 Å slice holds only half the
+atoms: (0, 0) and (½, ½) at z = 0, (0, ½) and (½, 0) at z = a/2. Each slice is C-centred with translation (a/2, a/2), and
+the propagator between the two kinds of slice makes the (h + k even, h and k odd) beams real: the dynamical coupling to
+the first-order Laue zone ((1 1 ±1) is allowed). Measured: up to 4.9e−5 of the pattern's maximum at ten cells, growing with
+thickness. The truth is now: (a) with slices of a/2, all intensity on (h, k) (in units of 1/a) with h + k even, off it
+≤ 1e−20 × max; (b) with one slice per cell (thickness a, each slice the whole cell's projection, period a/2), all intensity
+on h and k both even, off it ≤ 1e−20 × max; (c) the 4mm symmetry as registered (each slice is 4mm about the origin). The
+port did not change; the test did.
+
+**Metal: the total intensity drifts, cause proven (Gate D).** The registered bound for Σ|ψ|² (Metal against CPU,
+1e−5 relative, predicted ≤ 3e−6) failed: 1.8e−5 on B2 (20 slices) and 8.4e−5 on the 512², 100-slice probe; the exit wave
+(worst 5.0e−5 against 1e−4), the intensity (9.7e−5 against 2e−4) and the pattern (1.24e−4 against 2e−4) held. The
+drift is linear in the number of slices, about 8e−7 per slice at 512². Gate D, `tools/metal-fft-gain/`: MPSGraph's
+float32 FFT round trip, with no multiplication in between, loses 1.4e−7 to 1.4e−6 of Σ|ψ|² per round trip (by grid and
+field), linearly over 100 round trips, for both of its scaling modes; the zero frequency passes exactly; after a fitted
+scalar the remainder is 1e−13 of the energy. So the loss is a near-uniform gain of about 1 − 5e−7 on the non-zero
+frequencies of each MPSGraph FFT pair, a property of the framework on this OS and device, not of the port (one step is one
+round trip). The bound is amended to **1.5e−6 × (number of slices)** relative (the measured worst per round trip, a delta
+at 256², is 1.43e−6), with the cause recorded. Not done tonight, and why: a scalar compensation would over-correct
+DC-heavy fields (the plane wave's exit), and a frequency gain map or a compute-shader FFT with twiddles rounded from
+float64 is an acceleration lane of its own. The owner may overrule this amendment (board, waiting list).
