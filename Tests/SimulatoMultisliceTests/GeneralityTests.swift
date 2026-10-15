@@ -57,6 +57,10 @@ struct GeneralityTests {
     func metalBatchingAndShapesChangeRoundingOnly() throws {
         let (lazy, incidents) = try Self.batch(11)
         let reference = try Multislice.runBatch(incidents, through: lazy, backend: .metal)
+        // The default run itself (11 waves in a padded batch of 16) returns every wave, in order (generality mutant G14).
+        #expect(reference.count == incidents.count)
+        let cpu = try Multislice.runBatch(incidents, through: lazy)
+        for (x, y) in zip(reference, cpu) { #expect(relMax(x.field, y.field) <= MetalAccuracy.registered.wave) }
         let perWave = lazy.grid.count * 24
         for options in [ExecutionOptions(metalBatchBytes: perWave), ExecutionOptions(metalBatchBytes: 3 * perWave),
                         ExecutionOptions(metalBatchBytes: 3 * perWave, metalBatchShapes: .exact),

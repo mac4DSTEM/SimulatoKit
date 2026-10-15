@@ -39,6 +39,16 @@ m1.MUTANTS = [
      "a registered Metal bound moved"),
     ("G11", O, "        self.maximumCPUThreads = max(1, maximumCPUThreads)", "        self.maximumCPUThreads = maximumCPUThreads", F,
      "the thread count no longer clamped"),
+    # The tests that an option changes no number (or rounding only), broken by making the option change one.
+    ("G12", "Sources/SimulatoMultislice/MetalMultislice.swift", "                    results.withLock { $0[q] = w }",
+     "                    results.withLock { $0[q] = workers == 1 && q == count - 1 ? incidents[q] : w }", F,
+     "one thread returns the last incident unpropagated"),
+    ("G13", "Sources/SimulatoDetector/STEM.swift", "            let range = first..<min(first + chunk, positions.count)\n",
+     "            let range = first..<min(first + chunk, positions.count)\n            if chunk == 1 && first == 0 { continue }\n",
+     "theScanChunkIsAParameter", "a one-position chunk skips the first position"),
+    ("G14", E, "out += fields(data, batch: b, grid: p.grid, count: chunk.count)",
+     "out += fields(data, batch: b, grid: p.grid, count: b == used ? used : used - 1)", F,
+     "a padded batch read one wave short"),
 ]
 # Equivalent by design, not run: the thread cap and the CPU scan chunk change no number (bit for bit; tested as such).
 m1.EXTRA = {}
