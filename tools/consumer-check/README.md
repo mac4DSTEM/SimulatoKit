@@ -8,7 +8,7 @@ the package, where `package` is visible) never notice.
 
 ## What it covers
 
-319 checks (the count printed by `run.sh`), about 0.1 s to run, under 20 s to build in release.
+326 checks (the count printed by `run.sh`), about 0.1 s to run, under 20 s to build in release.
 
 - **SimulatoCore**: `ElectronBeam` (λ at 200 keV = 0.025079340317328468 Å as the kit computes it, against 12.2643/√(V(1+0.97848e-6 V));
   σ against Kirkland's closed form; the mass factor), `PhysicalConstants`, all 17 `SimulatoError` cases, `Grid` (`fftfreq` by hand,

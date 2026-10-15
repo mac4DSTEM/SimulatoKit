@@ -334,4 +334,32 @@ func checkMultislice(_ r: inout Report) {
             try Potential(structure: structure, nx: 64, ny: 64, sliceThicknesses: [1, 1])
         }
     }
+
+    r.section("Multislice: choices as parameters (0.2.0)") { r in
+        var o = ExecutionOptions.standard
+        r.check("ExecutionOptions.standard: 8 threads, 512 MiB, 256 MiB, renormalised, 12 executables, powers of two",
+                o.maximumCPUThreads == 8 && o.metalBatchBytes == 512 << 20 && o.scanChunkBytes == 256 << 20
+                && o.metalRenormalization && o.metalExecutableCacheLimit == 12 && o.metalBatchShapes == .powersOfTwo)
+        o.maximumCPUThreads = 0
+        r.equal("a count below 1 is raised to 1", o.maximumCPUThreads, 1)
+        let a = MetalAccuracy.registered
+        r.check("MetalAccuracy.registered: 1e-4, 2e-4, 1.5e-6 per slice, 100 slices",
+                a.wave == 1e-4 && a.intensity == 2e-4 && a.pattern == 2e-4 && a.detector == 2e-4
+                && a.totalIntensityPerSlice == 1.5e-6 && a.sliceLimit == 100)
+        let shapes: [MetalBatchShapes] = [.powersOfTwo, .exact]
+        r.equal("MetalBatchShapes has two cases", Set(shapes).count, 2)
+        let beam = try ElectronBeam(energy: 200_000)
+        let lazy = try Potential(structure: singleAtomStructure().repeated(2, 2, 1), nx: 64, ny: 64, sliceThickness: 2,
+                                 maximumSliceCount: 2)
+        let wave = Waves.planeWave(beam: beam, grid: lazy.grid)
+        let a1 = try Multislice.runBatch([wave, wave], through: lazy, options: ExecutionOptions(maximumCPUThreads: 1))
+        let a8 = try Multislice.runBatch([wave, wave], through: lazy)
+        r.check("runBatch(options:) with one thread equals the default exactly", a1 == a8)
+        r.refusesCase("maximumSliceCount: 1 refuses two slices", "invalidSliceThickness") {
+            try Potential(structure: singleAtomStructure(), nx: 32, ny: 32, sliceThickness: 2, maximumSliceCount: 1)
+        }
+        let g = try Grid(nx: 32, ny: 32, extentX: 4, extentY: 4)
+        let h = try Grid(nx: 32, ny: 32, extentX: 4 * (1 + 1e-10), extentY: 4)
+        r.check("Grid.matches(_:relativeTolerance:)", !g.matches(h) && g.matches(h, relativeTolerance: 1e-9))
+    }
 }
