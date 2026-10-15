@@ -60,7 +60,10 @@ final class MetalEngine: @unchecked Sendable {
     let graphDevice: MPSGraphDevice
     /// One Metal run at a time (the executables and the queue are shared).
     let runLock = NSLock()
-    private let cache = Mutex<[String: MetalStep]>([:])
+    /// The compiled executables, least recently used first; at most `cacheLimit` (each holds device memory: about 240 MB
+    /// at 1024² for a batch of 21; an unbounded cache grew to 2.9 GB over twelve batch sizes, refuter 2026-10-15).
+    private let cache = Mutex<[(key: String, step: MetalStep)]>([])
+    static let cacheLimit = 12
     /// The largest `currentAllocatedSize` seen at a commit since the last reset (registration-performance.md 1.8).
     let peak = Mutex<Int>(0)
 
@@ -87,11 +90,24 @@ final class MetalEngine: @unchecked Sendable {
 
     /// The executable for `key`, built by `make` the first time.
     func step(_ key: String, _ make: () -> MetalStep) -> MetalStep {
-        if let s = cache.withLock({ $0[key] }) { return s }
+        let hit: MetalStep? = cache.withLock { c in
+            guard let i = c.firstIndex(where: { $0.key == key }) else { return nil }
+            let entry = c.remove(at: i)
+            c.append(entry)
+            return entry.step
+        }
+        if let s = hit { return s }
         let s = make()
-        cache.withLock { $0[key] = s }
+        cache.withLock { c in
+            c.removeAll { $0.key == key }
+            c.append((key, s))
+            if c.count > Self.cacheLimit { c.removeFirst(c.count - Self.cacheLimit) }
+        }
         return s
     }
+
+    /// The number of compiled executables held.
+    var cachedExecutables: Int { cache.withLock { $0.count } }
 
     /// A shared-storage tensor of `count` 32-bit or 64-bit elements, zeroed.
     func tensor(_ shape: [Int], _ type: MPSDataType) throws -> (MPSGraphTensorData, any MTLBuffer) {
@@ -170,17 +186,16 @@ enum MetalGraphs {
                                                name: nil), axes: axes, name: nil)
     }
 
-    /// y · √((E_Y E_x) / (E_X E_y)): the round trip's Σ|·|² made to follow Parseval as the device measured it before and
-    /// after the forward transform (1 where a product is 0).
+    /// y · √((E_Y / E_X) (E_x / E_y)): the round trip's Σ|·|² made to follow Parseval as the device measured it before
+    /// and after the forward transform (1 where E_X or E_y is 0). Ratios, not products: E_Y E_x overflowed float32 for a
+    /// wave of amplitude 1e8 (refuter, 2026-10-15).
     static func renormalized(_ g: MPSGraph, _ y: MPSGraphTensor, ex: MPSGraphTensor, eX: MPSGraphTensor, eY: MPSGraphTensor,
                              axes: [NSNumber]) -> MPSGraphTensor {
         let ey = energy(g, y, axes: axes)
-        let den = g.multiplication(eX, ey, name: nil)
-        let num = g.multiplication(eY, ex, name: nil)
         let zero = g.constant(0, dataType: .float32), one = g.constant(1, dataType: .float32)
-        let s = g.select(predicate: g.greaterThan(den, zero, name: nil),
-                         trueTensor: g.squareRoot(with: g.division(num, den, name: nil), name: nil),
-                         falseTensor: one, name: nil)
+        let ratio = g.multiplication(g.division(eY, eX, name: nil), g.division(ex, ey, name: nil), name: nil)
+        let valid = g.logicalAND(g.greaterThan(eX, zero, name: nil), g.greaterThan(ey, zero, name: nil), name: nil)
+        let s = g.select(predicate: valid, trueTensor: g.squareRoot(with: ratio, name: nil), falseTensor: one, name: nil)
         return g.multiplication(y, g.cast(s, to: .complexFloat32, name: "s"), name: nil)
     }
 
@@ -382,6 +397,8 @@ extension MetalMultislice {
     static func propagate(_ p: MetalPreparedPotential, psi: MPSGraphTensorData, batch b: Int, planes: Set<Int>,
                           options: MetalOptions, engine: MetalEngine,
                           read: (Int, MPSGraphTensorData) throws -> Void) throws {
+        // No slice: the wave passes unchanged (the CPU path's answer; `0...last` trapped, refuter 2026-10-15).
+        guard p.sliceCount > 0 else { return try read(-1, psi) }
         let step = stepExecutable(p, batch: b, options: options, engine: engine)
         var current = psi
         var other = try engine.tensor([b, p.grid.nx, p.grid.ny], .complexFloat32).0
@@ -404,11 +421,11 @@ extension MetalMultislice {
         }
     }
 
-    /// Complex64 [b, nx, ny] as b float64 fields.
-    static func fields(_ data: MPSGraphTensorData, batch b: Int, grid: Grid) -> [ComplexField] {
+    /// Complex64 [b, nx, ny] as float64 fields, the first `count` of them (all when nil).
+    static func fields(_ data: MPSGraphTensorData, batch b: Int, grid: Grid, count: Int? = nil) -> [ComplexField] {
         var interleaved = [Float](repeating: 0, count: 2 * grid.count * b)
         data.mpsndarray().readBytes(&interleaved, strideBytes: nil)
-        return (0..<b).map { k in
+        return (0..<(count ?? b)).map { k in
             var f = ComplexField(nx: grid.nx, ny: grid.ny)
             let base = 2 * grid.count * k
             for i in 0..<grid.count {
@@ -421,6 +438,14 @@ extension MetalMultislice {
 
     /// The batch size whose waves fit in 512 MB (registration-slice-2.md 3.6).
     static func batchSize(_ grid: Grid) -> Int { max(1, (512 << 20) / (grid.count * 8 * 3)) }
+
+    /// The batch an executable is compiled for: b rounded up to a power of two, at most `size` (so a run compiles a few
+    /// batch shapes, not one per remainder); the extra waves are zeros and are not read.
+    static func compiledBatch(_ b: Int, size: Int) -> Int {
+        var e = 1
+        while e < b { e *= 2 }
+        return min(e, max(size, b))
+    }
 
     /// The waves of one incident at the requested planes (−1: the incident itself, which the caller adds).
     static func run(_ incident: Waves, prepared p: MetalPreparedPotential, planes: [Int],
@@ -451,7 +476,8 @@ extension MetalMultislice {
         for start in stride(from: 0, to: incidents.count, by: size) {
             try autoreleasepool {
                 let chunk = Array(incidents[start..<min(start + size, incidents.count)])
-                var v = [Float](repeating: 0, count: 2 * p.grid.count * chunk.count)
+                let b = compiledBatch(chunk.count, size: size)
+                var v = [Float](repeating: 0, count: 2 * p.grid.count * b)
                 for (k, f) in chunk.enumerated() {
                     let base = 2 * p.grid.count * k
                     for i in 0..<p.grid.count {
@@ -459,9 +485,9 @@ extension MetalMultislice {
                         v[base + 2 * i + 1] = Float(f.imaginary[i])
                     }
                 }
-                let psi = try engine.floats(v, [chunk.count, p.grid.nx, p.grid.ny], .complexFloat32)
-                try propagate(p, psi: psi, batch: chunk.count, planes: [], options: options, engine: engine) { j, data in
-                    if j == p.sliceCount - 1 { out += fields(data, batch: chunk.count, grid: p.grid) }
+                let psi = try engine.floats(v, [b, p.grid.nx, p.grid.ny], .complexFloat32)
+                try propagate(p, psi: psi, batch: b, planes: [], options: options, engine: engine) { j, data in
+                    if j == p.sliceCount - 1 { out += fields(data, batch: b, grid: p.grid, count: chunk.count) }
                 }
             }
         }
@@ -562,7 +588,8 @@ extension MetalMultislice {
         let scale = try engine.floats([Float(intensityScale)], [1])
         for start in stride(from: 0, to: count, by: size) {
             try autoreleasepool {
-                let b = min(size, count - start)
+                let used = min(size, count - start)
+                let b = compiledBatch(used, size: size)
                 let probes = probeStep(nx: nx, ny: ny, batch: b, engine: engine)
                 let intensities = engine.step("intensities \(nx)x\(ny) b\(b)") {
                     let g = MPSGraph()
@@ -577,7 +604,7 @@ extension MetalMultislice {
                     ], targets: [out]), placeholders: ["psi": psi, "scale": sc])
                 }
                 var rx = [Float](repeating: 0, count: 2 * b * nx), ry = [Float](repeating: 0, count: 2 * b * ny)
-                for k in 0..<b {
+                for k in 0..<used {  // the padded positions keep zero ramps: zero probes
                     let (fx, fy) = try ramps(start + k)
                     for i in 0..<nx {
                         rx[2 * (k * nx + i)] = Float(fx.real[i])
@@ -609,7 +636,7 @@ extension MetalMultislice {
                     cb2.waitUntilCompleted()
                     try engine.check(cb2, "intensities")
                     let pointer = buffer.contents().bindMemory(to: Float.self, capacity: b * n)
-                    for k in 0..<b {
+                    for k in 0..<used {
                         try deliver(start + k, (0..<n).map { Double(pointer[k * n + $0]) })
                     }
                 }

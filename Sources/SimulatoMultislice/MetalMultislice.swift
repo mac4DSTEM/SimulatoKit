@@ -129,3 +129,9 @@ extension Multislice {
         return engine.peak.withLock { $0 }
     }
 }
+
+extension Multislice {
+    /// For the tests: how many compiled Metal executables the process holds (bounded, registration-performance.md
+    /// amendment 3).
+    package static var metalCachedExecutables: Int { MetalEngine.shared?.cachedExecutables ?? 0 }
+}

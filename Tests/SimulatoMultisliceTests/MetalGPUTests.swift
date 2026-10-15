@@ -216,4 +216,44 @@ struct MetalGPUTests {
                                      planes: indices, label: "uneven, values")
         print("uneven slices: wave \(a.wave) / \(b.wave), pattern \(a.pattern) / \(b.pattern)")
     }
+
+    /// Gate B finding 4: a potential with no slice returns the incident wave on `.metal`, as on `.cpu` (it trapped).
+    @Test func noSliceReturnsTheIncidentWave() throws {
+        let grid = try Grid(nx: 64, ny: 64, extentX: 8, extentY: 8)
+        let empty = ProjectedPotential(grid: grid, slices: [])
+        let wave = Waves.planeWave(beam: try ElectronBeam(energy: 200e3), grid: grid)
+        let cpu = try Multislice.run(wave, through: empty, backend: .cpu)
+        let gpu = try Multislice.run(wave, through: empty, backend: .metal)
+        #expect(gpu.count == cpu.count && gpu.first?.field == wave.field)
+        let batch = try Multislice.runBatch([wave, wave], through: empty, backend: .metal)
+        #expect(batch.count == 2 && batch.allSatisfy { $0.field == wave.field })
+    }
+
+    /// Gate B finding 5: a wave of amplitude 1e8 stays finite and within the bounds (the renormalisation's products
+    /// overflowed float32 and gave NaN).
+    @Test func largeAmplitudesStayFinite() throws {
+        let lazy = try GPUCases.potential("B1")
+        let beam = try Pins.beam("B1")
+        let one = Waves.planeWave(beam: beam, grid: lazy.grid)
+        var field = one.field
+        field.real = field.real.map { $0 * 1e8 }
+        let big = Waves(field: field, grid: lazy.grid, beam: beam, normalization: .values)
+        let gpu = try Multislice.run(big, through: lazy, backend: .metal)[0]
+        let cpu = try Multislice.run(big, through: lazy, backend: .cpu)[0]
+        #expect(gpu.field.real.allSatisfy(\.isFinite) && gpu.field.imaginary.allSatisfy(\.isFinite), "finite")
+        #expect(relMax(gpu.field, cpu.field) <= 1e-4, "amplitude 1e8: \(relMax(gpu.field, cpu.field))")
+    }
+
+    /// Gate B finding 6: the compiled executables are bounded (each held device memory; twelve batch sizes held 2.9 GB),
+    /// and a remainder batch reuses a power-of-two shape; results do not depend on the batch a wave ran in.
+    @Test func compiledExecutablesAreBounded() throws {
+        let lazy = try Potential(structure: GPUCases.aluminium(cells: (2, 2, 2)), nx: 64, ny: 64, sliceThickness: 2.025)
+        let wave = Waves.planeWave(beam: try ElectronBeam(energy: 300e3), grid: lazy.grid)
+        let single = try Multislice.runBatch([wave], through: lazy, backend: .metal)[0]
+        for n in 1...12 {
+            let out = try Multislice.runBatch([Waves](repeating: wave, count: n), through: lazy, backend: .metal)
+            #expect(out.count == n && relMax(out[n - 1].field, single.field) <= 1e-6, "batch of \(n)")
+        }
+        #expect(Multislice.metalCachedExecutables <= 12, "\(Multislice.metalCachedExecutables) executables held")
+    }
 }

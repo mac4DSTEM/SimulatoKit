@@ -152,7 +152,10 @@ N03 and N17 had gone stale at slice 2's refuter fixes and name the current lines
 
 Measured by `BenchmarkTests` (`SIMULATO_BENCHMARK=1`; log `bench-2026-10-15.log` in the session's scratchpad), M5 Pro,
 macOS 27, Al [001] at 300 keV, 100 slices of a/2, about 0.047 Å per pixel, structure to numbers (the potential
-included). Other sessions ran heavy tests on the machine at the same time, so the CPU times are, if anything, slow.
+included). **Measured under load:** other sessions ran builds and mutant runs at the same time (the coordinator measured a
+load average of 76 at 11:36), so the CPU times are slower than on a quiet machine and the speed-ups overstate; the
+Metal times carry the load less (the GPU is not shared) but their host share is slowed too. A quiet re-measure is owed
+(`SIMULATO_BENCHMARK=1`, about 12 minutes).
 
 | Grid | Plane wave: Metal / CPU | Speed-up | 64 × 64 HAADF scan: Metal / CPU | Speed-up | Metal peak memory |
 |---|---|---|---|---|---|
@@ -168,3 +171,37 @@ about 100 ms per position (21 positions per 512 MB batch); the host's share (ram
 **Memory, fixed before this table.** The first run peaked at 5.6, 19.8 and 73 GB of device memory: each batch's buffers
 (autoreleased Objective-C objects) lived until the scan returned. Every slice step and every batch now runs in its own
 autorelease pool; the peaks above are after the fix (the earlier per-slice design held 960² × 100 slices at 3.8 GB).
+
+### 2026-10-15 ~12:30 CEST, Gate B: the refuter on the frozen `88b30da`, and the fixes it required
+
+One Gate B refuter (a Sonnet subagent, scratch clone, test files `RefuterProbes.swift` and `RefuterScans.swift` there, not
+committed) ran about 450 cases and 2500 comparisons, both potential forms: Z = 1 to 103, seven elements in a slice,
+stacked columns, atoms on pixel corners and slice edges and far outside the box, uneven slicings of 1 to 200 slices, grids
+8² to 1024² with 24 × 960 and 240 × 480, 20 keV to 1 MeV, exit planes, batches of 1 to 700 across the 512 MB split,
+frozen-phonon ensembles, scans at the corner and outside the box, alternating potentials, vacuum, 8 threads at once.
+**It could not break the registered bounds on physical inputs:** worst exit wave 4.6e−5 (Pb, 100 slices), intensity 6.6e−5,
+pattern 1.58e−4 (79 % of 2e−4; a random 600-atom structure), GPU V 1.3e−6, k = 0 identity 1.8e−7, GPU probe 1.2e−6
+(Σ|Ψ|² 9.5e−7), scans 3.4e−5; `build()` and determinism bit-equal everywhere, no concurrency mismatch, no refusal that
+differs between `.cpu` and `.metal`; the largest peak memory 1.64 GB.
+
+Fixed (tier 2, a test each, each broken once: `tools/performance/mutants.py` P16–P18):
+1. **A potential with no slice trapped** on `.metal` (`0...last` with last −1); it now returns the incident wave, as `.cpu`.
+2. **A wave of amplitude ≥ 1e8 gave NaN** on `.metal`: the renormalisation's products E_Y E_x overflowed float32; it now
+   multiplies two ratios (E_Y / E_X)(E_x / E_y).
+3. **The compiled executables were never freed** (twelve batch sizes at 1024² held 2.9 GB): the cache keeps the 12 most
+   recently used, and a remainder batch runs in a power-of-two shape (the extra waves zero, not read), so a run compiles a
+   few shapes.
+
+Recorded, not changed:
+4. **The renormalised drift exceeds this lane's 3e−7 guard on heavy elements**: 3.2e−7 (seven elements in a 12 Å slice),
+   4.3e−7 (Pb [001], 100 slices), 4.9e−7 (five stacked Au atoms); all inside the registered 1.5e−6. The new measured bound
+   is therefore **5e−7 per slice** over the refuter's inputs (1.4e−7 on Al); the 3e−7 test guards the Al case only.
+5. **Unphysical phase** (σV above about 200 rad in one pixel column, about 100 or more Au atoms stacked in one slice):
+   2e−6 to 8e−6 per slice, and at 1000 atoms wave 1.8e−4, intensity 1.4e−4. Real slices stay below a few rad.
+6. **Weak high-angle signals: proposed for the owner.** A single H atom (16 × 16 × 40 Å, 256², 100 slices, 300 keV),
+   `AnnularDetector(85, 100)`: Metal against CPU 2.3e−4 of the image's maximum (bound 2e−4); a segmented 2 × 8 at 30–90
+   mrad 2.2e−4. Gate D (the same case on the slice-2 path at `aa0cae3`, `GateDWeak` in the scratchpad): 3.4e−4 there, so
+   the excess is not this lane's; the absolute error is about 3e−10 of the probe's total intensity (float32's floor),
+   and the image's maximum is 9.5e−7 of it. A relative bound cannot hold for a signal that weak. **Proposed** (not in
+   force until the owner accepts it): Metal detector values within 2e−4 × max(image maximum, 1e−5 × the incident's
+   Σ|Ψ(k)|²). Until then the registered bound stands, and this case is a known limit in `docs/status.md`.
