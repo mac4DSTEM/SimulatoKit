@@ -102,4 +102,51 @@ public struct Probe: Sendable, Hashable {
         try FFT2D(nx: grid.nx, ny: grid.ny).inverse(&psi)
         return Waves(field: psi, grid: grid, beam: beam, normalization: .reciprocalSpace)
     }
+
+    /// Ψ₀ = aperture · exp(−iχ) / ‖·‖ in reciprocal space, unshifted (registration-performance.md 1.6): `build(at:)`
+    /// without the shift ramp, whose modulus is 1, so its norm does not depend on the position.
+    package func centredSpectrum() -> ComplexField {
+        let lambda = beam.wavelength
+        let kx = grid.frequenciesX, ky = grid.frequenciesY
+        let ap = aperture.values(on: grid, wavelength: lambda)
+        var psi = ComplexField(nx: grid.nx, ny: grid.ny)
+        var norm = 0.0
+        for ix in 0..<grid.nx {
+            for iy in 0..<grid.ny {
+                let i = ix * grid.ny + iy
+                let alpha = (kx[ix] * kx[ix] + ky[iy] * ky[iy]).squareRoot() * lambda
+                let phi = atan2(ky[iy], kx[ix])
+                let chi = aberrations.chi(alpha: alpha, phi: phi, wavelength: lambda)
+                psi.real[i] = ap[i] * cos(-chi)
+                psi.imaginary[i] = ap[i] * sin(-chi)
+                norm += psi.real[i] * psi.real[i] + psi.imaginary[i] * psi.imaginary[i]
+            }
+        }
+        let f = norm.squareRoot()
+        for i in psi.real.indices {
+            psi.real[i] /= f
+            psi.imaginary[i] /= f
+        }
+        return psi
+    }
+
+    /// The shift to `position` as two ramps, r_x[ix] = exp(−2πi p_x[ix] u_x) (an nx × 1 field) and r_y[iy] likewise
+    /// (1 × ny), computed in float64 as `build(at:)` computes them; the shift is r_x[ix] · r_y[iy].
+    package func shiftRamps(at position: SIMD2<Double>) throws -> (x: ComplexField, y: ComplexField) {
+        guard position.x.isFinite, position.y.isFinite else { throw SimulatoError.invalidPosition(index: 0) }
+        let ux = position.x / grid.samplingX, uy = position.y / grid.samplingY
+        let px = Grid.fftfreq(grid.nx, 1.0), py = Grid.fftfreq(grid.ny, 1.0)
+        var rx = ComplexField(nx: grid.nx, ny: 1), ry = ComplexField(nx: 1, ny: grid.ny)
+        for ix in 0..<grid.nx {
+            let sx = -2 * Double.pi * px[ix] * ux
+            rx.real[ix] = cos(sx)
+            rx.imaginary[ix] = sin(sx)
+        }
+        for iy in 0..<grid.ny {
+            let sy = -2 * Double.pi * py[iy] * uy
+            ry.real[iy] = cos(sy)
+            ry.imaginary[iy] = sin(sy)
+        }
+        return (rx, ry)
+    }
 }

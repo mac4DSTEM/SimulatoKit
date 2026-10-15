@@ -144,4 +144,13 @@ public struct FrozenPhonons: Sendable, Hashable {
                                    parameterization: parameterization)
         }
     }
+
+    /// The potential of every configuration, unbuilt (for `.metal`, which builds each slice on the GPU).
+    public func lazyPotentials(nx: Int, ny: Int, sliceThickness: Double,
+                               parameterization: LobatoParameterization = LobatoParameterization()) throws -> [Potential] {
+        try (0..<count).map {
+            try Potential(structure: configuration($0), nx: nx, ny: ny, sliceThickness: sliceThickness,
+                          parameterization: parameterization)
+        }
+    }
 }

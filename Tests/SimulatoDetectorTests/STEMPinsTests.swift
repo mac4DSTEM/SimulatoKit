@@ -107,4 +107,31 @@ struct STEMPinsTests {
             #expect(d <= 2e-4, "\(id) \(name): Metal against CPU \(d)")
         }
     }
+
+    /// registration-performance.md 1.6 and truth 3: the scan through unbuilt potentials (each slice built on the GPU,
+    /// probes and intensities on the GPU) against the CPU scan, and two runs bit-equal.
+    @Test(.enabled(if: Multislice.metalIsAvailable, "no Metal device: the GPU-built scan is not tested here"),
+          arguments: ["S1", "S3"])
+    func metalScanThroughUnbuiltPotentialsMatchesTheCPUScan(id: String) throws {
+        let c = Pins2.case(id)
+        let g = c["gpts"] as! [Int]
+        let lazy = try Pins2.frozenPhonons(id).lazyPotentials(nx: g[0], ny: g[1],
+                                                              sliceThickness: c["slice_thickness_requested"] as! Double)
+        let probe = try Pins2.probe(id, grid: lazy[0].grid)
+        let detectors = try Pins2.detectors()
+        let scan = try Pins2.scan(id)
+        let gpu = try STEM.scan(probe: probe, potentials: lazy, scan: scan, detectors: detectors.map(\.1), backend: .metal)
+        let again = try STEM.scan(probe: probe, potentials: lazy, scan: scan, detectors: detectors.map(\.1), backend: .metal)
+        let cpu = try Self.run(id, pi: .exact, backend: .cpu)
+        let entries = c["detectors"] as! [String: [String: Any]]
+        for ((name, _), (m, m2)) in zip(detectors, zip(gpu, again)) {
+            #expect(m.values == m2.values, "\(id) \(name): deterministic")
+            let entry = entries[name]!
+            let b = cpu[name]!.values
+            let s = (entry["kind"] as! String) == "pixelated" ? max(b.map(abs).max()!, 1e-300) : entry["scale"] as! Double
+            let d = scaledMax(m.values, b, scale: s)
+            print("GPU-built scan vs CPU, \(id) \(name): \(d)")
+            #expect(d <= 2e-4, "\(id) \(name): \(d)")
+        }
+    }
 }

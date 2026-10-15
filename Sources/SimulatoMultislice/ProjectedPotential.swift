@@ -12,6 +12,12 @@ import SimulatoCore
 public struct PotentialSlice: Sendable, Hashable {
     public let thickness: Double
     public let values: [Double]
+
+    /// A slice of thickness [Å] with V [V·Å] row-major on its grid (`ProjectedPotential(grid:slices:)` checks the count).
+    public init(thickness: Double, values: [Double]) {
+        self.thickness = thickness
+        self.values = values
+    }
 }
 
 /// The projected potential of a structure, slice by slice, on a grid.
@@ -28,26 +34,17 @@ public struct ProjectedPotential: Sendable, Hashable {
         try self.init(structure: structure, nx: nx, ny: ny, sliceThicknesses: t, parameterization: parameterization)
     }
 
-    /// Builds the potential with the given slice thicknesses (they must sum to the box's depth).
+    /// Builds the potential with the given slice thicknesses (they must sum to the box's depth): `Potential(...).build()`.
     public init(structure: AtomicStructure, nx: Int, ny: Int, sliceThicknesses: [Double],
                 parameterization: LobatoParameterization = LobatoParameterization()) throws {
-        let grid = try Grid(nx: nx, ny: ny, extentX: structure.box.x, extentY: structure.box.y)
-        let thicknesses = try Slicing.validated(sliceThicknesses, depth: structure.box.z)
-        for a in structure.atoms where !LobatoParameterization.supports(atomicNumber: a.atomicNumber) {
-            throw SimulatoError.unsupportedElement(a.atomicNumber)
-        }
-        let atoms = Slicing.wrapped(structure)
-        let index = Slicing.sliceIndices(z: atoms.map(\.position.z), thicknesses: thicknesses)
-        let builder = try SliceBuilder(grid: grid, parameterization: parameterization)
-        var slices: [PotentialSlice] = []
-        slices.reserveCapacity(thicknesses.count)
-        for (j, dz) in thicknesses.enumerated() {
-            let inSlice = atoms.indices.filter { index[$0] == j }.map { atoms[$0] }
-            slices.append(PotentialSlice(thickness: dz, values: try builder.potential(of: inSlice)))
-        }
+        self = try Potential(structure: structure, nx: nx, ny: ny, sliceThicknesses: sliceThicknesses,
+                             parameterization: parameterization).build()
+    }
+
+    init(grid: Grid, slices: [PotentialSlice], sliceOfAtom: [Int]) {
         self.grid = grid
         self.slices = slices
-        self.sliceOfAtom = index
+        self.sliceOfAtom = sliceOfAtom
     }
 
     /// A potential from slices computed elsewhere (for example the slices of another potential).

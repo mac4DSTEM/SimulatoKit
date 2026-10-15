@@ -52,12 +52,30 @@ public enum Multislice {
                            backend: Backend = .cpu) throws -> [Waves] {
         guard incident.grid.matches(potential.grid) else { throw SimulatoError.gridMismatch }
         let planes = try exitPlanes.planes(sliceCount: potential.slices.count)
-        let transmissions = try transmissionFunctions(potential, beam: incident.beam)
         switch backend {
         case .cpu:
+            let transmissions = try transmissionFunctions(potential, beam: incident.beam)
             return try runCPU(incident, potential: potential, transmissions: transmissions, planes: planes)
         case .metal:
-            return try MetalMultislice.run(incident, potential: potential, transmissions: transmissions, planes: planes)
+            let engine = try MetalEngine.require()
+            let prepared = try MetalMultislice.prepare(potential, beam: incident.beam, engine: engine)
+            return try MetalMultislice.run(incident, prepared: prepared, planes: planes)
+        }
+    }
+
+    /// The same for a `Potential`: on `.cpu` built first (`build()`), on `.metal` built slice by slice on the GPU
+    /// (registration-performance.md 1.3).
+    public static func run(_ incident: Waves, through potential: Potential, exitPlanes: ExitPlanes = .last,
+                           backend: Backend = .cpu) throws -> [Waves] {
+        guard incident.grid.matches(potential.grid) else { throw SimulatoError.gridMismatch }
+        switch backend {
+        case .cpu:
+            return try run(incident, through: potential.build(), exitPlanes: exitPlanes, backend: .cpu)
+        case .metal:
+            let planes = try exitPlanes.planes(sliceCount: potential.sliceCount)
+            let engine = try MetalEngine.require()
+            let prepared = try MetalMultislice.prepare(potential, beam: incident.beam, engine: engine)
+            return try MetalMultislice.run(incident, prepared: prepared, planes: planes)
         }
     }
 

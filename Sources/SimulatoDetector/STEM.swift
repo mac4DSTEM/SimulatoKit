@@ -33,11 +33,41 @@ public struct Measurement: Sendable {
 
 public enum STEM {
     /// Scans `probe` over `scan` through every potential (one per frozen-phonon configuration; one for a static
-    /// structure) and returns each detector's measurement averaged over the potentials.
+    /// structure) and returns each detector's measurement averaged over the potentials. On `.metal` the probes, the
+    /// transmissions and the diffraction intensities are computed on the GPU (registration-performance.md 1.6).
     public static func scan(probe: Probe, potentials: [ProjectedPotential], scan: GridScan, detectors: [any Detector],
                             backend: Backend = .cpu) throws -> [Measurement] {
         guard !potentials.isEmpty else { throw SimulatoError.invalidScan("no potential") }
         for p in potentials where !p.grid.matches(probe.grid) { throw SimulatoError.gridMismatch }
+        switch backend {
+        case .cpu:
+            return try cpuScan(probe: probe, potentials: potentials, scan: scan, detectors: detectors)
+        case .metal:
+            return try metalScan(probe: probe, count: potentials.count, scan: scan, detectors: detectors) { k, s, n, r, d in
+                try Multislice.metalScanIntensities(spectrum: s, positions: n, ramps: r, through: potentials[k],
+                                                    beam: probe.beam, deliver: d)
+            }
+        }
+    }
+
+    /// The same through unbuilt potentials: on `.cpu` each is built (`build()`), on `.metal` each slice is built on the GPU.
+    public static func scan(probe: Probe, potentials: [Potential], scan: GridScan, detectors: [any Detector],
+                            backend: Backend = .cpu) throws -> [Measurement] {
+        guard !potentials.isEmpty else { throw SimulatoError.invalidScan("no potential") }
+        for p in potentials where !p.grid.matches(probe.grid) { throw SimulatoError.gridMismatch }
+        switch backend {
+        case .cpu:
+            return try cpuScan(probe: probe, potentials: potentials.map { try $0.build() }, scan: scan, detectors: detectors)
+        case .metal:
+            return try metalScan(probe: probe, count: potentials.count, scan: scan, detectors: detectors) { k, s, n, r, d in
+                try Multislice.metalScanIntensities(spectrum: s, positions: n, ramps: r, through: potentials[k],
+                                                    beam: probe.beam, deliver: d)
+            }
+        }
+    }
+
+    static func cpuScan(probe: Probe, potentials: [ProjectedPotential], scan: GridScan,
+                        detectors: [any Detector]) throws -> [Measurement] {
         let positions = scan.positions
         let shapes = try detectors.map { try $0.shape(for: probe.grid, beam: probe.beam) }
         let counts = shapes.map { $0.reduce(1, *) }
@@ -48,21 +78,47 @@ public enum STEM {
             let range = first..<min(first + chunk, positions.count)
             let incidents = try range.map { try probe.build(at: positions[$0]) }
             for potential in potentials {
-                let exits = try Multislice.runBatch(incidents, through: potential, backend: backend)
+                let exits = try Multislice.runBatch(incidents, through: potential, backend: .cpu)
                 for (offset, exit) in exits.enumerated() {
-                    let q = first + offset
-                    let intensity = try DiffractionIntensity(exit)
-                    for (d, detector) in detectors.enumerated() {
-                        let v = try detector.detect(intensity)
-                        precondition(v.count == counts[d], "a detector returned the wrong number of values")
-                        for k in 0..<v.count { sums[d][q * counts[d] + k] += v[k] }
-                    }
+                    try accumulate(DiffractionIntensity(exit), at: first + offset, detectors, counts, &sums)
                 }
             }
         }
-        let n = Double(potentials.count)
-        return zip(sums, shapes).map { values, shape in
-            Measurement(scanShape: [scan.nx, scan.ny], valueShape: shape, values: values.map { $0 / n })
+        return average(sums, shapes, scan: scan, over: potentials.count)
+    }
+
+    typealias Ramps = (Int) throws -> (x: ComplexField, y: ComplexField)
+
+    /// Potentials outer, positions inner: each position still sums its configurations in potential order.
+    static func metalScan(probe: Probe, count: Int, scan: GridScan, detectors: [any Detector],
+                          run: (Int, ComplexField, Int, Ramps, (Int, [Double]) throws -> Void) throws -> Void)
+        throws -> [Measurement] {
+        let positions = scan.positions
+        let shapes = try detectors.map { try $0.shape(for: probe.grid, beam: probe.beam) }
+        let counts = shapes.map { $0.reduce(1, *) }
+        var sums = counts.map { [Double](repeating: 0, count: $0 * positions.count) }
+        let spectrum = probe.centredSpectrum()
+        for k in 0..<count {
+            try run(k, spectrum, positions.count, { try probe.shiftRamps(at: positions[$0]) }) { q, values in
+                let intensity = DiffractionIntensity(grid: probe.grid, beam: probe.beam, values: values)
+                try accumulate(intensity, at: q, detectors, counts, &sums)
+            }
+        }
+        return average(sums, shapes, scan: scan, over: count)
+    }
+
+    static func accumulate(_ intensity: DiffractionIntensity, at q: Int, _ detectors: [any Detector], _ counts: [Int],
+                           _ sums: inout [[Double]]) throws {
+        for (d, detector) in detectors.enumerated() {
+            let v = try detector.detect(intensity)
+            precondition(v.count == counts[d], "a detector returned the wrong number of values")
+            for k in 0..<v.count { sums[d][q * counts[d] + k] += v[k] }
+        }
+    }
+
+    static func average(_ sums: [[Double]], _ shapes: [[Int]], scan: GridScan, over n: Int) -> [Measurement] {
+        zip(sums, shapes).map { values, shape in
+            Measurement(scanShape: [scan.nx, scan.ny], valueShape: shape, values: values.map { $0 / Double(n) })
         }
     }
 }
