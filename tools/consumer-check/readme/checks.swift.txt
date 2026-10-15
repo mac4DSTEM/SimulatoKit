@@ -1,0 +1,28 @@
+
+// ---- checks (tools/consumer-check/readme/checks.swift.txt), appended after the README's quick start ----
+import Foundation
+
+nonisolated(unsafe) var readmeChecks = 0
+nonisolated(unsafe) var readmeFailures = 0
+func readmeCheck(_ name: String, _ ok: Bool, _ detail: @autoclosure () -> String = "") {
+    readmeChecks += 1
+    if ok { print("PASS \(name)") } else { readmeFailures += 1; print("FAIL \(name) \(detail())") }
+}
+
+do {
+    let image = hrtem.values
+    readmeCheck("hrtem: values.count == nx * ny", image.count == hrtem.nx * hrtem.ny && !image.isEmpty,
+                "\(image.count) vs \(hrtem.nx) x \(hrtem.ny)")
+    readmeCheck("hrtem: all values finite", image.allSatisfy { $0.isFinite })
+    let mean = image.reduce(0, +) / Double(max(image.count, 1))
+    readmeCheck("hrtem: mean in (0.5, 1.5)", mean > 0.5 && mean < 1.5, "mean = \(mean)")
+
+    let h = haadf.values
+    readmeCheck("haadf: count == scan.nx * scan.ny", h.count == scan.nx * scan.ny, "\(h.count) vs \(scan.nx * scan.ny)")
+    readmeCheck("haadf: all values finite", h.allSatisfy { $0.isFinite })
+    readmeCheck("haadf: all values non-negative", h.allSatisfy { $0 >= 0 }, "min = \(h.min() ?? .nan)")
+    readmeCheck("haadf: not all equal", Set(h).count > 1, "all \(h.first ?? .nan)")
+}
+
+print("readme-consumer summary: \(readmeChecks) checks, \(readmeFailures) failed")
+if readmeFailures > 0 { Foundation.exit(1) }  // qualified: the README names a variable `exit`

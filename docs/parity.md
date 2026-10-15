@@ -199,11 +199,17 @@ abTEM runs on NumPy, or on CuPy with `device="gpu"`. SimulatoKit has two backend
 
 The Metal bounds hold to 100 slices (slice-1 amendment 3, item 7); MPSGraph's float32 FFT is not exactly unitary, a known
 limit (amendment 2; `docs/status.md`). The CTF (`Waves.applying`) runs on the CPU only. A Metal result beyond a bound is a
-failure of the Metal path, never a tolerance to widen.
+failure of the Metal path, never a tolerance to widen. `MetalAccuracy.registered` carries these bounds as a value.
+
+Execution choices are parameters (`ExecutionOptions`, passed as `options:`; 0.2.0, `docs/registration-generality.md`):
+threads, Metal batch memory and shapes, the CPU scan chunk, the renormalisation, the executable cache. abTEM's nearest
+counterparts are its `max_batch` and dask settings, which are not counted as missing options above.
 
 ## Not abTEM's, SimulatoKit's own
 
 - The Metal backend (`Backend.metal`) and the batched scan (`Multislice.runBatch`), registered against the CPU path; MPSGraph's float32 FFT gain is a known limit
   (registration amendment 2).
-- The CPU batch on up to `Multislice.maximumCPUThreads` (8) threads, bit for bit equal to sequential runs.
+- The CPU batch on up to `ExecutionOptions.maximumCPUThreads` (8 by default) threads, bit for bit equal to sequential runs.
+- The constants of the CTF closed forms as parameters (`factor:` of `scherzerDefocus`, 1.5 by default as abTEM; `divisor:` of
+  `pointResolution`, 6; `oversampling:` of `nyquistSampling`, 4).
 - `LobatoParameterization.PiConstant`: the exact π by default, abTEM's float32 π on request.

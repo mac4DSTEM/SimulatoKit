@@ -34,7 +34,10 @@ f ∈ {1, 3, 5, 15} and m ≥ 3 (the lengths Accelerate's DFT accepts). Cells ar
 ## Quick start
 
 ```swift
-import SimulatoCore, SimulatoMultislice, SimulatoProbe, SimulatoDetector
+import SimulatoCore
+import SimulatoMultislice
+import SimulatoProbe
+import SimulatoDetector
 
 let a = 4.05, h = a / 2   // fcc Al, Å
 let cell = try AtomicStructure(box: SIMD3(a, a, a), atoms: [
@@ -85,13 +88,32 @@ The CPU scans run 8 threads and were timed on a subset of positions and scaled (
 numbers were taken on a heavily loaded machine (other builds running), which slows the CPU side most: read the ratios
 as upper bounds until a quiet re-measure.
 
+## Choices and their defaults
+
+Every choice the kit makes has a parameter, and the default is the value the numbers were validated with:
+`ExecutionOptions` (`options:` on `Multislice.run`, `Multislice.runBatch` and `STEM.scan`: CPU threads, Metal batch memory
+and shapes, the CPU scan's chunk, the Metal renormalisation and executable cache), `MetalAccuracy.registered` (the
+Metal-against-CPU bounds the tests hold), `Grid.matches(_:relativeTolerance:)`, the slice ceiling (`maximumSliceCount:`)
+and the constants of `scherzerDefocus`, `pointResolution` and `nyquistSampling`. abTEM's own conventions (the antialias
+aperture, the slicing rules, the π choice in `LobatoParameterization`) stay as abTEM defines them.
+
+```swift
+// continuing the quick start: its 256 probe positions as a batch, with smaller Metal batches and fewer CPU threads
+var options = ExecutionOptions.standard
+options.maximumCPUThreads = 4
+options.metalBatchBytes = 128 << 20
+let probes = try scan.positions.map { try probe.build(at: $0) }
+let exits = try Multislice.runBatch(probes, through: potential, backend: backend, options: options)
+```
+
 ## How the numbers are checked
 
 - **Pins against abTEM 1.0.10** (`164e644`) in float64: wavelength, potentials, probes, exit waves, patterns, detectors,
   CTF kernels and HRTEM images agree within 1e−10 of the array's maximum or tighter (measured 1e−13 to 1e−16, with
   abTEM's float32 π reproduced by `.abTEMFloat32`), and within 1e−6 with the kit's default exact π. Each slice has a written registration with its bounds and amendments:
-  `docs/registration-slice-1.md` (potentials, multislice), `-slice-2.md` (frozen phonons, scans, detectors),
-  `-slice-3.md` (CTF), and `docs/registration-performance.md`.
+  `docs/registration-slice-1.md` (potentials, multislice), `docs/registration-slice-2.md` (frozen phonons, scans,
+  detectors), `docs/registration-slice-3.md` (CTF), `docs/registration-performance.md` (the Metal path) and
+  `docs/registration-generality.md` (the defaults as parameters).
 - **Truth tests** independent of abTEM: Kirkland's table, the k = 0 identity, the far field, vacuum propagation, slice
   symmetry, the probe, the aberration phase, the thickness series.
 - **Mutants**: every new test is broken on purpose and must fail (`docs/slice-*-mutants-2026-10-15.md`).

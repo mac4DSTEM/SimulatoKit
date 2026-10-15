@@ -1,5 +1,5 @@
 // swift-tools-version: 6.2
-// SimulatoKit — the macEM suite's electron-scattering simulation library: projected potentials and multislice
+// SimulatoKit — an electron-scattering simulation library: projected potentials and multislice
 // propagation and frozen phonons (SimulatoMultislice), probes, aberrations and scans (SimulatoProbe), detectors and the
 // STEM driver (SimulatoDetector) on a
 // shared core of beams, grids, structures and waves (SimulatoCore). A Swift port of abTEM (GPL-3.0-or-later), checked
@@ -8,7 +8,7 @@
 // Every accelerated path keeps a CPU reference path with a registered tolerance: the CPU path is float64 on Accelerate
 // (vDSP), the Metal path float32 on MPSGraph, one API with the backend as a parameter.
 //
-// Swift 6 language mode, nonisolated by default, the three upcoming features the suite's packages enable, no unsafe flags
+// Swift 6 language mode, nonisolated by default, three upcoming features, no unsafe flags
 // (a versioned dependency cannot carry them): tools/test.sh runs the tests with `-c release`. One product per module.
 import PackageDescription
 

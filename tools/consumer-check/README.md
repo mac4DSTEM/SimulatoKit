@@ -40,6 +40,18 @@ The section "Multislice: the lazy Potential" in `MultisliceChecks.swift` checks 
 builds in **release** (`swift build -c release -j 4`; the kit is built as a consumer builds it, with no unsafe flags), requires a
 warning-free build whose log names no test or example target, runs the checks, and prints `consumer-check: all passed — N checks ...`.
 
+## The second consumer: the README's Quick start
+
+    tools/consumer-check/readme.sh      # also the last step of run.sh
+
+A second separate package, `readme/` (same identity trick, same four products), whose `main.swift` is **generated**: `readme.sh`
+copies the first ```` ```swift ```` block after the `## Quick start` heading of `README.md` verbatim, then appends the fixed
+`readme/checks.swift.txt`, which asserts on the README's own `hrtem`, `haadf` and `scan` (HRTEM image finite with mean in
+(0.5, 1.5); HAADF values finite, non-negative, not all equal, `count == scan.nx * scan.ny`). It builds in release (`-j 4`, no
+warnings allowed), runs, and prints `readme-consumer: the README's quick start builds and runs (N checks)`. If the quick start
+stops defining `hrtem`, `haadf` or `scan` the script fails with a message saying so. The generated `main.swift` is gitignored
+(`readme/.gitignore`); the README code is never edited by the script, so a quick start that stops compiling turns this red.
+
 ## The negative controls
 
     tools/consumer-check/controls.sh                 # all ten, about 1.5 to 3 minutes (10 of 10 caught on 2026-10-15)

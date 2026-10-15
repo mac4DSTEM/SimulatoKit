@@ -12,5 +12,5 @@ xcrun swiftc -O tools/metal-fft-gain/round-trip-drift.swift -o /tmp/drift && /tm
 xcrun swiftc -O tools/metal-fft-gain/round-trip-gain.swift -o /tmp/gain && /tmp/gain      # the fitted gain per input
 ```
 
-The logs of the 2026-10-15 runs are beside the scripts. Re-run them after an OS update: if the gain is gone, the amended
+The logs of the 2026-10-15 runs are beside the scripts (`round-trip-drift-2026-10-15.log`, `round-trip-gain-2026-10-15.log`). Re-run them after an OS update: if the gain is gone, the amended
 bound can return to the registered 1e−5.

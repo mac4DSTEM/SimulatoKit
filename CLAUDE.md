@@ -65,6 +65,11 @@ in `MetalEngine.swift`), `SimulatoProbe` (slice 1; slice 2: `GridScan`; slice 3:
   at every green checkpoint. At each tag, `docs/consumers-x.y.z.md` says what each consumer changes.
 - **The owner's data** lives in the suite's `data/` folder (`$MACEM_DATA`, default `../data`): never copied here; a manifest
   line in `../data/README.md` per file used.
-- **Consumer check**: `tools/consumer-check/run.sh` (the whole public API from a separate package) and `controls.sh`
-  (negative controls); run both before a tag.
+- **Consumer check**: `tools/consumer-check/run.sh` (the whole public API from a separate package, then `readme.sh`, the
+  README's code built verbatim) and `controls.sh` (negative controls); run both before a tag.
+- **Every choice is a parameter** (0.2.0, `docs/registration-generality.md`): a new policy gets a parameter whose default
+  is the validated value, and the defaults must reproduce every fixture bit for bit. No application or suite name in
+  Sources, Tests, README, DocC, `Package.swift` or the example (the registrations and consumer notes keep the record).
+- **DocC**: one catalogue per module in `Sources/<Module>/<Module>.docc`, one article each; links must resolve
+  (`xcrun docc convert` per module with that module's symbol graph).
 - **Suite board**: this repo's row is `lanes/simulatokit`; how a session opens and closes it is in `../CLAUDE.md`.

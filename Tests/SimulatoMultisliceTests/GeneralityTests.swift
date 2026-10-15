@@ -1,7 +1,7 @@
 //
 //  GeneralityTests.swift
 //  Role: registration-generality.md section 3: every policy that became a parameter, off its default. The defaults
-//        themselves are the rest of the suite (and the bit digests of section 2).
+//        themselves are every other test (and the bit digests of section 2).
 //
 
 import Testing

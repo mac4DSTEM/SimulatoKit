@@ -1,6 +1,6 @@
 #!/bin/zsh
 # SimulatoKit consumer check: build tools/consumer-check (a separate package that depends on SimulatoKit by path) in
-# RELEASE, as the suite's tests run (tools/test.sh uses -c release), and run it. Exit 0 only if the build is
+# RELEASE, as the kit's tests run (tools/test.sh uses -c release), and run it. Exit 0 only if the build is
 # warning-free, no test-only target was built, and every check passed.
 #
 #   run.sh            build, run the checks, print "consumer-check: all passed — N checks ..." and exit 0.
@@ -34,3 +34,5 @@ summary=$(grep "^consumer-check summary:" $out)
 checks=${${summary#consumer-check summary: }%% checks*}
 head=$(git -C $root --no-optional-locks rev-parse --short HEAD 2>/dev/null || print unknown)
 print "consumer-check: all passed — $checks checks through SimulatoKit's public API only, release build, no warnings, no test-only target built (SimulatoKit $head)"
+# the second consumer: the README's Quick start, extracted verbatim and run (readme.sh)
+$here/readme.sh

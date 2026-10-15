@@ -1,5 +1,17 @@
 # SimulatoKit status
 
+## State (2026-10-15, late afternoon: the 0.2.0 generality pass)
+
+- **0.0.1 (`bcde1b5`) and 0.1.0 (`f3bacd6`) are tagged and pushed by the owner**; CI is green on the runner.
+- **The generality pass** (`docs/registration-generality.md`, registered `e52b3e2`, code `69568e1`): every execution
+  choice a parameter whose default is the old value (`ExecutionOptions`, `MetalBatchShapes`, `MetalAccuracy.registered`,
+  `Grid.matches(_:relativeTolerance:)`, `maximumSliceCount:`, the CTF closed forms' constants). Proof: 14 bit digests of
+  both backends and both potential forms identical on 0.1.0 and on the pass; every fixture unchanged; 84 test functions.
+  A DocC catalogue per module with one article each (the Metal pitfalls article in SimulatoMultislice); a second
+  consumer that builds the README's code verbatim (it found an invalid import line in the quick start); no application
+  or suite name in the sources, tests, README, DocC, `Package.swift` or the example. The macOS floor measured again:
+  the code builds at macOS 15, at 14 only `Mutex` fails; the declaration stays macOS 27 (the owner's decision).
+
 ## State (2026-10-15, afternoon: the Metal performance lane and the 0.1.0 candidate)
 
 - **The Metal performance lane, part 2, is done** (`docs/registration-performance.md`, registered at `1b34eb6`, code
