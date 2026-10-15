@@ -205,3 +205,14 @@ Recorded, not changed:
    and the image's maximum is 9.5e−7 of it. A relative bound cannot hold for a signal that weak. **Proposed** (not in
    force until the owner accepts it): Metal detector values within 2e−4 × max(image maximum, 1e−5 × the incident's
    Σ|Ψ(k)|²). Until then the registered bound stands, and this case is a known limit in `docs/status.md`.
+
+### 2026-10-15 15:20 CEST, the owner accepts amendment 3, item 6
+
+The Metal detector bound is now **2e−4 × max(the image's maximum, 1e−5 × the incident intensity)** (Σ|Ψ(k)|², 1 for a
+probe), for every detector value of a Metal scan against the CPU path. It replaces "2e−4 × the image's maximum" of
+slice 2's section 4 for images whose maximum is below 1e−5 of the incident intensity, and is unchanged above it. It is
+carried as `MetalAccuracy.registered.detectorFloor` (1e−5) and `detectorBound(imageMaximum:incidentIntensity:)`.
+Test: `weakHighAngleSignalIsWithinTheFlooredBound`, the refuter's single H atom at 85–100 mrad (image maximum 9.5e−7,
+Metal error 2.45e−10: beyond the old 1.9e−10, within the floored 2e−9); mutant P19 (the floor at 0) makes it fail. No
+number of the kit moves; the existing scan tests keep their bound, which the floor only widens for weak images.
+

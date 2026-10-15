@@ -60,6 +60,9 @@ m1.MUTANTS = [
      "MetalGPUTests", "the renormalisation by products again"),
     ("P18", E, "    static let cacheLimit = 12", "    static let cacheLimit = 100_000", "MetalGPUTests",
      "the executable cache unbounded"),
+    # Amendment 4: the accepted floor of the detector bound.
+    ("P19", "Sources/SimulatoMultislice/ExecutionOptions.swift", "                detectorFloor: Double = 1e-5,",
+     "                detectorFloor: Double = 0,", "STEMPinsTests|GeneralityTests", "the detector floor at 0 (the old bound)"),
 ]
 m1.EXTRA = {}
 

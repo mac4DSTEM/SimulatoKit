@@ -72,7 +72,8 @@ device it throws `SimulatoError.metalUnavailable` (`Multislice.metalIsAvailable`
 tolerances of Metal against the CPU: exit wave 1e−4, intensity, diffraction pattern and detector images 2e−4 relative to
 the maximum, total intensity 1.5e−6 per slice, up to 100 slices (`docs/registration-performance.md`); measured, the wave
 is within about 5e−5 and the total intensity within 5e−7 per slice (1.4e−7 on light elements) at up to 1024² with 100
-slices. Very weak high-angle signals (below about 1e−5 of the probe's intensity) sit at float32's noise floor.
+slices. Detector images are bounded by 2e−4 × max(their maximum, 1e−5 of the probe's intensity): weaker signals sit at
+float32's noise floor (`MetalAccuracy.registered.detectorBound(imageMaximum:incidentIntensity:)`).
 
 Measured speed (Apple M5 Pro, macOS 27; fcc Al at 300 keV, 100 slices, about 0.047 Å per pixel; from the structure to the
 numbers, the potential included; `docs/registration-performance.md`):

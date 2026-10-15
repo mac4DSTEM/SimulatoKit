@@ -146,4 +146,24 @@ struct STEMPinsTests {
                               options: ExecutionOptions(scanChunkBytes: 1))
         #expect(zip(a, b).allSatisfy { $0.values == $1.values })
     }
+
+    /// Performance amendment 3, item 6, accepted 2026-10-15 (amendment 4): the Gate B refuter's weak signal, one H atom
+    /// seen by an 85–100 mrad annulus, whose image maximum is 9.5e−7 of the probe's intensity; Metal against CPU is about
+    /// 2.4e−10 absolute, beyond 2e−4 × the image maximum (1.9e−10) and within the floored bound (2e−9).
+    @Test(.enabled(if: Multislice.metalIsAvailable, "no Metal device: the floored detector bound is not tested here"))
+    func weakHighAngleSignalIsWithinTheFlooredBound() throws {
+        let s = try AtomicStructure(box: SIMD3(16, 16, 40), atoms: [.init(atomicNumber: 1, position: SIMD3(8, 8, 2))])
+        let p = try ProjectedPotential(structure: s, nx: 256, ny: 256, sliceThickness: 0.4)
+        let probe = try Probe(beam: ElectronBeam(energy: 300e3), grid: p.grid, aperture: Aperture(semiangleCutoff: 20))
+        let scan = try GridScan(start: SIMD2(7.7, 7.7), end: SIMD2(8.3, 8.3), nx: 3, ny: 3)
+        let d: [any Detector] = [try AnnularDetector(inner: 85, outer: 100)]
+        let cpu = try STEM.scan(probe: probe, potentials: [p], scan: scan, detectors: d)[0].values
+        let gpu = try STEM.scan(probe: probe, potentials: [p], scan: scan, detectors: d, backend: .metal)[0].values
+        let maximum = cpu.map(abs).max()!
+        let error = zip(gpu, cpu).map { abs($0 - $1) }.max()!
+        let bound = MetalAccuracy.registered.detectorBound(imageMaximum: maximum, incidentIntensity: 1)
+        print("weak signal: image max \(maximum), Metal error \(error), relative \(error / maximum), floored bound \(bound)")
+        #expect(maximum < 1e-5, "the case is below the floor")
+        #expect(error <= bound)
+    }
 }

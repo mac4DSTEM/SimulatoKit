@@ -1,5 +1,10 @@
 # SimulatoKit status
 
+## State (2026-10-15, ~15:30: 0.2.1)
+
+- **0.2.1 candidate**: the owner accepted the floored Metal detector bound (performance amendment 4):
+  `MetalAccuracy.detectorFloor` and `detectorBound`, the refuter's weak-signal case as a test, mutant P19 caught.
+
 ## State (2026-10-15, late afternoon: the 0.2.0 generality pass)
 
 - **0.0.1 (`bcde1b5`) and 0.1.0 (`f3bacd6`) are tagged and pushed by the owner**; CI is green on the runner.
@@ -104,9 +109,9 @@
   1.4e−7 to 1.4e−6 of Σ|ψ|², depending on the data (a fixed gain map does not correct it: performance amendment 1). The
   per-step renormalisation keeps the Metal path within 5e−7 per slice of the CPU path's (measured; 1.4e−7 on Al); the
   registered bound stays 1.5e−6 per slice, accepted by the owner. Re-measure after OS updates.
-- **Weak high-angle signals on Metal** sit at float32's floor (about 3e−10 of the probe's intensity, absolute): a single H
-  atom's 85–100 mrad image is off by 2.3e−4 of its own maximum (bound 2e−4), as it was before the performance lane
-  (Gate D). A floor for the bound is proposed to the owner (performance amendment 3, item 6); use `.cpu` for such signals.
+- **Weak high-angle signals on Metal** sit at float32's floor (about 3e−10 of the probe's intensity, absolute); the
+  detector bound is therefore 2e−4 × max(the image's maximum, 1e−5 of the incident intensity), accepted by the owner on
+  2026-10-15 (performance amendment 4, `MetalAccuracy.detectorBound`). Use `.cpu` for such signals when they matter.
 - **Unphysical phases** (σV above about 200 rad in one pixel column) break the Metal bounds.
 - **The Metal bounds are registered to 100 slices** (grids to 1024² since the performance lane). Before the lane, at 304
   slices the pattern error reached 3.9e−4 (bound 2e−4); not re-measured with the renormalisation. A 64 × 64 scan at 1024²

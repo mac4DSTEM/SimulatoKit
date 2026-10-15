@@ -23,7 +23,8 @@ struct GeneralityTests {
         #expect(o.metalBatchBytes == 512 << 20 && o.scanChunkBytes == 256 << 20)
         #expect(o.metalRenormalization && o.metalExecutableCacheLimit == 12 && o.metalBatchShapes == .powersOfTwo)
         let a = MetalAccuracy.registered
-        #expect(a.wave == 1e-4 && a.intensity == 2e-4 && a.pattern == 2e-4 && a.detector == 2e-4)
+        #expect(a.wave == 1e-4 && a.intensity == 2e-4 && a.pattern == 2e-4 && a.detector == 2e-4 && a.detectorFloor == 1e-5)
+        #expect(a.detectorBound(imageMaximum: 1) == 2e-4 && a.detectorBound(imageMaximum: 1e-7) == 2e-9)
         #expect(a.totalIntensityPerSlice == 1.5e-6 && a.sliceLimit == 100 && a.gridLimit == 1024)
         #expect(Slicing.maximumSliceCount == 1_000_000)
         #expect(ExecutionOptions(maximumCPUThreads: 0, metalBatchBytes: 0, metalExecutableCacheLimit: 0)

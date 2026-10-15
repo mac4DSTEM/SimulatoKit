@@ -50,8 +50,9 @@ public struct ExecutionOptions: Sendable, Hashable {
 
 /// The agreement of `.metal` (float32) with `.cpu` (float64) the kit registers and tests, relative to the array's
 /// largest magnitude (`docs/registration-slice-1.md` section 4, amendment 2; `docs/registration-slice-2.md` section 4;
-/// `docs/registration-performance.md`). Signals far below the array's maximum, under about 1e−5 of the incident
-/// intensity, sit at float32's floor and are not covered (performance amendment 3, item 6).
+/// `docs/registration-performance.md`). Detector values are bounded relative to the larger of the image's maximum and
+/// `detectorFloor` × the incident intensity: signals far below 1e−5 of the incident intensity sit at float32's floor
+/// (performance amendment 3, item 6, accepted 2026-10-15; `detectorBound(imageMaximum:incidentIntensity:)`).
 public struct MetalAccuracy: Sendable, Hashable {
     /// Exit waves, ×max |ψ|.
     public var wave: Double
@@ -59,8 +60,10 @@ public struct MetalAccuracy: Sendable, Hashable {
     public var intensity: Double
     /// Diffraction patterns, ×max.
     public var pattern: Double
-    /// Detector values over a scan, ×the image's max.
+    /// Detector values over a scan, × max(the image's max, `detectorFloor` × the incident intensity).
     public var detector: Double
+    /// The floor of a detector bound, as a fraction of the incident intensity (Σ|Ψ(k)|², 1 for a probe).
+    public var detectorFloor: Double
     /// Σ|ψ|², relative, per slice.
     public var totalIntensityPerSlice: Double
     /// The bounds hold up to this many slices.
@@ -69,14 +72,22 @@ public struct MetalAccuracy: Sendable, Hashable {
     public var gridLimit: Int
 
     public init(wave: Double = 1e-4, intensity: Double = 2e-4, pattern: Double = 2e-4, detector: Double = 2e-4,
-                totalIntensityPerSlice: Double = 1.5e-6, sliceLimit: Int = 100, gridLimit: Int = 1024) {
+                detectorFloor: Double = 1e-5, totalIntensityPerSlice: Double = 1.5e-6, sliceLimit: Int = 100,
+                gridLimit: Int = 1024) {
         self.wave = wave
         self.intensity = intensity
         self.pattern = pattern
         self.detector = detector
+        self.detectorFloor = detectorFloor
         self.totalIntensityPerSlice = totalIntensityPerSlice
         self.sliceLimit = sliceLimit
         self.gridLimit = gridLimit
+    }
+
+    /// The largest difference allowed between a Metal and a CPU detector image: `detector` × max(`imageMaximum`,
+    /// `detectorFloor` × `incidentIntensity`).
+    public func detectorBound(imageMaximum: Double, incidentIntensity: Double = 1) -> Double {
+        detector * max(imageMaximum, detectorFloor * incidentIntensity)
     }
 
     /// The registered bounds.
