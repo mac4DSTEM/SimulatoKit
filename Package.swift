@@ -20,7 +20,7 @@ let settings: [SwiftSetting] = [
 
 let package = Package(
     name: "SimulatoKit",
-    platforms: [.macOS("27.0")],
+    platforms: [.macOS(.v15), .iOS(.v18)],
     products: [
         .library(name: "SimulatoCore", targets: ["SimulatoCore"]),
         .library(name: "SimulatoMultislice", targets: ["SimulatoMultislice"]),

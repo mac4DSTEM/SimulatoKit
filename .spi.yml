@@ -7,3 +7,5 @@ builder:
         - SimulatoMultislice
         - SimulatoProbe
         - SimulatoDetector
+    - platform: ios
+      scheme: SimulatoDetector

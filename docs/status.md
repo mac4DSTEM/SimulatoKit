@@ -10,7 +10,8 @@
   A DocC catalogue per module with one article each (the Metal pitfalls article in SimulatoMultislice); a second
   consumer that builds the README's code verbatim (it found an invalid import line in the quick start); no application
   or suite name in the sources, tests, README, DocC, `Package.swift` or the example. The macOS floor measured again:
-  the code builds at macOS 15, at 14 only `Mutex` fails; the declaration stays macOS 27 (the owner's decision).
+  the code builds at macOS 15, at 14 only `Mutex` fails. By the owner's decision (13:58) the package now declares
+  macOS 15 and iOS 18; green at the new floor, digests unchanged, all four libraries built for iOS device and simulator.
   Break-once 17 of 17 (`docs/generality-mutants-2026-10-15.md`). Gate B (amendment 1): the defaults unmoved and every
   old call site bit-identical; five defects fixed (a negative cache limit through the var trapped, the limit ignored on
   hits, `Int.max` slice ceiling trapped, an odd grid tolerance refused a grid itself, `ProjectedPotential` lacked the
@@ -35,8 +36,8 @@
   controls), `.spi.yml`, `.github/workflows/ci.yml`, the hook refusing `pkill -f` and `killall`, `docs/consumers-0.0.1.md`
   and `docs/consumers-0.1.0.md` (`Measurement` renamed `ScanMeasurement`; `DiffractionIntensity.init(grid:beam:values:)`
   public). The owner tags; the commands are on the board row.
-- **Platform floor**: declared macOS 27; the code uses nothing newer than macOS 15 (`Synchronization.Mutex` is the only
-  macOS 15 API; MPSGraph's FFT needs 14).
+- **Platform floor**: declared macOS 15 and iOS 18 since 0.2.0 (`Synchronization.Mutex` is the only macOS 15 / iOS 18 API;
+  MPSGraph's FFT needs 14 / 17); tests run on macOS only.
 
 ## State (2026-10-15, end of the first session)
 

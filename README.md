@@ -24,10 +24,9 @@ SimulatoKit must be GPL-compatible. It is a library of numbers, not an applicati
 .product(name: "SimulatoMultislice", package: "SimulatoKit")  // also SimulatoCore, SimulatoProbe, SimulatoDetector
 ```
 
-Swift 6.2 tools, Swift 6 language mode. Platform: `Package.swift` declares macOS 27, the platform it is developed and
-tested on. The code itself uses nothing newer than macOS 15: it builds with the floor lowered to macOS 15, and at macOS 14
-only `Synchronization.Mutex` fails (audited 2026-10-15). A lower declared floor is a later decision; a fork that needs
-macOS 15 can lower it without code changes.
+Swift 6.2 tools, Swift 6 language mode. Platforms: macOS 15 and iOS/iPadOS 18 (from 0.2.0). Every module, the Metal
+path included, builds for both (MPSGraph's FFT needs macOS 14 / iOS 17, `Synchronization.Mutex` macOS 15 / iOS 18); the
+tests and the consumer checks run on macOS, where the numbers are validated. Developed and tested on macOS 27.
 Build with `-c release`: the FFT and potential loops are many times slower unoptimised. Grid lengths are f · 2^m with
 f ∈ {1, 3, 5, 15} and m ≥ 3 (the lengths Accelerate's DFT accepts). Cells are orthogonal.
 

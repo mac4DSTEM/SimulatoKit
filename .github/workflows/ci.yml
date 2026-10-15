@@ -1,6 +1,6 @@
 name: CI
 
-# The package's platform floor is macOS 27, so the runner must provide an Xcode with Swift 6.2 or later and a macOS 27 SDK.
+# The package declares macOS 15 and iOS 18; the runner must provide an Xcode with Swift 6.2 or later (tools-version 6.2).
 # macos-latest is used; the step below selects the newest Xcode installed on the image. If the image has none that builds
 # the package, this job fails at `swift build` and says so (no silent skip).
 on:
@@ -25,3 +25,5 @@ jobs:
       # may have no GPU); the CPU float64 reference tests always run.
       - name: Test
         run: tools/test.sh
+      - name: Build the libraries for iOS
+        run: xcodebuild -scheme SimulatoDetector -destination 'generic/platform=iOS Simulator' -quiet build

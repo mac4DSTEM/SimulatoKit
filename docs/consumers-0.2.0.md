@@ -38,5 +38,14 @@ function no longer has its old type (`grids.allSatisfy(grid.matches)` fails to t
 
 ## Not changed
 
-The Metal detector bound for very weak signals (performance amendment 3, item 6) waits for a decision; the platform
-declaration stays macOS 27 (the code builds at macOS 15).
+The Metal detector bound for very weak signals (performance amendment 3, item 6) waits for a decision.
+
+## The platform floor (owner's decision, 2026-10-15 13:58)
+
+`Package.swift` now declares **macOS 15 and iOS 18** (was macOS 27), so a consumer on macOS 15 or later, or on
+iPadOS/iOS 18 or later, can depend on the kit. Every module builds for both, the Metal path included (MPSGraph's FFT
+exists from macOS 14 / iOS 17); no availability branch was added. The proof at the new floor: `tools/test.sh` green (85
+test functions), the consumer check 326 of 326 and the README consumer 7 of 7, the 14 bit digests of both backends
+identical to 0.1.0's, the Metal timing unchanged (512², 100 slices: 30 to 43 ms, against 36 to 48 ms before), and
+`xcodebuild` builds of all four libraries for an iOS device and the iOS simulator without a warning. The numbers are
+validated on macOS only; on iOS the same code runs but no test runs there yet.

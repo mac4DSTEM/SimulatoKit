@@ -11,7 +11,7 @@ let kit = URL(fileURLWithPath: Context.packageDirectory).deletingLastPathCompone
 
 let package = Package(
     name: "ReadmeConsumer",
-    platforms: [.macOS("27.0")],
+    platforms: [.macOS(.v15)],
     dependencies: [
         .package(path: "../../.."),
     ],

@@ -91,3 +91,13 @@ thickness), and a bad `oversampling` as `invalidAperture` (a new error case woul
 type-check, a source break named in `docs/consumers-0.2.0.md`; a zero-slice `runBatch` on `.metal` returns the incident
 rounded to float32. The tests that count cached executables now hold the Metal run lock around the run and the count
 (`Multislice.withMetalExclusive`), so a run of another suite in parallel cannot change the count between the two.
+
+### 2026-10-15 ~15:40 CEST, the platform floor (the owner's decision of 13:58)
+
+The package declares macOS 15 and iOS 18 (was macOS 27). The owner's conditions and their proof on the pass's code:
+`tools/test.sh` green with no warning; the consumer check 326 of 326 and the README consumer 7 of 7; the 14 bit digests of
+section 2 identical (so the Metal and Accelerate numbers did not move with the deployment target); the Metal timing
+unchanged (512², 100 slices, one wave: 30 to 34 ms without and 42 to 43 ms with the renormalisation, against 36 and 43 to
+48 ms before, at load average 17); no availability branch added; all four libraries built by `xcodebuild` for an iOS
+device and the iOS simulator without a warning (CI repeats the simulator build). Every module builds for iOS, the Metal
+module included, since MPSGraph's FFT exists from iOS 17; none had to stay macOS-only.
