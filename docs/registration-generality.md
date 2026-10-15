@@ -1,6 +1,6 @@
 # SimulatoKit 0.2.0: the generality pass (registration)
 
-Registered 2026-10-15 ~14:05 CEST on `f3bacd6` (0.1.0), before any code of the pass. Tier 1: the defaults must reproduce
+Registered 2026-10-15 14:02 CEST (`e52b3e2`) on `f3bacd6` (0.1.0), before any code of the pass. Tier 1: the defaults must reproduce
 every number bit for bit, and a policy that becomes a parameter can move numbers when it is changed.
 
 ## 1. What the pass makes
@@ -56,7 +56,7 @@ that moved, an option that changes a number it should not, a refusal that differ
 
 ## 4. Amendments
 
-### 2026-10-15 ~14:45 CEST, at the first full run
+### 2026-10-15 14:12 CEST (`69568e1`), at the first full run
 
 **The defaults moved nothing.** The 14 bit digests of section 2 (`DefaultsDigest`, scratch) are identical on `f3bacd6` and
 on the pass's code; every fixture passes unchanged (`tools/test.sh`, 84 test functions). One addition to section 1: the
@@ -67,7 +67,7 @@ have an observable effect to test. Two planned mutants are equivalent by design 
 floor, measured again on this code: it builds at macOS 15; at macOS 14 only `Synchronization.Mutex` fails (four uses in
 `MetalEngine.swift`); the declaration stays macOS 27.
 
-### 2026-10-15 ~15:15 CEST, Gate B: the refuter on the frozen `69568e1`, and the fixes it required
+### 2026-10-15 14:22 CEST (`bcc07be`), Gate B: the refuter on the frozen `69568e1`, and the fixes it required
 
 One refuter (a Sonnet subagent; `GRProbes.swift` and `GRCrash.swift` in its scratch clone, not committed): the 14
 digests identical to 0.1.0's; every changed public declaration only gained trailing defaulted arguments, and every old
@@ -92,7 +92,7 @@ type-check, a source break named in `docs/consumers-0.2.0.md`; a zero-slice `run
 rounded to float32. The tests that count cached executables now hold the Metal run lock around the run and the count
 (`Multislice.withMetalExclusive`), so a run of another suite in parallel cannot change the count between the two.
 
-### 2026-10-15 ~15:40 CEST, the platform floor (the owner's decision of 13:58)
+### 2026-10-15 14:35 CEST (`200b56b`), the platform floor (the owner's decision of 13:58)
 
 The package declares macOS 15 and iOS 18 (was macOS 27). The owner's conditions and their proof on the pass's code:
 `tools/test.sh` green with no warning; the consumer check 326 of 326 and the README consumer 7 of 7; the 14 bit digests of

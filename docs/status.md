@@ -36,6 +36,9 @@
   controls), `.spi.yml`, `.github/workflows/ci.yml`, the hook refusing `pkill -f` and `killall`, `docs/consumers-0.0.1.md`
   and `docs/consumers-0.1.0.md` (`Measurement` renamed `ScanMeasurement`; `DiffractionIntensity.init(grid:beam:values:)`
   public). The owner tags; the commands are on the board row.
+- **`References/` is a symlink** to the org folder's `../References/SimulatoKit` (2026-10-15 14:35, "repos stay light"):
+  the pinned abTEM clone and venv live there once; every script and registration path works through the link (the
+  oracle imports abTEM 1.0.10 through it; `tools/test.sh` and the consumer check green after the move).
 - **Platform floor**: declared macOS 15 and iOS 18 since 0.2.0 (`Synchronization.Mutex` is the only macOS 15 / iOS 18 API;
   MPSGraph's FFT needs 14 / 17); tests run on macOS only.
 
