@@ -2,7 +2,7 @@
 
 registration-performance.md section 6, gate 3. `tools/performance/mutants.py` (slice 1's runner) on a clone of the frozen
 `88b30da`, one mutant at a time, `swift test -c release -j 4 --filter 'MetalGPUTests|MetalTests|STEMPinsTests|PotentialTests'`
-(P15: `PotentialTests`), on the M5 Pro with a Metal device. **15 of 15 killed**, and P16–P18 (Gate B's fixes, on `bcde1b5`, filter `MetalGPUTests`) 3 of 3; every new test function of the lane fails
+(P15: `PotentialTests`), on the M5 Pro with a Metal device. **15 of 15 killed**, P19 (amendment 4) killed, and P16–P18 (Gate B's fixes, on `bcde1b5`, filter `MetalGPUTests`) 3 of 3; every new test function of the lane fails
 under at least one mutant (the benchmark is not a gate and is not mutated).
 
 | Mutant | Rule broken | Killed by |
@@ -28,3 +28,4 @@ under at least one mutant (the benchmark is not a gate and is not mutated).
 
 P15 was added after the first fourteen: `buildEqualsTheEagerPotentialBitForBit` compares two paths that share `build()`,
 so P13 moved both and the test passed; P15 breaks the eager path's delegation instead.
+| P19 | the detector floor at 0 (the old bound; amendment 4, on 0.2.1) | theDefaultsAreTheRegisteredValues, weakHighAngleSignalIsWithinTheFlooredBound |
