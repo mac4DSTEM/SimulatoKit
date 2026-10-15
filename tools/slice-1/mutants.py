@@ -178,7 +178,7 @@ def main():
         apply(clone, path, old, new)
         if mid in EXTRA:
             apply(clone, *EXTRA[mid])
-        r = sh(f"swift test -c release --filter '{flt}' 2>&1", clone)
+        r = sh(f"swift test -c release -j 4 --filter '{flt}' 2>&1", clone)
         out = r.stdout
         # Swift Testing (the kits' standard since 2026-10-15): "✘ Test name(args) ... failed" / "recorded an issue".
         failed = sorted(set(re.findall(r"✘ Test (\w+)\(", out)))

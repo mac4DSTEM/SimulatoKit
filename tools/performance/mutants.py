@@ -48,6 +48,10 @@ m1.MUTANTS = [
     ("P14", E, "var idx = [Int32](repeating: 0, count: m), w = [Float](repeating: 0, count: m)",
      "var idx = [Int32](repeating: 0, count: m), w = [Float](repeating: 1e-3, count: m)", F,
      "the padding carries weight"),
+    ("P15", "Sources/SimulatoMultislice/ProjectedPotential.swift",
+     "                             parameterization: parameterization).build()",
+     "                             parameterization: LobatoParameterization()).build()", "PotentialTests",
+     "the eager potential drops the parameterisation it was given"),
 ]
 m1.EXTRA = {}
 

@@ -1,6 +1,6 @@
 # SimulatoKit performance lane, part 2: the Metal path on the GPU end to end (registration)
 
-Registered 2026-10-15 ~11:30 CEST, before any code of this lane, on `aa0cae3`. Tier 1: the Metal path's numbers move
+Registered 2026-10-15 11:15 CEST (`1b34eb6`), before any code of this lane, on `aa0cae3`. Tier 1: the Metal path's numbers move
 (the potential and the transmissions are computed in float32 on the GPU instead of in float64 on the CPU). The CPU path
 does not change and stays the reference; every bound below is slice 1's or slice 2's registered bound unless it is named
 as new. Part 1 (`235d661`, tier 2) was the CPU batch on up to 8 threads.
@@ -110,7 +110,7 @@ compute-shader FFT with float64-rounded twiddles is not part of this lane.
 
 ## 8. Amendments
 
-### 2026-10-15 ~12:45 CEST, at the first test run: the gain map rejected, the per-step renormalisation in its place
+### 2026-10-15 ~11:30 CEST, at the first test run (written by 11:51, `88b30da`): the gain map rejected, the per-step renormalisation in its place
 
 **The gain map (1.7) is rejected; the cause is measured.** Prototype (scratch, M5 Pro, macOS 27): the map G(k) measured
 from 16 random-phase fields, then 100 round trips of fields not used to measure it, Σ|ψ|² change per round trip without
@@ -148,7 +148,7 @@ padding carrying weight. The slice-1 and slice-2 mutants that named the old per-
 step in `MetalEngine.swift`; M15, M17 and M33 name `build(at:)` by a longer text (the probe's new helpers repeat a line);
 N03 and N17 had gone stale at slice 2's refuter fixes and name the current lines.
 
-### 2026-10-15 ~13:40 CEST, the speed and memory of section 5, and a memory fix
+### 2026-10-15 ~11:50 CEST (`88b30da`), the speed and memory of section 5, and a memory fix
 
 Measured by `BenchmarkTests` (`SIMULATO_BENCHMARK=1`; log `bench-2026-10-15.log` in the session's scratchpad), M5 Pro,
 macOS 27, Al [001] at 300 keV, 100 slices of a/2, about 0.047 Å per pixel, structure to numbers (the potential
