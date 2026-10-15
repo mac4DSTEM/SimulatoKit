@@ -1,0 +1,27 @@
+name: CI
+
+# The package's platform floor is macOS 27, so the runner must provide an Xcode with Swift 6.2 or later and a macOS 27 SDK.
+# macos-latest is used; the step below selects the newest Xcode installed on the image. If the image has none that builds
+# the package, this job fails at `swift build` and says so (no silent skip).
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Select the newest Xcode
+        run: |
+          newest=$(ls -d /Applications/Xcode*.app | sort -V | tail -n 1)
+          echo "Selecting $newest"
+          sudo xcode-select -s "$newest/Contents/Developer"
+      - name: Swift version
+        run: swift --version
+      # Metal suites skip themselves with a named reason when MTLCreateSystemDefaultDevice() is nil (hosted runners
+      # may have no GPU); the CPU float64 reference tests always run.
+      - name: Test
+        run: tools/test.sh

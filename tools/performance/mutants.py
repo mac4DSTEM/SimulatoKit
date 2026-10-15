@@ -52,6 +52,14 @@ m1.MUTANTS = [
      "                             parameterization: parameterization).build()",
      "                             parameterization: LobatoParameterization()).build()", "PotentialTests",
      "the eager potential drops the parameterisation it was given"),
+    # Gate B's fixes (amendment 3).
+    ("P16", E, "        guard p.sliceCount > 0 else { return try read(-1, psi) }\n", "", "MetalGPUTests",
+     "the no-slice guard removed"),
+    ("P17", E, "let ratio = g.multiplication(g.division(eY, eX, name: nil), g.division(ex, ey, name: nil), name: nil)",
+     "let ratio = g.division(g.multiplication(eY, ex, name: nil), g.multiplication(eX, ey, name: nil), name: nil)",
+     "MetalGPUTests", "the renormalisation by products again"),
+    ("P18", E, "    static let cacheLimit = 12", "    static let cacheLimit = 100_000", "MetalGPUTests",
+     "the executable cache unbounded"),
 ]
 m1.EXTRA = {}
 

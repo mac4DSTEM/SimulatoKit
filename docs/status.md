@@ -1,10 +1,32 @@
 # SimulatoKit status
 
+## State (2026-10-15, afternoon: the Metal performance lane and the 0.1.0 candidate)
+
+- **The Metal performance lane, part 2, is done** (`docs/registration-performance.md`, registered at `1b34eb6`, code
+  `5300102`, memory fix and mutants `88b30da`): `Potential` (abTEM's lazy potential, `build()` bit-equal to the eager
+  one); the potential built on the GPU from host-merged deltas; the transmissions on the GPU for both forms; one compiled
+  MPSGraph step encoded per slice into one command buffer with ping-pong wave buffers; a per-step renormalisation of
+  Σ|·|²; STEM probes and intensities on the GPU. Speed, structure to numbers, 100 slices: plane wave 6.6× / 33× / 190×,
+  64 × 64 HAADF scan 31× / 28× / 37× at 256² / 512² / 1024²; device memory 1.0 to 1.7 GB. The gain-map attempt was
+  rejected with its measurements (amendment 1); the renormalisation brought the measured Σ|ψ|² drift from 9.3e−7 to
+  1.4e−7 per slice on Al and at most 5e−7 on heavy elements (slice 1's accepted 1.5e−6 stays the registered bound).
+  Break-once 18 of 18 (`docs/performance-mutants-2026-10-15.md`). Gate B (amendment 3): about 450 cases, the bounds not
+  broken on physical inputs (worst pattern 79 %); three defects fixed (no slice trapped, amplitude 1e8 gave NaN, the
+  executable cache grew without bound). 0.0.1 candidate `bcde1b5`, gated on a clean clone.
+- **0.0.1 candidate** at the lane's gated commit; **0.1.0 candidate** after it: `docs/parity.md` filled against abTEM's
+  documented API (24 done, 34 partial, 64 absent), a README without the suite, the example (a CIF in, an HRTEM image and a
+  HAADF scan out as PNGs and a CSV), `tools/consumer-check` (the whole public API from a separate package, negative
+  controls), `.spi.yml`, `.github/workflows/ci.yml`, the hook refusing `pkill -f` and `killall`, `docs/consumers-0.0.1.md`
+  and `docs/consumers-0.1.0.md` (`Measurement` renamed `ScanMeasurement`; `DiffractionIntensity.init(grid:beam:values:)`
+  public). The owner tags; the commands are on the board row.
+- **Platform floor**: declared macOS 27; the code uses nothing newer than macOS 15 (`Synchronization.Mutex` is the only
+  macOS 15 API; MPSGraph's FFT needs 14).
+
 ## State (2026-10-15, end of the first session)
 
 - **Repo created 2026-10-14/15 night** by the SimulatoKit session (the coordinator's side session). The owner created
-  `github.com/mac4DSTEM/SimulatoKit` (private until 0.1.0) and pushed through `79dc601`; the later commits wait for the
-  owner's push (board, waiting list). No tag.
+  `github.com/mac4DSTEM/SimulatoKit` and pushed through `79dc601`, and made it public on 2026-10-15 morning; the later
+  commits wait for the owner's push (board, waiting list). No tag.
 - **Slice 3 is ported, refuted and green** (2026-10-15, owner's standing instruction): `ContrastTransferFunction`
   (abTEM's CTF: aberrations, spatial and temporal envelopes, aperture), `Waves.applying` for HRTEM images, Scherzer
   defocus, point resolution, Nyquist sampling. Registration: `docs/registration-slice-3.md` (three amendments). Pins: 35
@@ -49,18 +71,26 @@
 | slice 2: segmented against abTEM | 1e−6 (abTEM sums in float32) | 3.8e−7; against the float64 sum 2e−15 |
 | slice 2: Metal batched scan against CPU | 2e−4 × scale | 8.6e−6 (refuter, 480², 225 positions) |
 | slice 3: CTF kernels, HRTEM images, closed forms | 1e−12, 1e−10, 1e−15 | 3.7e−16, 2.2e−15, bit-equal (refuter) |
+| performance: GPU-built V against the CPU's | 1e−5 × max V | 3.1e−7 (A1, A2, B1, D1) |
+| performance: GPU probe against `Probe.build` | 1e−5 × max | 5.0e−7; Σ\|Ψ(k)\|² − 1 = −5e−7 |
+| performance: Metal (renormalised) against CPU, 512² × 100 slices | slice 1's | wave 1.6e−5, pattern 6.5e−5, Σ\|ψ\|² 2.2e−8 to 1.4e−7 per slice |
+| performance: refuter, about 450 cases, both forms | slices 1 and 2's | wave 4.6e−5, pattern 1.58e−4, scans 3.4e−5, Σ\|ψ\|² ≤ 4.9e−7 per slice |
+| performance: the same at 1024² × 100 slices | slice 1's | wave 1.3e−5, pattern 3.9e−5, 8.4e−8 per slice |
+| performance: GPU-built scans (S1, S3) against CPU | 2e−4 × scale | 4.9e−6; bit-equal on a second run |
 
 ## Known limits
 
 - **MPSGraph's float32 FFT is not exactly unitary** (Gate D, amendment 2, `tools/metal-fft-gain/`): each round trip loses
-  1.4e−7 to 1.4e−6 of Σ|ψ|² on the non-zero frequencies, so the Metal path's total intensity drifts ~8e−7 per slice below
-  the CPU path's; the amended bound of 1.5e−6 per slice is accepted by the owner (2026-10-15). Re-measure after OS updates.
-- **Metal is not yet faster.** At 512² and 102 slices the example took 2.81 s on the CPU and 2.35 s on Metal, both
-  dominated by the potential, which the CPU path builds for both. One MPSGraph run per slice, with host round trips for
-  the transmission functions, is the slice-1 design (correctness first); a performance lane (one executable for all
-  slices, the potential on the GPU) is planned.
-- **The Metal bounds hold to 100 slices.** At 304 slices the pattern error reaches 3.9e−4 (bound 2e−4), growing about
-  1.3e−6 per slice; Metal memory holds every transmission twice (960² × 100 slices peaked at 3.8 GB). Amendment 3.
+  1.4e−7 to 1.4e−6 of Σ|ψ|², depending on the data (a fixed gain map does not correct it: performance amendment 1). The
+  per-step renormalisation keeps the Metal path within 5e−7 per slice of the CPU path's (measured; 1.4e−7 on Al); the
+  registered bound stays 1.5e−6 per slice, accepted by the owner. Re-measure after OS updates.
+- **Weak high-angle signals on Metal** sit at float32's floor (about 3e−10 of the probe's intensity, absolute): a single H
+  atom's 85–100 mrad image is off by 2.3e−4 of its own maximum (bound 2e−4), as it was before the performance lane
+  (Gate D). A floor for the bound is proposed to the owner (performance amendment 3, item 6); use `.cpu` for such signals.
+- **Unphysical phases** (σV above about 200 rad in one pixel column) break the Metal bounds.
+- **The Metal bounds are registered to 100 slices** (grids to 1024² since the performance lane). Before the lane, at 304
+  slices the pattern error reached 3.9e−4 (bound 2e−4); not re-measured with the renormalisation. A 64 × 64 scan at 1024²
+  is GPU-bound at about 100 ms per position.
 - **Differences from abTEM at the edges**, recorded in amendment 3 and `docs/parity.md`: always periodic (abTEM honours
   ASE's `pbc`), an atom in the gap of a short slice list kept (abTEM drops it), `.afterSlices` always adds the last slice,
   and abTEM's own `build()` / `multislice()` disagreement on atoms at a tiny negative x or y.
@@ -71,11 +101,12 @@
   caller (no Debye–Waller table).
 - **Frozen phonons agree with abTEM only when abTEM's displacements are given**; the kit's generator agrees in distribution.
 - **Segmented detectors** sum in float64 where abTEM sums in float32: they agree with abTEM to ~2e−7.
-- **The potential is built on the CPU** for both backends (the remaining performance lane); CPU scans use up to 8 threads.
+- **A `ProjectedPotential` on `.metal`** uploads every slice's V (float32, 4 bytes per pixel per slice); a `Potential`
+  uploads only the atoms' merged deltas, so prefer `Potential` for large Metal runs. CPU scans use up to 8 threads.
 
 ## Hand-off
 
-Next: the consumers and the 0.1.0 preparation (docs/consumers-0.1.0.md for mac4DSTEM, macTEM and the other kits' tests; DocC;
-the public API pass; a consumer-check package like DiffractoKit's), and the rest of the Metal performance lane (the
-potential on the GPU, one MPSGraph executable over all slices, measured against the CPU path, and an attempt to tighten
-slice 1's amendment-2 intensity bound). The board's `lanes/simulatokit` row holds the exact prompt.
+Next (the board's `lanes/simulatokit` row holds the exact prompt): the owner's tags 0.0.1 and 0.1.0; then the kit loop's
+asks from the apps and the consumer kits, if any, as 0.1.x; then slice 4, exit-wave and focal-series reconstruction
+(abTEM has none: the reference is the literature's closed forms and a simulated focal series from this kit), or what
+the apps ask first; the generality pass is 0.2.0.

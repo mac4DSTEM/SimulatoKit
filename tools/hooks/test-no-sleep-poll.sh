@@ -15,6 +15,19 @@ check 2 'sleep 1m'
 check 2 'sleep 0.5h'
 check 2 'while true; do x; sleep 2; done'
 check 2 'until grep -q x f; do sleep 1; done'
+check 2 'pkill -f swift-test'
+check 2 'pkill -9f foo'
+check 2 'pkill --full x'
+check 2 'killall swift'
+check 2 'cd x && killall -9 y'
+check 2 'echo a; /usr/bin/pkill -f x'
+check 2 'git log --grep killall'   # matched as text: refused (accepted false positive)
+check 0 'echo "killall swift"'   # quoted right after a quote: passes (same text policy as sleep)
+check 0 'kill 4242'
+check 0 'kill -9 4242'
+check 0 'pkill -P 4242'
+check 0 'pkill swift-test'   # no -f: name match only, allowed
+check 0 'pkill -9 -P 4242 && ls -f'   # -f belongs to ls, not pkill
 check 0 'echo "sleep 60"'   # quoted: passes (sleep must follow whitespace or an operator)
 check 0 'sleep 1'
 check 0 'sleep 5 && ls'

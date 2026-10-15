@@ -2,7 +2,7 @@
 
 registration-performance.md section 6, gate 3. `tools/performance/mutants.py` (slice 1's runner) on a clone of the frozen
 `88b30da`, one mutant at a time, `swift test -c release -j 4 --filter 'MetalGPUTests|MetalTests|STEMPinsTests|PotentialTests'`
-(P15: `PotentialTests`), on the M5 Pro with a Metal device. **15 of 15 killed**; every new test function of the lane fails
+(P15: `PotentialTests`), on the M5 Pro with a Metal device. **15 of 15 killed**, and P16–P18 (Gate B's fixes, on `bcde1b5`, filter `MetalGPUTests`) 3 of 3; every new test function of the lane fails
 under at least one mutant (the benchmark is not a gate and is not mutated).
 
 | Mutant | Rule broken | Killed by |
@@ -22,6 +22,9 @@ under at least one mutant (the benchmark is not a gate and is not mutated).
 | P13 | Potential.build puts slice 0's atoms in every slice | detectorsEqualAbTEM, gpuPotentialMatchesTheCPUPotential, metalScanThroughUnbuiltPotentialsMatchesTheCPUScan, potentialOnMetalMatchesTheCPUPath, potentialOnMetalMatchesTheCPUPathAt1024Squared, renormalizationTightensTheTotalIntensity, unevenSlicesMatchTheCPUPath |
 | P14 | the padding carries weight | gpuPotentialMatchesTheCPUPotential, metalScanThroughUnbuiltPotentialsMatchesTheCPUScan, potentialOnMetalMatchesTheCPUPath, potentialOnMetalMatchesTheCPUPathAt1024Squared, runsAreDeterministic, unevenSlicesMatchTheCPUPath |
 | P15 | the eager potential drops the parameterisation it was given | buildEqualsTheEagerPotentialBitForBit |
+| P16 | the no-slice guard removed | noSliceReturnsTheIncidentWave (the test process trapped) |
+| P17 | the renormalisation by products again | largeAmplitudesStayFinite |
+| P18 | the executable cache unbounded | compiledExecutablesAreBounded |
 
 P15 was added after the first fourteen: `buildEqualsTheEagerPotentialBitForBit` compares two paths that share `build()`,
 so P13 moved both and the test passed; P15 breaks the eager path's delegation instead.
