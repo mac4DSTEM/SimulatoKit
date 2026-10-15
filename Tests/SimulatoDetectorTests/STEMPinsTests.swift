@@ -13,7 +13,7 @@ import SimulatoProbe
 @Suite("STEM against abTEM")
 struct STEMPinsTests {
     static func run(_ id: String, pi: LobatoParameterization.PiConstant, backend: Backend = .cpu)
-        throws -> [String: Measurement] {
+        throws -> [String: ScanMeasurement] {
         let potentials = try Pins2.potentials(id, pi: pi)
         let probe = try Pins2.probe(id, grid: potentials[0].grid)
         let detectors = try Pins2.detectors()

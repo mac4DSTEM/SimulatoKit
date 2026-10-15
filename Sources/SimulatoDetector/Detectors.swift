@@ -15,7 +15,10 @@ public struct DiffractionIntensity: Sendable {
     /// |FFT₂(ψ)|² in FFT order, `[ix * ny + iy]`.
     public let values: [Double]
 
-    package init(grid: Grid, beam: ElectronBeam, values: [Double]) {
+    /// An intensity given directly, |FFT₂(ψ)|² in FFT order (for example to test a custom `Detector`).
+    /// - Precondition: `values` holds nx × ny values.
+    public init(grid: Grid, beam: ElectronBeam, values: [Double]) {
+        precondition(values.count == grid.count, "DiffractionIntensity: \(grid.nx) x \(grid.ny) values required")
         self.grid = grid
         self.beam = beam
         self.values = values

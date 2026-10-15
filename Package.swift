@@ -41,8 +41,9 @@ let package = Package(
         // frozen-phonon configurations (docs/registration-slice-2.md).
         .target(name: "SimulatoDetector", dependencies: ["SimulatoCore", "SimulatoMultislice", "SimulatoProbe"],
                 swiftSettings: settings),
-        // The first ten minutes: simulate one image from a CIF, write a PNG and the numbers (not a product).
-        .executableTarget(name: "SimulatoExample", dependencies: ["SimulatoCore", "SimulatoMultislice", "SimulatoProbe"],
+        // The first ten minutes: a CIF in, an HRTEM image and a STEM HAADF scan out (not a product).
+        .executableTarget(name: "SimulatoExample",
+                          dependencies: ["SimulatoCore", "SimulatoMultislice", "SimulatoProbe", "SimulatoDetector"],
                           path: "Examples/SimulatoExample", exclude: ["Al.cif"], swiftSettings: settings),
         .testTarget(name: "SimulatoCoreTests", dependencies: ["SimulatoCore"], swiftSettings: settings),
         .testTarget(name: "SimulatoMultisliceTests", dependencies: ["SimulatoMultislice", "SimulatoProbe"],

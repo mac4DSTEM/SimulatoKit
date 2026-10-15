@@ -10,8 +10,9 @@ import SimulatoCore
 import SimulatoMultislice
 import SimulatoProbe
 
-/// One detector's measurement over a scan: values row-major over (scan x, scan y, the detector's shape).
-public struct Measurement: Sendable {
+/// One detector's measurement over a scan: values row-major over (scan x, scan y, the detector's shape). Named
+/// `ScanMeasurement`, not abTEM's `Measurement`, so it does not collide with Foundation's `Measurement`.
+public struct ScanMeasurement: Sendable {
     public let scanShape: [Int]
     public let valueShape: [Int]
     public let values: [Double]
@@ -36,7 +37,7 @@ public enum STEM {
     /// structure) and returns each detector's measurement averaged over the potentials. On `.metal` the probes, the
     /// transmissions and the diffraction intensities are computed on the GPU (registration-performance.md 1.6).
     public static func scan(probe: Probe, potentials: [ProjectedPotential], scan: GridScan, detectors: [any Detector],
-                            backend: Backend = .cpu) throws -> [Measurement] {
+                            backend: Backend = .cpu) throws -> [ScanMeasurement] {
         guard !potentials.isEmpty else { throw SimulatoError.invalidScan("no potential") }
         for p in potentials where !p.grid.matches(probe.grid) { throw SimulatoError.gridMismatch }
         switch backend {
@@ -52,7 +53,7 @@ public enum STEM {
 
     /// The same through unbuilt potentials: on `.cpu` each is built (`build()`), on `.metal` each slice is built on the GPU.
     public static func scan(probe: Probe, potentials: [Potential], scan: GridScan, detectors: [any Detector],
-                            backend: Backend = .cpu) throws -> [Measurement] {
+                            backend: Backend = .cpu) throws -> [ScanMeasurement] {
         guard !potentials.isEmpty else { throw SimulatoError.invalidScan("no potential") }
         for p in potentials where !p.grid.matches(probe.grid) { throw SimulatoError.gridMismatch }
         switch backend {
@@ -67,7 +68,7 @@ public enum STEM {
     }
 
     static func cpuScan(probe: Probe, potentials: [ProjectedPotential], scan: GridScan,
-                        detectors: [any Detector]) throws -> [Measurement] {
+                        detectors: [any Detector]) throws -> [ScanMeasurement] {
         let positions = scan.positions
         let shapes = try detectors.map { try $0.shape(for: probe.grid, beam: probe.beam) }
         let counts = shapes.map { $0.reduce(1, *) }
@@ -92,7 +93,7 @@ public enum STEM {
     /// Potentials outer, positions inner: each position still sums its configurations in potential order.
     static func metalScan(probe: Probe, count: Int, scan: GridScan, detectors: [any Detector],
                           run: (Int, ComplexField, Int, Ramps, (Int, [Double]) throws -> Void) throws -> Void)
-        throws -> [Measurement] {
+        throws -> [ScanMeasurement] {
         let positions = scan.positions
         let shapes = try detectors.map { try $0.shape(for: probe.grid, beam: probe.beam) }
         let counts = shapes.map { $0.reduce(1, *) }
@@ -116,9 +117,9 @@ public enum STEM {
         }
     }
 
-    static func average(_ sums: [[Double]], _ shapes: [[Int]], scan: GridScan, over n: Int) -> [Measurement] {
+    static func average(_ sums: [[Double]], _ shapes: [[Int]], scan: GridScan, over n: Int) -> [ScanMeasurement] {
         zip(sums, shapes).map { values, shape in
-            Measurement(scanShape: [scan.nx, scan.ny], valueShape: shape, values: values.map { $0 / Double(n) })
+            ScanMeasurement(scanShape: [scan.nx, scan.ny], valueShape: shape, values: values.map { $0 / Double(n) })
         }
     }
 }
