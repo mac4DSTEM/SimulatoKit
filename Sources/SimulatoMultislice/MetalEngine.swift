@@ -376,7 +376,9 @@ extension MetalMultislice {
     }
 
     /// Propagates the batch in `psi` (shape [b, nx, ny], overwritten) through every slice: one command buffer, committed
-    /// at each plane in `planes` (zero-based slice indices; the last slice always) where `read` gets the wave.
+    /// at each plane in `planes` (zero-based slice indices; the last slice always) where `read` gets the wave. Every
+    /// slice and every batch runs in its own autorelease pool: without one, each batch's buffers lived to the end of the
+    /// scan (the first benchmark: 73 GB at 1024², 4096 positions).
     static func propagate(_ p: MetalPreparedPotential, psi: MPSGraphTensorData, batch b: Int, planes: Set<Int>,
                           options: MetalOptions, engine: MetalEngine,
                           read: (Int, MPSGraphTensorData) throws -> Void) throws {
@@ -386,16 +388,18 @@ extension MetalMultislice {
         var cb = MPSCommandBuffer(from: engine.queue)
         let last = p.sliceCount - 1
         for j in 0...last {
-            _ = step.executable.executable.encode(to: cb, inputs: step.inputs(stepInputs(p, slice: j, psi: current)),
-                                                  results: [other], executionDescriptor: nil)
-            swap(&current, &other)
-            if planes.contains(j) || j == last {
-                engine.notePeak()
-                cb.commit()
-                cb.waitUntilCompleted()
-                try engine.check(cb, "slice \(j)")
-                try read(j, current)
-                if j < last { cb = MPSCommandBuffer(from: engine.queue) }
+            try autoreleasepool {
+                _ = step.executable.executable.encode(to: cb, inputs: step.inputs(stepInputs(p, slice: j, psi: current)),
+                                                      results: [other], executionDescriptor: nil)
+                swap(&current, &other)
+                if planes.contains(j) || j == last {
+                    engine.notePeak()
+                    cb.commit()
+                    cb.waitUntilCompleted()
+                    try engine.check(cb, "slice \(j)")
+                    try read(j, current)
+                    if j < last { cb = MPSCommandBuffer(from: engine.queue) }
+                }
             }
         }
     }
@@ -445,18 +449,20 @@ extension MetalMultislice {
         let size = batchSize(p.grid)
         var out: [ComplexField] = []
         for start in stride(from: 0, to: incidents.count, by: size) {
-            let chunk = Array(incidents[start..<min(start + size, incidents.count)])
-            var v = [Float](repeating: 0, count: 2 * p.grid.count * chunk.count)
-            for (k, f) in chunk.enumerated() {
-                let base = 2 * p.grid.count * k
-                for i in 0..<p.grid.count {
-                    v[base + 2 * i] = Float(f.real[i])
-                    v[base + 2 * i + 1] = Float(f.imaginary[i])
+            try autoreleasepool {
+                let chunk = Array(incidents[start..<min(start + size, incidents.count)])
+                var v = [Float](repeating: 0, count: 2 * p.grid.count * chunk.count)
+                for (k, f) in chunk.enumerated() {
+                    let base = 2 * p.grid.count * k
+                    for i in 0..<p.grid.count {
+                        v[base + 2 * i] = Float(f.real[i])
+                        v[base + 2 * i + 1] = Float(f.imaginary[i])
+                    }
                 }
-            }
-            let psi = try engine.floats(v, [chunk.count, p.grid.nx, p.grid.ny], .complexFloat32)
-            try propagate(p, psi: psi, batch: chunk.count, planes: [], options: options, engine: engine) { j, data in
-                if j == p.sliceCount - 1 { out += fields(data, batch: chunk.count, grid: p.grid) }
+                let psi = try engine.floats(v, [chunk.count, p.grid.nx, p.grid.ny], .complexFloat32)
+                try propagate(p, psi: psi, batch: chunk.count, planes: [], options: options, engine: engine) { j, data in
+                    if j == p.sliceCount - 1 { out += fields(data, batch: chunk.count, grid: p.grid) }
+                }
             }
         }
         return out
@@ -555,55 +561,57 @@ extension MetalMultislice {
         let spectrumData = try engine.complex(spectrum)
         let scale = try engine.floats([Float(intensityScale)], [1])
         for start in stride(from: 0, to: count, by: size) {
-            let b = min(size, count - start)
-            let probes = probeStep(nx: nx, ny: ny, batch: b, engine: engine)
-            let intensities = engine.step("intensities \(nx)x\(ny) b\(b)") {
-                let g = MPSGraph()
-                let psi = g.placeholder(shape: MetalGraphs.shape([b, nx, ny]), dataType: .complexFloat32, name: "psi")
-                let sc = g.placeholder(shape: [1], dataType: .float32, name: "scale")
-                let f = g.fastFourierTransform(psi, axes: [1, 2], descriptor: MetalGraphs.forward, name: nil)
-                let re = g.realPartOfTensor(tensor: f, name: nil), im = g.imaginaryPartOfTensor(tensor: f, name: nil)
-                let i2 = g.addition(g.multiplication(re, re, name: nil), g.multiplication(im, im, name: nil), name: nil)
-                let out = g.multiplication(i2, sc, name: nil)
-                return MetalStep(executable: MetalExecutable(g, device: engine.graphDevice, feeds: [
-                    (psi, [b, nx, ny], .complexFloat32), (sc, [1], .float32),
-                ], targets: [out]), placeholders: ["psi": psi, "scale": sc])
-            }
-            var rx = [Float](repeating: 0, count: 2 * b * nx), ry = [Float](repeating: 0, count: 2 * b * ny)
-            for k in 0..<b {
-                let (fx, fy) = try ramps(start + k)
-                for i in 0..<nx {
-                    rx[2 * (k * nx + i)] = Float(fx.real[i])
-                    rx[2 * (k * nx + i) + 1] = Float(fx.imaginary[i])
+            try autoreleasepool {
+                let b = min(size, count - start)
+                let probes = probeStep(nx: nx, ny: ny, batch: b, engine: engine)
+                let intensities = engine.step("intensities \(nx)x\(ny) b\(b)") {
+                    let g = MPSGraph()
+                    let psi = g.placeholder(shape: MetalGraphs.shape([b, nx, ny]), dataType: .complexFloat32, name: "psi")
+                    let sc = g.placeholder(shape: [1], dataType: .float32, name: "scale")
+                    let f = g.fastFourierTransform(psi, axes: [1, 2], descriptor: MetalGraphs.forward, name: nil)
+                    let re = g.realPartOfTensor(tensor: f, name: nil), im = g.imaginaryPartOfTensor(tensor: f, name: nil)
+                    let i2 = g.addition(g.multiplication(re, re, name: nil), g.multiplication(im, im, name: nil), name: nil)
+                    let out = g.multiplication(i2, sc, name: nil)
+                    return MetalStep(executable: MetalExecutable(g, device: engine.graphDevice, feeds: [
+                        (psi, [b, nx, ny], .complexFloat32), (sc, [1], .float32),
+                    ], targets: [out]), placeholders: ["psi": psi, "scale": sc])
                 }
-                for i in 0..<ny {
-                    ry[2 * (k * ny + i)] = Float(fy.real[i])
-                    ry[2 * (k * ny + i) + 1] = Float(fy.imaginary[i])
-                }
-            }
-            let rxData = try engine.floats(rx, [b, nx, 1], .complexFloat32)
-            let ryData = try engine.floats(ry, [b, 1, ny], .complexFloat32)
-            let (psi, _) = try engine.tensor([b, nx, ny], .complexFloat32)
-            let cb = MPSCommandBuffer(from: engine.queue)
-            _ = probes.executable.executable.encode(
-                to: cb, inputs: probes.inputs(["spectrum": spectrumData, "rx": rxData, "ry": ryData]), results: [psi],
-                executionDescriptor: nil)
-            cb.commit()
-            cb.waitUntilCompleted()
-            try engine.check(cb, "probes")
-            try propagate(p, psi: psi, batch: b, planes: [], options: options, engine: engine) { j, exit in
-                guard j == p.sliceCount - 1 else { return }
-                let (values, buffer) = try engine.tensor([b, nx, ny], .float32)
-                let cb2 = MPSCommandBuffer(from: engine.queue)
-                _ = intensities.executable.executable.encode(
-                    to: cb2, inputs: intensities.inputs(["psi": exit, "scale": scale]), results: [values],
-                    executionDescriptor: nil)
-                cb2.commit()
-                cb2.waitUntilCompleted()
-                try engine.check(cb2, "intensities")
-                let pointer = buffer.contents().bindMemory(to: Float.self, capacity: b * n)
+                var rx = [Float](repeating: 0, count: 2 * b * nx), ry = [Float](repeating: 0, count: 2 * b * ny)
                 for k in 0..<b {
-                    try deliver(start + k, (0..<n).map { Double(pointer[k * n + $0]) })
+                    let (fx, fy) = try ramps(start + k)
+                    for i in 0..<nx {
+                        rx[2 * (k * nx + i)] = Float(fx.real[i])
+                        rx[2 * (k * nx + i) + 1] = Float(fx.imaginary[i])
+                    }
+                    for i in 0..<ny {
+                        ry[2 * (k * ny + i)] = Float(fy.real[i])
+                        ry[2 * (k * ny + i) + 1] = Float(fy.imaginary[i])
+                    }
+                }
+                let rxData = try engine.floats(rx, [b, nx, 1], .complexFloat32)
+                let ryData = try engine.floats(ry, [b, 1, ny], .complexFloat32)
+                let (psi, _) = try engine.tensor([b, nx, ny], .complexFloat32)
+                let cb = MPSCommandBuffer(from: engine.queue)
+                _ = probes.executable.executable.encode(
+                    to: cb, inputs: probes.inputs(["spectrum": spectrumData, "rx": rxData, "ry": ryData]), results: [psi],
+                    executionDescriptor: nil)
+                cb.commit()
+                cb.waitUntilCompleted()
+                try engine.check(cb, "probes")
+                try propagate(p, psi: psi, batch: b, planes: [], options: options, engine: engine) { j, exit in
+                    guard j == p.sliceCount - 1 else { return }
+                    let (values, buffer) = try engine.tensor([b, nx, ny], .float32)
+                    let cb2 = MPSCommandBuffer(from: engine.queue)
+                    _ = intensities.executable.executable.encode(
+                        to: cb2, inputs: intensities.inputs(["psi": exit, "scale": scale]), results: [values],
+                        executionDescriptor: nil)
+                    cb2.commit()
+                    cb2.waitUntilCompleted()
+                    try engine.check(cb2, "intensities")
+                    let pointer = buffer.contents().bindMemory(to: Float.self, capacity: b * n)
+                    for k in 0..<b {
+                        try deliver(start + k, (0..<n).map { Double(pointer[k * n + $0]) })
+                    }
                 }
             }
         }

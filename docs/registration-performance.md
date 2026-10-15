@@ -109,3 +109,62 @@ No speed bound is gated. No change to the CPU path or to any number of a CPU res
 compute-shader FFT with float64-rounded twiddles is not part of this lane.
 
 ## 8. Amendments
+
+### 2026-10-15 ~12:45 CEST, at the first test run: the gain map rejected, the per-step renormalisation in its place
+
+**The gain map (1.7) is rejected; the cause is measured.** Prototype (scratch, M5 Pro, macOS 27): the map G(k) measured
+from 16 random-phase fields, then 100 round trips of fields not used to measure it, Σ|ψ|² change per round trip without
+and with C = 1/G:
+
+| Field | 256² without / with C | 512² | 1024² |
+|---|---|---|---|
+| random phase | −9.4e−7 / −5.8e−9 | −8.2e−7 / −2.7e−9 | −1.3e−6 / −2.9e−9 |
+| weak phase (0.3 rad) | −3.2e−8 / −2.3e−7 | −1.7e−8 / −1.1e−7 | −1.6e−8 / +1.0e−9 |
+| a delta | 0 / +9.5e−7 | 0 / +9.5e−7 | 0 / +1.4e−6 |
+
+The loss is not a fixed gain per frequency: it depends on the data (a delta passes every butterfly exactly; a
+weak-phase field, mostly the zero frequency, loses little), so a map measured on one kind of field over-corrects
+another, as amendment 2 of slice 1 predicted for a scalar. Not kept.
+
+**In its place, the per-step renormalisation** (in `MetalGraphs.renormalized`, on by default): after each FFT pair the
+device measures E_x = Σ|x|² before the forward transform, E_X = Σ|X|² after it, E_Y = Σ|X · P|² (or |X · A|² for the
+transmission) and E_y = Σ|y|² after the inverse, and scales y by √(E_Y E_x / (E_X E_y)); so the round trip's Σ|·|² follows
+Parseval, Σ|y|² = Σ|P · FFT(x)|² / N, with the forward transform's measured loss removed, for each wave of a batch and
+for the transmission. 1 where a product is 0. No array of the CPU path changes. Measured against the CPU path (512²,
+100 slices, Al, plane wave and probe, both potential forms), per slice, without / with: plane 2.8e−7 / 1.8e−8 (atoms),
+2.9e−7 / 1.4e−7 (values); probe 9.2e−7 / 2.2e−8, 9.3e−7 / 1.05e−7; and the errors fall with it (probe wave 5.4e−5 /
+1.6e−5, pattern 1.3e−4 / 6.5e−5). At 1024² × 100 slices: 8.4e−8 per slice, wave 1.3e−5. **The new measured bound is
+1.4e−7 per slice** (worst over these runs), against 9.3e−7 before; slice 1's accepted 1.5e−6 × slices stays the
+registered bound, and this lane's test guards the renormalised drift at 3e−7 per slice (`renormalizationTightensTheTotalIntensity`).
+
+**Mutants (gate 3), as run:** P01 σ replaced in the GPU phase; P02 the next element's kernel; P03 the delta weights'
+x and y swapped; P04 the first thickness's propagator for every slice (a test with uneven slices added for it,
+`unevenSlicesMatchTheCPUPath`); P05 the GPU probe's x ramp sign; P06 the renormalisation squared (for "the gain map
+applied twice"); P07 the scan intensity as Re² only; P08 the wave read one slice early (for "one slice late"); P09 the
+host merge overwriting (a column of eight gold atoms in one slice added to `runsAreDeterministic`); P10 the GPU probe's
+spectrum normalised 1e−4 off (for "the plane wave's ÷ N² dropped": the scans run probes only); P11 only the first
+element summed; P12 the GPU transmission not bandlimited; P13 `build()` putting slice 0's atoms everywhere; P14 the
+padding carrying weight. The slice-1 and slice-2 mutants that named the old per-slice graph (M20, M21, N16) now name the
+step in `MetalEngine.swift`; M15, M17 and M33 name `build(at:)` by a longer text (the probe's new helpers repeat a line);
+N03 and N17 had gone stale at slice 2's refuter fixes and name the current lines.
+
+### 2026-10-15 ~13:40 CEST, the speed and memory of section 5, and a memory fix
+
+Measured by `BenchmarkTests` (`SIMULATO_BENCHMARK=1`; log `bench-2026-10-15.log` in the session's scratchpad), M5 Pro,
+macOS 27, Al [001] at 300 keV, 100 slices of a/2, about 0.047 Å per pixel, structure to numbers (the potential
+included). Other sessions ran heavy tests on the machine at the same time, so the CPU times are, if anything, slow.
+
+| Grid | Plane wave: Metal / CPU | Speed-up | 64 × 64 HAADF scan: Metal / CPU | Speed-up | Metal peak memory |
+|---|---|---|---|---|---|
+| 256² | 0.089 s / 0.585 s | 6.6× | 16.6 s / 516 s (from 256 positions) | 31× | 0.98 GB |
+| 512² | 0.133 s / 4.45 s | 33× | 90.2 s / 2521 s (from 64 positions) | 28× | 1.3 GB |
+| 1024² | 0.281 s / 53.5 s | 190× | 408 s / 15157 s (from 64 positions) | 37× | 1.7 GB |
+
+The CPU scan runs 8 threads; its time is the subset's, scaled by 4096 / subset (linear in positions). The predictions
+(20× to 50× for the plane wave at 512², 5× to 10× for the scan) were low for the scan. The renormalisation costs 20 % to
+33 % of the GPU time (512², 100 slices, one wave: 36 ms without, 43 to 48 ms with). At 1024² the scan is GPU-bound at
+about 100 ms per position (21 positions per 512 MB batch); the host's share (ramps, widening, detectors) is a few ms.
+
+**Memory, fixed before this table.** The first run peaked at 5.6, 19.8 and 73 GB of device memory: each batch's buffers
+(autoreleased Objective-C objects) lived until the scan returned. Every slice step and every batch now runs in its own
+autorelease pool; the peaks above are after the fix (the earlier per-slice design held 960² × 100 slices at 3.8 GB).

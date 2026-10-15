@@ -17,14 +17,14 @@ FP = "Sources/SimulatoMultislice/FrozenPhonons.swift"
 DET = "Sources/SimulatoDetector/Detectors.swift"
 STEM = "Sources/SimulatoDetector/STEM.swift"
 SCAN = "Sources/SimulatoProbe/GridScan.swift"
-MS = "Sources/SimulatoMultislice/MetalMultislice.swift"
+MS = "Sources/SimulatoMultislice/MetalEngine.swift"  # the Metal step since the performance lane, part 2
 
 m1.MUTANTS = [
     ("N01", FP, "position: $0.0.position + $0.1)", "position: $0.0.position + 2 * $0.1)", "FrozenPhononsTests|STEMPinsTests",
      "σ applied twice (displacement doubled)"),
     ("N02", FP, "return SIMD3(directions.contains(.x) ? s * r.x : 0,", "return SIMD3(s * r.x,", "FrozenPhononsTests",
      "the directions ignored on x"),
-    ("N03", FP, "var g = GaussianGenerator(seed: seed &+ UInt64(c))", "var g = GaussianGenerator(seed: seed)",
+    ("N03", FP, "var g = GaussianGenerator(seed: Self.configurationSeed(seed, c))", "var g = GaussianGenerator(seed: seed)",
      "FrozenPhononsTests", "every configuration from the same seed"),
     ("N04", FP, "let u2 = Double(nextUInt64() >> 11) * 0x1p-53", "let u2 = Double(nextUInt64() >> 11) * 0x1p-54",
      "FrozenPhononsTests", "Box–Muller's angle over half the circle (wrong statistics)"),
@@ -54,12 +54,12 @@ m1.MUTANTS = [
     ("N14", DET, "let r = Int((Double(radialBins) * (alpha - inner) / (outer - inner)).rounded(.down))",
      "let r = min(radialBins - 1, Int((Double(radialBins) * (alpha - inner) / (outer - inner)).rounded()))",
      "STEMPinsTests", "the radial bin rounded instead of floored"),
-    ("N15", STEM, "values: values.map { $0 / n })", "values: values)", "STEMPinsTests",
+    ("N15", STEM, "values: values.map { $0 / Double(n) })", "values: values)", "STEMPinsTests",
      "the average over configurations a sum"),
-    ("N16", MS, "let spectrum = graph.fastFourierTransform(transmitted, axes: [1, 2], descriptor: forward, name: nil)",
-     "let spectrum = graph.fastFourierTransform(transmitted, axes: [0, 1], descriptor: forward, name: nil)",
+    ("N16", MS, "let spectrum = g.fastFourierTransform(x, axes: [1, 2], descriptor: forward, name: nil)",
+     "let spectrum = g.fastFourierTransform(x, axes: [0, 1], descriptor: forward, name: nil)",
      "STEMPinsTests", "Metal: the batch's forward FFT over axes 0 and 1"),
-    ("N17", DET, "        if o > maximum && abs(o - maximum) > 1e-5 + 1e-8 * abs(maximum) {",
+    ("N17", DET, "        if o > maximum && abs(o - maximum) > 1e-5 + 1e-5 * abs(o) {",
      "        if o > 10 * maximum {", "DetectorTruthTests", "an outer beyond the maximum angle accepted"),
     ("N18", DET, "            if m % 2 != n % 2 { m += 1 }\n            return m\n",
      "            return m\n", "STEMPinsTests", "the cutoff gpts without the grid's parity"),

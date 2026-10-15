@@ -14,7 +14,8 @@ import SimulatoProbe
 import SimulatoDetector
 
 @Suite("Benchmark (SIMULATO_BENCHMARK=1)",
-       .enabled(if: ProcessInfo.processInfo.environment["SIMULATO_BENCHMARK"] == "1", "set SIMULATO_BENCHMARK=1 to run"),
+       .enabled(if: ["1", "metal"].contains(ProcessInfo.processInfo.environment["SIMULATO_BENCHMARK"] ?? ""),
+                "set SIMULATO_BENCHMARK=1 to run (SIMULATO_BENCHMARK=metal: the Metal side only)"),
        .enabled(if: Multislice.metalIsAvailable, "no Metal device"))
 struct BenchmarkTests {
     static func seconds(_ d: Duration) -> Double {
@@ -32,7 +33,8 @@ struct BenchmarkTests {
         let clock = ContinuousClock()
         // The plane wave, structure to exit wave.
         var times: [String: Double] = [:]
-        for backend in [Backend.metal, .cpu] {
+        let metalOnly = ProcessInfo.processInfo.environment["SIMULATO_BENCHMARK"] == "metal"
+        for backend in metalOnly ? [Backend.metal] : [Backend.metal, .cpu] {
             let t = try clock.measure {
                 let p = try Potential(structure: structure, nx: n, ny: n, sliceThickness: 2.025)
                 _ = try Multislice.run(.planeWave(beam: beam, grid: p.grid), through: p, backend: backend)
@@ -52,6 +54,11 @@ struct BenchmarkTests {
             let probe = try Probe(beam: beam, grid: p.grid, aperture: Aperture(semiangleCutoff: 25))
             _ = try STEM.scan(probe: probe, potentials: [p], scan: full, detectors: [detector], backend: .metal)
             peak = Multislice.metalPeakAllocatedBytes() - base
+        }
+        if metalOnly {
+            print(String(format: "BENCH %d²: plane wave metal %.3f s; scan 64x64 metal %.2f s; peak device memory of the Metal scan %d MB above the start",
+                         n, times["plane metal"]!, Self.seconds(tm), peak >> 20))
+            return
         }
         let tc = try clock.measure {
             let p = try Potential(structure: structure, nx: n, ny: n, sliceThickness: 2.025)

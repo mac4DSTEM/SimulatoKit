@@ -179,14 +179,41 @@ struct MetalGPUTests {
                                   ("probe", try probe.build(at: SIMD2(15.3, 16.9)))] {
             let cpu = try Multislice.run(incident, through: eager, exitPlanes: planes, backend: .cpu)
             for renormalize in [false, true] {
-                let a = try GPUCases.compare(try Multislice.runMetal(incident, through: lazy, exitPlanes: planes,
-                                                                     renormalize: renormalize),
-                                             cpu, planes: indices, label: "\(label) atoms r=\(renormalize)")
+                var gpu: [Waves] = []
+                let clock = ContinuousClock()
+                _ = try Multislice.runMetal(incident, through: lazy, exitPlanes: .last, renormalize: renormalize)  // warm
+                let time = try clock.measure {
+                    gpu = try Multislice.runMetal(incident, through: lazy, exitPlanes: planes, renormalize: renormalize)
+                }
+                print("512² x 100 slices, \(label), renormalize \(renormalize): \(time) on the GPU (potential included)")
+                let a = try GPUCases.compare(gpu, cpu, planes: indices, label: "\(label) atoms r=\(renormalize)")
                 let b = try GPUCases.compare(try Multislice.runMetal(incident, through: eager, exitPlanes: planes,
                                                                      renormalize: renormalize),
                                              cpu, planes: indices, label: "\(label) values r=\(renormalize)")
+                if renormalize {
+                    // Amendment 1: the measured drift with the renormalisation, guarded at 3e−7 per slice (worst
+                    // measured 1.4e−7; without it 9.3e−7, inside the accepted 1.5e−6).
+                    #expect(a.totalPerSlice <= 3e-7 && b.totalPerSlice <= 3e-7, "\(label): renormalised drift")
+                }
                 print("Σ|ψ|² per slice, 512² x 100, \(label), renormalize \(renormalize): atoms \(a.totalPerSlice), values \(b.totalPerSlice); wave \(a.wave) / \(b.wave), pattern \(a.pattern) / \(b.pattern)")
             }
         }
+    }
+
+    /// Uneven slices (every distinct thickness its own propagator), both forms, against the CPU path.
+    @Test func unevenSlicesMatchTheCPUPath() throws {
+        let structure = try Pins.structure("D1")
+        let thicknesses = [1.0, 2.5, 0.7, 4.0, 3.325, 2.0, 6.0]
+        let lazy = try Potential(structure: structure, nx: 120, ny: 160, sliceThicknesses: thicknesses)
+        let eager = try lazy.build()
+        let incident = try Pins.incident("D1", "probe", grid: lazy.grid)
+        let planes = ExitPlanes.every(2)
+        let indices = try planes.planes(sliceCount: thicknesses.count)
+        let cpu = try Multislice.run(incident, through: eager, exitPlanes: planes, backend: .cpu)
+        let a = try GPUCases.compare(Multislice.run(incident, through: lazy, exitPlanes: planes, backend: .metal), cpu,
+                                     planes: indices, label: "uneven, atoms")
+        let b = try GPUCases.compare(Multislice.run(incident, through: eager, exitPlanes: planes, backend: .metal), cpu,
+                                     planes: indices, label: "uneven, values")
+        print("uneven slices: wave \(a.wave) / \(b.wave), pattern \(a.pattern) / \(b.pattern)")
     }
 }
