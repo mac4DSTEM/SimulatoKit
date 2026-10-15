@@ -253,3 +253,24 @@ struct CTFTruthTests {
         #expect(throws: (any Error).self) { try ContrastTransferFunction.nyquistSampling(semiangleCutoff: -5, energy: 200e3) }
     }
 }
+
+@Suite("CTF conventions as parameters (registration-generality.md)")
+struct CTFConventionTests {
+    @Test func theClosedFormsTakeTheirConstants() throws {
+        let lambda = try ElectronBeam(energy: 300e3).wavelength
+        let cs = 1.2e7
+        #expect(try ContrastTransferFunction.scherzerDefocus(Cs: cs, energy: 300e3, factor: 4.0 / 3)
+                == (4.0 / 3 * cs * lambda).squareRoot())
+        #expect(try ContrastTransferFunction.scherzerDefocus(Cs: -cs, energy: 300e3, factor: 1)
+                == -(cs * lambda).squareRoot())
+        #expect(try ContrastTransferFunction.pointResolution(Cs: cs, energy: 300e3, divisor: 1)
+                == pow(pow(lambda, 3) * cs, 0.25))
+        #expect(try ContrastTransferFunction.nyquistSampling(semiangleCutoff: 20, energy: 300e3, oversampling: 2)
+                == 1 / (2 * 20 / lambda * 1e-3))
+        #expect(throws: (any Error).self) { try ContrastTransferFunction.scherzerDefocus(Cs: cs, energy: 300e3, factor: 0) }
+        #expect(throws: (any Error).self) { try ContrastTransferFunction.pointResolution(Cs: cs, energy: 300e3, divisor: -1) }
+        #expect(throws: (any Error).self) {
+            try ContrastTransferFunction.nyquistSampling(semiangleCutoff: 20, energy: 300e3, oversampling: .nan)
+        }
+    }
+}

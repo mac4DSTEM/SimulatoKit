@@ -37,49 +37,51 @@ public enum STEM {
     /// structure) and returns each detector's measurement averaged over the potentials. On `.metal` the probes, the
     /// transmissions and the diffraction intensities are computed on the GPU (registration-performance.md 1.6).
     public static func scan(probe: Probe, potentials: [ProjectedPotential], scan: GridScan, detectors: [any Detector],
-                            backend: Backend = .cpu) throws -> [ScanMeasurement] {
+                            backend: Backend = .cpu, options: ExecutionOptions = .standard) throws -> [ScanMeasurement] {
         guard !potentials.isEmpty else { throw SimulatoError.invalidScan("no potential") }
         for p in potentials where !p.grid.matches(probe.grid) { throw SimulatoError.gridMismatch }
         switch backend {
         case .cpu:
-            return try cpuScan(probe: probe, potentials: potentials, scan: scan, detectors: detectors)
+            return try cpuScan(probe: probe, potentials: potentials, scan: scan, detectors: detectors, options: options)
         case .metal:
             return try metalScan(probe: probe, count: potentials.count, scan: scan, detectors: detectors) { k, s, n, r, d in
                 try Multislice.metalScanIntensities(spectrum: s, positions: n, ramps: r, through: potentials[k],
-                                                    beam: probe.beam, deliver: d)
+                                                    beam: probe.beam, options: options, deliver: d)
             }
         }
     }
 
     /// The same through unbuilt potentials: on `.cpu` each is built (`build()`), on `.metal` each slice is built on the GPU.
     public static func scan(probe: Probe, potentials: [Potential], scan: GridScan, detectors: [any Detector],
-                            backend: Backend = .cpu) throws -> [ScanMeasurement] {
+                            backend: Backend = .cpu, options: ExecutionOptions = .standard) throws -> [ScanMeasurement] {
         guard !potentials.isEmpty else { throw SimulatoError.invalidScan("no potential") }
         for p in potentials where !p.grid.matches(probe.grid) { throw SimulatoError.gridMismatch }
         switch backend {
         case .cpu:
-            return try cpuScan(probe: probe, potentials: potentials.map { try $0.build() }, scan: scan, detectors: detectors)
+            return try cpuScan(probe: probe, potentials: potentials.map { try $0.build() }, scan: scan, detectors: detectors,
+                               options: options)
         case .metal:
             return try metalScan(probe: probe, count: potentials.count, scan: scan, detectors: detectors) { k, s, n, r, d in
                 try Multislice.metalScanIntensities(spectrum: s, positions: n, ramps: r, through: potentials[k],
-                                                    beam: probe.beam, deliver: d)
+                                                    beam: probe.beam, options: options, deliver: d)
             }
         }
     }
 
     static func cpuScan(probe: Probe, potentials: [ProjectedPotential], scan: GridScan,
-                        detectors: [any Detector]) throws -> [ScanMeasurement] {
+                        detectors: [any Detector], options: ExecutionOptions) throws -> [ScanMeasurement] {
         let positions = scan.positions
         let shapes = try detectors.map { try $0.shape(for: probe.grid, beam: probe.beam) }
         let counts = shapes.map { $0.reduce(1, *) }
         var sums = counts.map { [Double](repeating: 0, count: $0 * positions.count) }
-        // Positions in chunks, so the waves of one chunk only are held (slice-2 refuter: 13 MB per position at 480²).
-        let chunk = max(1, (256 << 20) / (probe.grid.count * 16 * 2))
+        // Positions in chunks of `options.scanChunkBytes`, so the waves of one chunk only are held (slice-2 refuter: 13 MB
+        // per position at 480²).
+        let chunk = max(1, options.scanChunkBytes / (probe.grid.count * 16 * 2))
         for first in stride(from: 0, to: positions.count, by: chunk) {
             let range = first..<min(first + chunk, positions.count)
             let incidents = try range.map { try probe.build(at: positions[$0]) }
             for potential in potentials {
-                let exits = try Multislice.runBatch(incidents, through: potential, backend: .cpu)
+                let exits = try Multislice.runBatch(incidents, through: potential, backend: .cpu, options: options)
                 for (offset, exit) in exits.enumerated() {
                     try accumulate(DiffractionIntensity(exit), at: first + offset, detectors, counts, &sums)
                 }

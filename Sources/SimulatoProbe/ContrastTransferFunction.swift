@@ -108,25 +108,30 @@ public struct ContrastTransferFunction: Sendable, Hashable {
         return h
     }
 
-    /// Scherzer defocus [Å]: sign(Cs) √(1.5 |Cs| λ) (abTEM's convention: defocus = −C10).
-    public static func scherzerDefocus(Cs: Double, energy: Double) throws -> Double {
+    /// Scherzer defocus [Å]: sign(Cs) √(factor |Cs| λ) (defocus = −C10). The default factor 1.5 is abTEM's; 4/3 is the
+    /// other convention in use.
+    public static func scherzerDefocus(Cs: Double, energy: Double, factor: Double = 1.5) throws -> Double {
+        guard factor.isFinite, factor > 0 else { throw SimulatoError.invalidAberration("the Scherzer factor must be finite and positive") }
         let lambda = try ElectronBeam(energy: energy).wavelength
         let s: Double = Cs > 0 ? 1 : (Cs < 0 ? -1 : 0)
-        return s * (3 / 2 * abs(Cs) * lambda).squareRoot()
+        return s * (factor * abs(Cs) * lambda).squareRoot()
     }
 
-    /// Point resolution [Å]: (λ³ |Cs| / 6)^{1/4}.
-    public static func pointResolution(Cs: Double, energy: Double) throws -> Double {
+    /// Point resolution [Å]: (λ³ |Cs| / divisor)^{1/4}; the default divisor 6 is abTEM's ((λ³ Cs / 6)^{1/4} ≈ 0.64 (λ³ Cs)^{1/4}).
+    public static func pointResolution(Cs: Double, energy: Double, divisor: Double = 6) throws -> Double {
+        guard divisor.isFinite, divisor > 0 else { throw SimulatoError.invalidAberration("the divisor must be finite and positive") }
         let lambda = try ElectronBeam(energy: energy).wavelength
-        return pow(pow(lambda, 3) * abs(Cs) / 6, 1.0 / 4)
+        return pow(pow(lambda, 3) * abs(Cs) / divisor, 1.0 / 4)
     }
 
-    /// Nyquist sampling [Å] for a semiangle α_c [mrad]: 1 / (4 α_c / λ · 10⁻³).
-    public static func nyquistSampling(semiangleCutoff: Double, energy: Double) throws -> Double {
+    /// Nyquist sampling [Å] for a semiangle α_c [mrad]: 1 / (oversampling · α_c / λ · 10⁻³); the default 4 is abTEM's
+    /// (two samples per period of the probe's highest frequency 2 α_c / λ).
+    public static func nyquistSampling(semiangleCutoff: Double, energy: Double, oversampling: Double = 4) throws -> Double {
         // abTEM raises ZeroDivisionError at 0; a semiangle must be finite and positive (slice-3 refuter).
         guard semiangleCutoff.isFinite, semiangleCutoff > 0 else { throw SimulatoError.invalidAperture(semiangleCutoff) }
+        guard oversampling.isFinite, oversampling > 0 else { throw SimulatoError.invalidAperture(oversampling) }
         let lambda = try ElectronBeam(energy: energy).wavelength
-        return 1 / (4 * semiangleCutoff / lambda * 1e-3)
+        return 1 / (oversampling * semiangleCutoff / lambda * 1e-3)
     }
 }
 

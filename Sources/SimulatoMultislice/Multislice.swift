@@ -48,8 +48,9 @@ public enum Backend: Sendable, Hashable {
 /// The multislice algorithm (Fourier space, propagator order 1, transmit then propagate).
 public enum Multislice {
     /// Propagates `incident` through `potential` and returns the waves at the requested exit planes, in plane order.
+    /// `options` reach `.metal` (renormalisation, cache); `.cpu` runs one wave on one thread whatever they say.
     public static func run(_ incident: Waves, through potential: ProjectedPotential, exitPlanes: ExitPlanes = .last,
-                           backend: Backend = .cpu) throws -> [Waves] {
+                           backend: Backend = .cpu, options: ExecutionOptions = .standard) throws -> [Waves] {
         guard incident.grid.matches(potential.grid) else { throw SimulatoError.gridMismatch }
         let planes = try exitPlanes.planes(sliceCount: potential.slices.count)
         switch backend {
@@ -59,23 +60,23 @@ public enum Multislice {
         case .metal:
             let engine = try MetalEngine.require()
             let prepared = try MetalMultislice.prepare(potential, beam: incident.beam, engine: engine)
-            return try MetalMultislice.run(incident, prepared: prepared, planes: planes)
+            return try MetalMultislice.run(incident, prepared: prepared, planes: planes, options: options)
         }
     }
 
     /// The same for a `Potential`: on `.cpu` built first (`build()`), on `.metal` built slice by slice on the GPU
     /// (registration-performance.md 1.3).
     public static func run(_ incident: Waves, through potential: Potential, exitPlanes: ExitPlanes = .last,
-                           backend: Backend = .cpu) throws -> [Waves] {
+                           backend: Backend = .cpu, options: ExecutionOptions = .standard) throws -> [Waves] {
         guard incident.grid.matches(potential.grid) else { throw SimulatoError.gridMismatch }
         switch backend {
         case .cpu:
-            return try run(incident, through: potential.build(), exitPlanes: exitPlanes, backend: .cpu)
+            return try run(incident, through: potential.build(), exitPlanes: exitPlanes, backend: .cpu, options: options)
         case .metal:
             let planes = try exitPlanes.planes(sliceCount: potential.sliceCount)
             let engine = try MetalEngine.require()
             let prepared = try MetalMultislice.prepare(potential, beam: incident.beam, engine: engine)
-            return try MetalMultislice.run(incident, prepared: prepared, planes: planes)
+            return try MetalMultislice.run(incident, prepared: prepared, planes: planes, options: options)
         }
     }
 

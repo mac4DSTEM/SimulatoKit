@@ -134,4 +134,16 @@ struct STEMPinsTests {
             #expect(d <= 2e-4, "\(id) \(name): \(d)")
         }
     }
+
+    /// registration-generality.md: a CPU scan in chunks of one position equals the default bit for bit.
+    @Test func theScanChunkIsAParameter() throws {
+        let potentials = try Pins2.potentials("S1", pi: .exact)
+        let probe = try Pins2.probe("S1", grid: potentials[0].grid)
+        let scan = try Pins2.scan("S1")
+        let d = try Pins2.detectors().map(\.1)
+        let a = try STEM.scan(probe: probe, potentials: potentials, scan: scan, detectors: d)
+        let b = try STEM.scan(probe: probe, potentials: potentials, scan: scan, detectors: d,
+                              options: ExecutionOptions(scanChunkBytes: 1))
+        #expect(zip(a, b).allSatisfy { $0.values == $1.values })
+    }
 }

@@ -55,3 +55,14 @@ ignored, the ceiling ignored, each closed form's parameter ignored). One Gate B 
 that moved, an option that changes a number it should not, a refusal that differs.
 
 ## 4. Amendments
+
+### 2026-10-15 ~14:45 CEST, at the first full run
+
+**The defaults moved nothing.** The 14 bit digests of section 2 (`DefaultsDigest`, scratch) are identical on `f3bacd6` and
+on the pass's code; every fixture passes unchanged (`tools/test.sh`, 84 test functions). One addition to section 1: the
+Metal batching of `runBatch` and of scans now comes from one function, `batchPlan` (a package hook,
+`Multislice.metalBatchPlan`, lets a test read it), so `metalBatchBytes` and `metalBatchShapes`, which change rounding only,
+have an observable effect to test. Two planned mutants are equivalent by design and are not run: ignoring
+`maximumCPUThreads` or `scanChunkBytes` changes no number (both are tested bit for bit against the default). The macOS
+floor, measured again on this code: it builds at macOS 15; at macOS 14 only `Synchronization.Mutex` fails (four uses in
+`MetalEngine.swift`); the declaration stays macOS 27.

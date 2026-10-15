@@ -48,10 +48,11 @@ public struct Grid: Sendable, Hashable {
 
     /// The same grid within rounding: equal point counts and extents within 1e−12 relative (exact `==` refuses a grid
     /// whose extent was computed along another path, e.g. 9.600000000000001 against 9.6; refuter finding, 2026-10-15).
-    public func matches(_ other: Grid) -> Bool {
+    /// `relativeTolerance` defaults to 1e−12.
+    public func matches(_ other: Grid, relativeTolerance: Double = 1e-12) -> Bool {
         nx == other.nx && ny == other.ny
-            && abs(extentX - other.extentX) <= 1e-12 * max(abs(extentX), abs(other.extentX))
-            && abs(extentY - other.extentY) <= 1e-12 * max(abs(extentY), abs(other.extentY))
+            && abs(extentX - other.extentX) <= relativeTolerance * max(abs(extentX), abs(other.extentX))
+            && abs(extentY - other.extentY) <= relativeTolerance * max(abs(extentY), abs(other.extentY))
     }
 
     /// NumPy's `fftfreq(n, d)`: integers [0, 1, ..., ⌈n/2⌉ − 1, −⌊n/2⌋, ..., −1] times 1 / (n d), bit for bit.

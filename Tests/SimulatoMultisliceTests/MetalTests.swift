@@ -16,7 +16,7 @@ import SimulatoProbe
 struct MetalTests {
     /// The total-intensity bound per slice (amendment 2, Gate D: MPSGraph's float32 FFT round trip loses up to 1.43e−6
     /// of Σ|ψ|² per round trip on the non-zero frequencies; tools/metal-fft-gain).
-    static let totalIntensityPerSlice = 1.5e-6
+    static let totalIntensityPerSlice = MetalAccuracy.registered.totalIntensityPerSlice
 
     struct Worst {
         var wave = 0.0, intensity = 0.0, pattern = 0.0, total = 0.0, totalPerSlice = 0.0
@@ -38,9 +38,9 @@ struct MetalTests {
             worst.pattern = max(worst.pattern, p)
             worst.total = max(worst.total, t)
             if plane >= 0 { worst.totalPerSlice = max(worst.totalPerSlice, t / Double(plane + 1)) }
-            #expect(w <= 1e-4, "\(label): exit wave")
-            #expect(i <= 2e-4, "\(label): intensity")
-            #expect(p <= 2e-4, "\(label): diffraction pattern")
+            #expect(w <= MetalAccuracy.registered.wave, "\(label): exit wave")
+            #expect(i <= MetalAccuracy.registered.intensity, "\(label): intensity")
+            #expect(p <= MetalAccuracy.registered.pattern, "\(label): diffraction pattern")
             #expect(t <= Self.totalIntensityPerSlice * Double(plane + 1), "\(label): total intensity")
         }
         return worst

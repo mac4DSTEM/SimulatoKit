@@ -45,10 +45,11 @@ enum GPUCases {
             worst.pattern = max(worst.pattern, p)
             worst.total = max(worst.total, t)
             if plane >= 0 { worst.totalPerSlice = max(worst.totalPerSlice, t / Double(plane + 1)) }
-            #expect(w <= 1e-4, "\(label): exit wave \(w)")
-            #expect(i <= 2e-4, "\(label): intensity \(i)")
-            #expect(p <= 2e-4, "\(label): diffraction pattern \(p)")
-            #expect(t <= 1.5e-6 * Double(plane + 1), "\(label): total intensity \(t)")
+            let bound = MetalAccuracy.registered
+            #expect(w <= bound.wave, "\(label): exit wave \(w)")
+            #expect(i <= bound.intensity, "\(label): intensity \(i)")
+            #expect(p <= bound.pattern, "\(label): diffraction pattern \(p)")
+            #expect(t <= bound.totalIntensityPerSlice * Double(plane + 1), "\(label): total intensity \(t)")
         }
         return worst
     }

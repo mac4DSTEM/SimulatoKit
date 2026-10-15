@@ -20,18 +20,21 @@ public struct Potential: Sendable, Hashable {
     /// The slice of each atom, in the same order.
     public let sliceOfAtom: [Int]
 
-    /// Slices of `sliceThickness` (abTEM's rule: ⌈Lz / s⌉ equal slices).
+    /// Slices of `sliceThickness` (abTEM's rule: ⌈Lz / s⌉ equal slices), at most `maximumSliceCount`.
     public init(structure: AtomicStructure, nx: Int, ny: Int, sliceThickness: Double,
-                parameterization: LobatoParameterization = LobatoParameterization()) throws {
-        let t = try Slicing.thicknesses(depth: structure.box.z, requested: sliceThickness)
-        try self.init(structure: structure, nx: nx, ny: ny, sliceThicknesses: t, parameterization: parameterization)
+                parameterization: LobatoParameterization = LobatoParameterization(),
+                maximumSliceCount: Int = Slicing.maximumSliceCount) throws {
+        let t = try Slicing.thicknesses(depth: structure.box.z, requested: sliceThickness, maximumCount: maximumSliceCount)
+        try self.init(structure: structure, nx: nx, ny: ny, sliceThicknesses: t, parameterization: parameterization,
+                      maximumSliceCount: maximumSliceCount)
     }
 
-    /// The given slice thicknesses (they must sum to the box's depth).
+    /// The given slice thicknesses (they must sum to the box's depth), at most `maximumSliceCount`.
     public init(structure: AtomicStructure, nx: Int, ny: Int, sliceThicknesses: [Double],
-                parameterization: LobatoParameterization = LobatoParameterization()) throws {
+                parameterization: LobatoParameterization = LobatoParameterization(),
+                maximumSliceCount: Int = Slicing.maximumSliceCount) throws {
         let grid = try Grid(nx: nx, ny: ny, extentX: structure.box.x, extentY: structure.box.y)
-        let thicknesses = try Slicing.validated(sliceThicknesses, depth: structure.box.z)
+        let thicknesses = try Slicing.validated(sliceThicknesses, depth: structure.box.z, maximumCount: maximumSliceCount)
         for a in structure.atoms where !LobatoParameterization.supports(atomicNumber: a.atomicNumber) {
             throw SimulatoError.unsupportedElement(a.atomicNumber)
         }

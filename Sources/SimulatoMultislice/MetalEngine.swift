@@ -22,15 +22,6 @@ enum MetalSliceSource: Hashable {
     case values
 }
 
-/// Options of the Metal path that tests compare (not public).
-struct MetalOptions: Hashable {
-    /// Rescale the transmission and the wave after each FFT pair so their Σ|·|² follows Parseval as measured on the
-    /// device (registration-performance.md 1.7, amendment 1).
-    var renormalize: Bool
-
-    static let standard = MetalOptions(renormalize: true)
-}
-
 /// A compiled executable with its feeds in the executable's order.
 final class MetalExecutable: @unchecked Sendable {
     let executable: MPSGraphExecutable
@@ -60,10 +51,10 @@ final class MetalEngine: @unchecked Sendable {
     let graphDevice: MPSGraphDevice
     /// One Metal run at a time (the executables and the queue are shared).
     let runLock = NSLock()
-    /// The compiled executables, least recently used first; at most `cacheLimit` (each holds device memory: about 240 MB
-    /// at 1024² for a batch of 21; an unbounded cache grew to 2.9 GB over twelve batch sizes, refuter 2026-10-15).
+    /// The compiled executables, least recently used first; at most the caller's `metalExecutableCacheLimit` (each holds
+    /// device memory: about 240 MB at 1024² for a batch of 21; an unbounded cache grew to 2.9 GB over twelve batch sizes,
+    /// refuter 2026-10-15).
     private let cache = Mutex<[(key: String, step: MetalStep)]>([])
-    static let cacheLimit = 12
     /// The largest `currentAllocatedSize` seen at a commit since the last reset (registration-performance.md 1.8).
     let peak = Mutex<Int>(0)
 
@@ -89,7 +80,8 @@ final class MetalEngine: @unchecked Sendable {
     }
 
     /// The executable for `key`, built by `make` the first time.
-    func step(_ key: String, _ make: () -> MetalStep) -> MetalStep {
+    func step(_ key: String, limit: Int = ExecutionOptions.standard.metalExecutableCacheLimit,
+              _ make: () -> MetalStep) -> MetalStep {
         let hit: MetalStep? = cache.withLock { c in
             guard let i = c.firstIndex(where: { $0.key == key }) else { return nil }
             let entry = c.remove(at: i)
@@ -101,7 +93,7 @@ final class MetalEngine: @unchecked Sendable {
         cache.withLock { c in
             c.removeAll { $0.key == key }
             c.append((key, s))
-            if c.count > Self.cacheLimit { c.removeFirst(c.count - Self.cacheLimit) }
+            if c.count > limit { c.removeFirst(c.count - limit) }
         }
         return s
     }
@@ -339,10 +331,11 @@ extension MetalMultislice {
     }
 
     /// The step executable for a prepared potential and a batch of b waves.
-    static func stepExecutable(_ p: MetalPreparedPotential, batch b: Int, options: MetalOptions,
+    static func stepExecutable(_ p: MetalPreparedPotential, batch b: Int, options: ExecutionOptions,
                                engine: MetalEngine) -> MetalStep {
         let nx = p.grid.nx, ny = p.grid.ny
-        return engine.step("step \(p.source) \(nx)x\(ny) b\(b) \(options)") {
+        return engine.step("step \(p.source) \(nx)x\(ny) b\(b) r\(options.metalRenormalization)",
+                           limit: options.metalExecutableCacheLimit) {
             let g = MPSGraph()
             let psi = g.placeholder(shape: MetalGraphs.shape([b, nx, ny]), dataType: .complexFloat32, name: "psi")
             let aperture = g.placeholder(shape: MetalGraphs.shape([nx, ny]), dataType: .float32, name: "aperture")
@@ -370,8 +363,8 @@ extension MetalMultislice {
                 named["v"] = values
                 v = values
             }
-            let t = MetalGraphs.transmission(g, v: v, sigma: sigma, aperture: aperture, renormalize: options.renormalize)
-            let out = MetalGraphs.propagate(g, psi: psi, t: t, p: prop, renormalize: options.renormalize)
+            let t = MetalGraphs.transmission(g, v: v, sigma: sigma, aperture: aperture, renormalize: options.metalRenormalization)
+            let out = MetalGraphs.propagate(g, psi: psi, t: t, p: prop, renormalize: options.metalRenormalization)
             return MetalStep(executable: MetalExecutable(g, device: engine.graphDevice, feeds: feeds, targets: [out]),
                              placeholders: named)
         }
@@ -395,7 +388,7 @@ extension MetalMultislice {
     /// slice and every batch runs in its own autorelease pool: without one, each batch's buffers lived to the end of the
     /// scan (the first benchmark: 73 GB at 1024², 4096 positions).
     static func propagate(_ p: MetalPreparedPotential, psi: MPSGraphTensorData, batch b: Int, planes: Set<Int>,
-                          options: MetalOptions, engine: MetalEngine,
+                          options: ExecutionOptions, engine: MetalEngine,
                           read: (Int, MPSGraphTensorData) throws -> Void) throws {
         // No slice: the wave passes unchanged (the CPU path's answer; `0...last` trapped, refuter 2026-10-15).
         guard p.sliceCount > 0 else { return try read(-1, psi) }
@@ -437,11 +430,24 @@ extension MetalMultislice {
     }
 
     /// The batch size whose waves fit in 512 MB (registration-slice-2.md 3.6).
-    static func batchSize(_ grid: Grid) -> Int { max(1, (512 << 20) / (grid.count * 8 * 3)) }
+    static func batchSize(_ grid: Grid, bytes: Int = ExecutionOptions.standard.metalBatchBytes) -> Int {
+        max(1, bytes / (grid.count * 8 * 3))
+    }
+
+    /// The batches of a run of `count` waves: the first index, the waves used and the batch compiled, by
+    /// `options.metalBatchBytes` and `options.metalBatchShapes`.
+    static func batchPlan(count: Int, grid: Grid, options: ExecutionOptions) -> [(start: Int, used: Int, compiled: Int)] {
+        let size = batchSize(grid, bytes: options.metalBatchBytes)
+        return stride(from: 0, to: count, by: size).map { start in
+            let used = min(size, count - start)
+            return (start, used, compiledBatch(used, size: size, shapes: options.metalBatchShapes))
+        }
+    }
 
     /// The batch an executable is compiled for: b rounded up to a power of two, at most `size` (so a run compiles a few
     /// batch shapes, not one per remainder); the extra waves are zeros and are not read.
-    static func compiledBatch(_ b: Int, size: Int) -> Int {
+    static func compiledBatch(_ b: Int, size: Int, shapes: MetalBatchShapes = .powersOfTwo) -> Int {
+        guard shapes == .powersOfTwo else { return b }
         var e = 1
         while e < b { e *= 2 }
         return min(e, max(size, b))
@@ -449,7 +455,7 @@ extension MetalMultislice {
 
     /// The waves of one incident at the requested planes (−1: the incident itself, which the caller adds).
     static func run(_ incident: Waves, prepared p: MetalPreparedPotential, planes: [Int],
-                    options: MetalOptions = .standard) throws -> [Waves] {
+                    options: ExecutionOptions = .standard) throws -> [Waves] {
         let engine = try MetalEngine.require()
         engine.runLock.lock()
         defer { engine.runLock.unlock() }
@@ -467,16 +473,14 @@ extension MetalMultislice {
 
     /// The exit waves of a batch of incidents (after the last slice), in input order, in batches that fit 512 MB.
     static func runBatch(_ incidents: [ComplexField], prepared p: MetalPreparedPotential,
-                         options: MetalOptions = .standard) throws -> [ComplexField] {
+                         options: ExecutionOptions = .standard) throws -> [ComplexField] {
         let engine = try MetalEngine.require()
         engine.runLock.lock()
         defer { engine.runLock.unlock() }
-        let size = batchSize(p.grid)
         var out: [ComplexField] = []
-        for start in stride(from: 0, to: incidents.count, by: size) {
+        for (start, used, b) in batchPlan(count: incidents.count, grid: p.grid, options: options) {
             try autoreleasepool {
-                let chunk = Array(incidents[start..<min(start + size, incidents.count)])
-                let b = compiledBatch(chunk.count, size: size)
+                let chunk = Array(incidents[start..<(start + used)])
                 var v = [Float](repeating: 0, count: 2 * p.grid.count * b)
                 for (k, f) in chunk.enumerated() {
                     let base = 2 * p.grid.count * k
@@ -532,8 +536,10 @@ extension MetalMultislice {
 
 extension MetalMultislice {
     /// IFFT(Ψ₀ · r_x ⊗ r_y) for a batch of b positions.
-    static func probeStep(nx: Int, ny: Int, batch b: Int, engine: MetalEngine) -> MetalStep {
-        return engine.step("probes \(nx)x\(ny) b\(b)") {
+    static func probeStep(nx: Int, ny: Int, batch b: Int,
+                          limit: Int = ExecutionOptions.standard.metalExecutableCacheLimit,
+                          engine: MetalEngine) -> MetalStep {
+        return engine.step("probes \(nx)x\(ny) b\(b)", limit: limit) {
             let g = MPSGraph()
             let s = g.placeholder(shape: MetalGraphs.shape([nx, ny]), dataType: .complexFloat32, name: "spectrum")
             let rx = g.placeholder(shape: MetalGraphs.shape([b, nx, 1]), dataType: .complexFloat32, name: "rx")
@@ -577,21 +583,18 @@ extension MetalMultislice {
     static func scanIntensities(spectrum: ComplexField, positions count: Int,
                                 ramps: (Int) throws -> (x: ComplexField, y: ComplexField),
                                 potential p: MetalPreparedPotential, intensityScale: Double,
-                                        options: MetalOptions = .standard,
+                                        options: ExecutionOptions = .standard,
                                         deliver: (Int, [Double]) throws -> Void) throws {
         let engine = try MetalEngine.require()
         engine.runLock.lock()
         defer { engine.runLock.unlock() }
         let nx = p.grid.nx, ny = p.grid.ny, n = p.grid.count
-        let size = batchSize(p.grid)
         let spectrumData = try engine.complex(spectrum)
         let scale = try engine.floats([Float(intensityScale)], [1])
-        for start in stride(from: 0, to: count, by: size) {
+        for (start, used, b) in batchPlan(count: count, grid: p.grid, options: options) {
             try autoreleasepool {
-                let used = min(size, count - start)
-                let b = compiledBatch(used, size: size)
-                let probes = probeStep(nx: nx, ny: ny, batch: b, engine: engine)
-                let intensities = engine.step("intensities \(nx)x\(ny) b\(b)") {
+                let probes = probeStep(nx: nx, ny: ny, batch: b, limit: options.metalExecutableCacheLimit, engine: engine)
+                let intensities = engine.step("intensities \(nx)x\(ny) b\(b)", limit: options.metalExecutableCacheLimit) {
                     let g = MPSGraph()
                     let psi = g.placeholder(shape: MetalGraphs.shape([b, nx, ny]), dataType: .complexFloat32, name: "psi")
                     let sc = g.placeholder(shape: [1], dataType: .float32, name: "scale")
@@ -652,21 +655,23 @@ extension Multislice {
     package static func metalScanIntensities(spectrum: ComplexField, positions: Int,
                                              ramps: (Int) throws -> (x: ComplexField, y: ComplexField),
                                              through potential: ProjectedPotential, beam: ElectronBeam,
+                                             options: ExecutionOptions = .standard,
                                              deliver: (Int, [Double]) throws -> Void) throws {
         let engine = try MetalEngine.require()
         let prepared = try MetalMultislice.prepare(potential, beam: beam, engine: engine)
         try MetalMultislice.scanIntensities(spectrum: spectrum, positions: positions, ramps: ramps, potential: prepared,
-                                            intensityScale: 1, deliver: deliver)
+                                            intensityScale: 1, options: options, deliver: deliver)
     }
 
     /// The same through a `Potential` built on the GPU.
     package static func metalScanIntensities(spectrum: ComplexField, positions: Int,
                                              ramps: (Int) throws -> (x: ComplexField, y: ComplexField),
                                              through potential: Potential, beam: ElectronBeam,
+                                             options: ExecutionOptions = .standard,
                                              deliver: (Int, [Double]) throws -> Void) throws {
         let engine = try MetalEngine.require()
         let prepared = try MetalMultislice.prepare(potential, beam: beam, engine: engine)
         try MetalMultislice.scanIntensities(spectrum: spectrum, positions: positions, ramps: ramps, potential: prepared,
-                                            intensityScale: 1, deliver: deliver)
+                                            intensityScale: 1, options: options, deliver: deliver)
     }
 }
