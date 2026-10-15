@@ -49,6 +49,13 @@ m1.MUTANTS = [
     ("G14", E, "out += fields(data, batch: b, grid: p.grid, count: chunk.count)",
      "out += fields(data, batch: b, grid: p.grid, count: b == used ? used : used - 1)", F,
      "a padded batch read one wave short"),
+    # Gate B's fixes.
+    ("G15", E, "            if c.count > limit { c.removeFirst(c.count - limit) }\n            return entry.step",
+     "            return entry.step", F, "the cache limit not applied on a hit"),
+    ("G16", "Sources/SimulatoCore/Grid.swift", "let t = relativeTolerance >= 0 ? relativeTolerance : 0",
+     "let t = relativeTolerance", F, "a NaN or negative grid tolerance taken as given"),
+    ("G17", O, "    public var metalExecutableCacheLimit: Int { didSet { metalExecutableCacheLimit = max(1, metalExecutableCacheLimit) } }",
+     "    public var metalExecutableCacheLimit: Int", F, "a cache limit set through the var not clamped"),
 ]
 # Equivalent by design, not run: the thread cap and the CPU scan chunk change no number (bit for bit; tested as such).
 m1.EXTRA = {}

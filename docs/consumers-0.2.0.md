@@ -22,8 +22,10 @@ Nothing, unless it wants another choice. All new parameters have defaults, so 0.
   `pointResolution(Cs:energy:divisor:)` (6), `nyquistSampling(semiangleCutoff:energy:oversampling:)` (4); each refuses a
   non-positive or non-finite constant.
 
-A consumer that passes `options:` positionally or wraps these functions in a protocol requirement must add the new
-parameter; a consumer that only calls them does not.
+A consumer that only calls these functions changes nothing. One source break: an unapplied reference to a changed
+function no longer has its old type (`grids.allSatisfy(grid.matches)` fails to type-check; write
+`grids.allSatisfy { grid.matches($0) }`), and a protocol requirement that mirrors an old signature must add the parameter.
+`ExecutionOptions` raises any count below 1 to 1, in the initialiser and on every later set.
 
 ## Also new
 

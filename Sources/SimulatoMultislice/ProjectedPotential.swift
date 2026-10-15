@@ -27,18 +27,22 @@ public struct ProjectedPotential: Sendable, Hashable {
     /// The slice each atom of the structure was put in (in the structure's atom order).
     public let sliceOfAtom: [Int]
 
-    /// Builds the potential with slices of `sliceThickness` (abTEM's rule: ⌈Lz / s⌉ equal slices).
+    /// Builds the potential with slices of `sliceThickness` (abTEM's rule: ⌈Lz / s⌉ equal slices), at most
+    /// `maximumSliceCount`.
     public init(structure: AtomicStructure, nx: Int, ny: Int, sliceThickness: Double,
-                parameterization: LobatoParameterization = LobatoParameterization()) throws {
-        let t = try Slicing.thicknesses(depth: structure.box.z, requested: sliceThickness)
-        try self.init(structure: structure, nx: nx, ny: ny, sliceThicknesses: t, parameterization: parameterization)
+                parameterization: LobatoParameterization = LobatoParameterization(),
+                maximumSliceCount: Int = Slicing.maximumSliceCount) throws {
+        let t = try Slicing.thicknesses(depth: structure.box.z, requested: sliceThickness, maximumCount: maximumSliceCount)
+        try self.init(structure: structure, nx: nx, ny: ny, sliceThicknesses: t, parameterization: parameterization,
+                      maximumSliceCount: maximumSliceCount)
     }
 
     /// Builds the potential with the given slice thicknesses (they must sum to the box's depth): `Potential(...).build()`.
     public init(structure: AtomicStructure, nx: Int, ny: Int, sliceThicknesses: [Double],
-                parameterization: LobatoParameterization = LobatoParameterization()) throws {
+                parameterization: LobatoParameterization = LobatoParameterization(),
+                maximumSliceCount: Int = Slicing.maximumSliceCount) throws {
         self = try Potential(structure: structure, nx: nx, ny: ny, sliceThicknesses: sliceThicknesses,
-                             parameterization: parameterization).build()
+                             parameterization: parameterization, maximumSliceCount: maximumSliceCount).build()
     }
 
     init(grid: Grid, slices: [PotentialSlice], sliceOfAtom: [Int]) {

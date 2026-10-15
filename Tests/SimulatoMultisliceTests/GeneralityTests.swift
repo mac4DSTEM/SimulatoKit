@@ -74,11 +74,14 @@ struct GeneralityTests {
     @Test(.enabled(if: Multislice.metalIsAvailable, "no Metal device"))
     func theExecutableCacheFollowsItsLimit() throws {
         let (lazy, incidents) = try Self.batch(7)
-        for n in 1...7 {
-            _ = try Multislice.runBatch(Array(incidents.prefix(n)), through: lazy, backend: .metal,
-                                        options: ExecutionOptions(metalExecutableCacheLimit: 2, metalBatchShapes: .exact))
+        let held = try Multislice.withMetalExclusive {
+            for n in 1...7 {
+                _ = try Multislice.runBatch(Array(incidents.prefix(n)), through: lazy, backend: .metal,
+                                            options: ExecutionOptions(metalExecutableCacheLimit: 2, metalBatchShapes: .exact))
+            }
+            return Multislice.metalCachedExecutables
         }
-        #expect(Multislice.metalCachedExecutables <= 2, "\(Multislice.metalCachedExecutables) held")
+        #expect(held <= 2, "\(held) held")
     }
 
     @Test(.enabled(if: Multislice.metalIsAvailable, "no Metal device"))
@@ -110,5 +113,38 @@ struct GeneralityTests {
                           maximumSliceCount: 10)
         }
         #expect(throws: SimulatoError.invalidSliceThickness(1)) { try Slicing.thicknesses(depth: 5, requested: 1, maximumCount: 4) }
+    }
+
+    /// Gate B of the generality pass: counts set through the public vars are clamped too, and the engine survives them;
+    /// the cache limit holds on hits; a huge ceiling does not trap; odd grid tolerances keep a grid matching itself.
+    @Test func edgeValuesAreSafe() throws {
+        var o = ExecutionOptions.standard
+        o.metalExecutableCacheLimit = -1
+        o.maximumCPUThreads = Int.min
+        o.metalBatchBytes = 0
+        o.scanChunkBytes = -5
+        #expect(o == ExecutionOptions(maximumCPUThreads: 1, metalBatchBytes: 1, scanChunkBytes: 1, metalExecutableCacheLimit: 1))
+        #expect(try Slicing.thicknesses(depth: 4, requested: 1, maximumCount: Int.max).count == 4)
+        #expect(throws: SimulatoError.invalidSliceThickness(1)) {
+            try Slicing.thicknesses(depth: 9.3e18, requested: 1, maximumCount: Int.max)
+        }
+        let g = try Grid(nx: 64, ny: 64, extentX: 10, extentY: 10)
+        #expect(g.matches(g, relativeTolerance: -1) && g.matches(g, relativeTolerance: .nan) && g.matches(g, relativeTolerance: 0))
+        let far = try Grid(nx: 64, ny: 64, extentX: 20, extentY: 10)
+        #expect(!g.matches(far, relativeTolerance: .nan) && g.matches(far, relativeTolerance: .infinity))
+        let s = try GPUCases.aluminium(cells: (1, 1, 1))
+        #expect(throws: SimulatoError.invalidSliceThickness(0.3)) {
+            try ProjectedPotential(structure: s, nx: 32, ny: 32, sliceThickness: 0.3, maximumSliceCount: 10)
+        }
+        guard Multislice.metalIsAvailable else { return }
+        let (lazy, incidents) = try Self.batch(5)
+        let held = try Multislice.withMetalExclusive {
+            let gpu = try Multislice.runBatch(incidents, through: lazy, backend: .metal, options: o)
+            #expect(gpu.count == 5)
+            _ = try Multislice.runBatch(incidents, through: lazy, backend: .metal)  // hits and misses at the default limit
+            _ = try Multislice.runBatch(incidents, through: lazy, backend: .metal, options: o)  // a hit at limit 1
+            return Multislice.metalCachedExecutables
+        }
+        #expect(held == 1, "\(held) held under limit 1")
     }
 }

@@ -251,10 +251,13 @@ struct MetalGPUTests {
         let lazy = try Potential(structure: GPUCases.aluminium(cells: (2, 2, 2)), nx: 64, ny: 64, sliceThickness: 2.025)
         let wave = Waves.planeWave(beam: try ElectronBeam(energy: 300e3), grid: lazy.grid)
         let single = try Multislice.runBatch([wave], through: lazy, backend: .metal)[0]
-        for n in 1...12 {
-            let out = try Multislice.runBatch([Waves](repeating: wave, count: n), through: lazy, backend: .metal)
-            #expect(out.count == n && relMax(out[n - 1].field, single.field) <= 1e-6, "batch of \(n)")
+        let held = try Multislice.withMetalExclusive {
+            for n in 1...12 {
+                let out = try Multislice.runBatch([Waves](repeating: wave, count: n), through: lazy, backend: .metal)
+                #expect(out.count == n && relMax(out[n - 1].field, single.field) <= 1e-6, "batch of \(n)")
+            }
+            return Multislice.metalCachedExecutables
         }
-        #expect(Multislice.metalCachedExecutables <= 12, "\(Multislice.metalCachedExecutables) executables held")
+        #expect(held <= 12, "\(held) executables held")
     }
 }

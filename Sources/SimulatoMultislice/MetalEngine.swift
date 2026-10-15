@@ -49,8 +49,8 @@ final class MetalEngine: @unchecked Sendable {
     let device: any MTLDevice
     let queue: any MTLCommandQueue
     let graphDevice: MPSGraphDevice
-    /// One Metal run at a time (the executables and the queue are shared).
-    let runLock = NSLock()
+    /// One Metal run at a time (the executables and the queue are shared); recursive, so a test can hold it around a run.
+    let runLock = NSRecursiveLock()
     /// The compiled executables, least recently used first; at most the caller's `metalExecutableCacheLimit` (each holds
     /// device memory: about 240 MB at 1024² for a batch of 21; an unbounded cache grew to 2.9 GB over twelve batch sizes,
     /// refuter 2026-10-15).
@@ -80,12 +80,15 @@ final class MetalEngine: @unchecked Sendable {
     }
 
     /// The executable for `key`, built by `make` the first time.
-    func step(_ key: String, limit: Int = ExecutionOptions.standard.metalExecutableCacheLimit,
+    func step(_ key: String, limit requested: Int = ExecutionOptions.standard.metalExecutableCacheLimit,
               _ make: () -> MetalStep) -> MetalStep {
+        let limit = max(1, requested)
         let hit: MetalStep? = cache.withLock { c in
             guard let i = c.firstIndex(where: { $0.key == key }) else { return nil }
             let entry = c.remove(at: i)
             c.append(entry)
+            // The limit holds on a hit too (Gate B of the generality pass: seven stayed cached under limit 1).
+            if c.count > limit { c.removeFirst(c.count - limit) }
             return entry.step
         }
         if let s = hit { return s }

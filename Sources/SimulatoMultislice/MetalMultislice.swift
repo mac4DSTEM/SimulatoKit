@@ -135,6 +135,14 @@ extension Multislice {
     /// For the tests: how many compiled Metal executables the process holds (bounded, registration-performance.md
     /// amendment 3).
     package static var metalCachedExecutables: Int { MetalEngine.shared?.cachedExecutables ?? 0 }
+
+    /// For the tests: `body` with no other Metal run in between (so a count read in it is the body's own).
+    package static func withMetalExclusive<T>(_ body: () throws -> T) rethrows -> T {
+        guard let engine = MetalEngine.shared else { return try body() }
+        engine.runLock.lock()
+        defer { engine.runLock.unlock() }
+        return try body()
+    }
 }
 
 extension Multislice {

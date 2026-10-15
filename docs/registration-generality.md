@@ -66,3 +66,28 @@ have an observable effect to test. Two planned mutants are equivalent by design 
 `maximumCPUThreads` or `scanChunkBytes` changes no number (both are tested bit for bit against the default). The macOS
 floor, measured again on this code: it builds at macOS 15; at macOS 14 only `Synchronization.Mutex` fails (four uses in
 `MetalEngine.swift`); the declaration stays macOS 27.
+
+### 2026-10-15 ~15:15 CEST, Gate B: the refuter on the frozen `69568e1`, and the fixes it required
+
+One refuter (a Sonnet subagent; `GRProbes.swift` and `GRCrash.swift` in its scratch clone, not committed): the 14
+digests identical to 0.1.0's; every changed public declaration only gained trailing defaulted arguments, and every old
+call site compiles and gives bit-identical results; `.cpu` bit-equal across 13 thread and 15 scan-chunk values; the
+renormalisation option reaching every entry point; no cache cross-contamination between options; four threads with
+different options, no mismatch; refusals identical across backends; the CTF constants at 0, NaN, ±∞ and negative all
+refused; worst Metal numbers 8.4e−7 (batch options) and 4.0e−6 (scans), all inside `MetalAccuracy.registered`.
+
+Fixed (tier 2, a test each in `edgeValuesAreSafe`, broken once by G15–G17):
+1. **A cache limit of −1 or `Int.min` set through the public `var` trapped** in the cache's trim: every count of
+   `ExecutionOptions` is now clamped to at least 1 on every set, and the engine clamps again.
+2. **The cache limit held only on inserts**: seven entries stayed under limit 1 after a run of hits; it now holds on hits.
+3. **`Slicing.thicknesses(..., maximumCount: Int.max)` trapped** in `Int(n)` at n = 2^63: the count is capped at 2^53.
+4. **`Grid.matches` with a negative or NaN tolerance refused a grid compared with itself**: such a tolerance now counts as
+   0 (equal extents only).
+5. **The `ProjectedPotential` initialisers had no `maximumSliceCount:`**; they have it now, as `Potential`'s.
+
+Recorded, not changed: a slice count over the ceiling is refused as `invalidSliceThickness` (whose text names a
+thickness), and a bad `oversampling` as `invalidAperture` (a new error case would break consumers' exhaustive switches;
+0.3.0 may add one); unapplied references to the changed functions (`grids.allSatisfy(grid.matches)`) no longer
+type-check, a source break named in `docs/consumers-0.2.0.md`; a zero-slice `runBatch` on `.metal` returns the incident
+rounded to float32. The tests that count cached executables now hold the Metal run lock around the run and the count
+(`Multislice.withMetalExclusive`), so a run of another suite in parallel cannot change the count between the two.

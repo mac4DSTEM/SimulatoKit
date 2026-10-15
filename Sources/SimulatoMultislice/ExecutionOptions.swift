@@ -14,21 +14,22 @@ public enum MetalBatchShapes: Sendable, Hashable {
     case exact
 }
 
-/// How `Multislice.run`, `Multislice.runBatch` and `STEM.scan` execute. None of these choices changes a `.cpu` number;
+/// How `Multislice.run`, `Multislice.runBatch` and `STEM.scan` execute. Every count is at least 1 (a smaller value, set in
+/// the initialiser or later, is raised to 1). None of these choices changes a `.cpu` number;
 /// on `.metal`, batch sizes and shapes change rounding only (within `MetalAccuracy.registered`), the renormalisation
 /// changes the agreement (`docs/registration-performance.md`, amendment 1).
 public struct ExecutionOptions: Sendable, Hashable {
     /// At most this many threads for a CPU batch or scan (default 8); each thread runs whole positions, bit for bit as a
     /// sequential run.
-    public var maximumCPUThreads: Int
+    public var maximumCPUThreads: Int { didSet { maximumCPUThreads = max(1, maximumCPUThreads) } }
     /// The bytes of waves one Metal batch may hold (default 512 MiB; a wave costs nx · ny · 24 bytes).
-    public var metalBatchBytes: Int
+    public var metalBatchBytes: Int { didSet { metalBatchBytes = max(1, metalBatchBytes) } }
     /// The bytes of exit waves a CPU scan holds at once (default 256 MiB; an exit wave costs nx · ny · 32 bytes).
-    public var scanChunkBytes: Int
+    public var scanChunkBytes: Int { didSet { scanChunkBytes = max(1, scanChunkBytes) } }
     /// Rescale each Metal step to the device-measured Parseval energies (default on).
     public var metalRenormalization: Bool
     /// The compiled Metal executables kept, least recently used dropped first (default 12; each holds device memory).
-    public var metalExecutableCacheLimit: Int
+    public var metalExecutableCacheLimit: Int { didSet { metalExecutableCacheLimit = max(1, metalExecutableCacheLimit) } }
     /// How a remainder batch is shaped on Metal (default `.powersOfTwo`).
     public var metalBatchShapes: MetalBatchShapes
 

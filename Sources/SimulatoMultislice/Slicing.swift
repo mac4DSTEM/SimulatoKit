@@ -19,7 +19,8 @@ public enum Slicing {
         guard s.isFinite, s > 0 else { throw SimulatoError.invalidSliceThickness(s) }
         let n = (depth / s).rounded(.up)
         // Refuter finding (2026-10-15): a tiny s overflowed Int(n) and trapped. More than `maximumCount` slices is refused.
-        guard n.isFinite, n >= 1, n <= Double(maximumCount) else { throw SimulatoError.invalidSliceThickness(s) }
+        // At most 2^53 whatever `maximumCount` says: Int(n) trapped at n = 2^63 (Gate B of the generality pass).
+        guard n.isFinite, n >= 1, n <= Double(min(maximumCount, 1 << 53)) else { throw SimulatoError.invalidSliceThickness(s) }
         return [Double](repeating: depth / n, count: Int(n))
     }
 
