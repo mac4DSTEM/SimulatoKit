@@ -81,8 +81,8 @@ Fixed (tier 2, a test each in `edgeValuesAreSafe`, broken once by G15–G17):
    `ExecutionOptions` is now clamped to at least 1 on every set, and the engine clamps again.
 2. **The cache limit held only on inserts**: seven entries stayed under limit 1 after a run of hits; it now holds on hits.
 3. **`Slicing.thicknesses(..., maximumCount: Int.max)` trapped** in `Int(n)` at n = 2^63: the count is capped at 2^53.
-4. **`Grid.matches` with a negative or NaN tolerance refused a grid compared with itself**: such a tolerance now counts as
-   0 (equal extents only).
+4. **`Grid.matches` with a negative or NaN tolerance refused a grid compared with itself**: equal extents now match whatever
+   the tolerance (a negative or NaN one then accepts nothing else, as 0 would).
 5. **The `ProjectedPotential` initialisers had no `maximumSliceCount:`**; they have it now, as `Potential`'s.
 
 Recorded, not changed: a slice count over the ceiling is refused as `invalidSliceThickness` (whose text names a

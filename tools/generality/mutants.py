@@ -52,8 +52,8 @@ m1.MUTANTS = [
     # Gate B's fixes.
     ("G15", E, "            if c.count > limit { c.removeFirst(c.count - limit) }\n            return entry.step",
      "            return entry.step", F, "the cache limit not applied on a hit"),
-    ("G16", "Sources/SimulatoCore/Grid.swift", "let t = relativeTolerance >= 0 ? relativeTolerance : 0",
-     "let t = relativeTolerance", F, "a NaN or negative grid tolerance taken as given"),
+    ("G16", "Sources/SimulatoCore/Grid.swift", "            && (extentX == other.extentX\n                || abs(",
+     "            && (false\n                || abs(", F, "equal extents no longer match whatever the tolerance"),
     ("G17", O, "    public var metalExecutableCacheLimit: Int { didSet { metalExecutableCacheLimit = max(1, metalExecutableCacheLimit) } }",
      "    public var metalExecutableCacheLimit: Int", F, "a cache limit set through the var not clamped"),
 ]

@@ -51,10 +51,11 @@ public struct Grid: Sendable, Hashable {
     /// `relativeTolerance` defaults to 1e−12; a negative or NaN tolerance counts as 0 (equal extents only), an infinite one
     /// matches any grid with the same point counts.
     public func matches(_ other: Grid, relativeTolerance: Double = 1e-12) -> Bool {
-        let t = relativeTolerance >= 0 ? relativeTolerance : 0
-        return nx == other.nx && ny == other.ny
-            && (extentX == other.extentX || abs(extentX - other.extentX) <= t * max(abs(extentX), abs(other.extentX)))
-            && (extentY == other.extentY || abs(extentY - other.extentY) <= t * max(abs(extentY), abs(other.extentY)))
+        nx == other.nx && ny == other.ny
+            && (extentX == other.extentX
+                || abs(extentX - other.extentX) <= relativeTolerance * max(abs(extentX), abs(other.extentX)))
+            && (extentY == other.extentY
+                || abs(extentY - other.extentY) <= relativeTolerance * max(abs(extentY), abs(other.extentY)))
     }
 
     /// NumPy's `fftfreq(n, d)`: integers [0, 1, ..., ⌈n/2⌉ − 1, −⌊n/2⌋, ..., −1] times 1 / (n d), bit for bit.
