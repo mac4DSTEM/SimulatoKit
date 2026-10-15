@@ -11,6 +11,10 @@
   consumer that builds the README's code verbatim (it found an invalid import line in the quick start); no application
   or suite name in the sources, tests, README, DocC, `Package.swift` or the example. The macOS floor measured again:
   the code builds at macOS 15, at 14 only `Mutex` fails; the declaration stays macOS 27 (the owner's decision).
+  Break-once 17 of 17 (`docs/generality-mutants-2026-10-15.md`). Gate B (amendment 1): the defaults unmoved and every
+  old call site bit-identical; five defects fixed (a negative cache limit through the var trapped, the limit ignored on
+  hits, `Int.max` slice ceiling trapped, an odd grid tolerance refused a grid itself, `ProjectedPotential` lacked the
+  ceiling).
 
 ## State (2026-10-15, afternoon: the Metal performance lane and the 0.1.0 candidate)
 
