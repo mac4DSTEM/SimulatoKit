@@ -28,13 +28,15 @@ rm $main.code
 cd $pkg
 mkdir -p .build
 log=.build/readme-consumer-build.log
-if ! swift build -c release -j 4 >$log 2>&1; then
+# --disable-dependency-cache: SwiftPM's shared repository cache can print a 'skipping cache' warning on a CI runner,
+# which the warning count would take for the kit's own (DiffractoKit 0.4.1's CI).
+if ! swift build --disable-dependency-cache -c release -j 4 >$log 2>&1; then
   grep -E "error" $log | head -20 >&2
   die "BUILD FAILED (full log: $pkg/$log)"
 fi
 warnings=$(grep -c "warning:" $log || true)
 (( warnings == 0 )) || { grep "warning:" $log | head >&2; die "$warnings warning(s) in the build" }
-bin=$(swift build -c release --show-bin-path)
+bin=$(swift build --disable-dependency-cache -c release --show-bin-path)
 out=.build/readme-consumer-run.log
 set +e
 $bin/readme-consumer >$out 2>&1
