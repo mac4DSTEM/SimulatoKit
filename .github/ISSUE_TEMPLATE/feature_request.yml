@@ -1,0 +1,15 @@
+name: Feature request
+description: Suggest a missing feature or an abTEM capability to port
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What would you like to do?
+      description: If it is an abTEM feature, name it (see docs/parity.md for what is ported).
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why is it needed, and what do you do today instead?

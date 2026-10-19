@@ -2,8 +2,8 @@
 
 A Swift package for simulating electron scattering on Apple platforms: projected potentials, multislice propagation,
 frozen phonons, probes with aberrations, STEM scans with detectors, and the contrast transfer function for HRTEM images.
-It is a port of [abTEM](https://github.com/abtem/abtem) 1.0.10, checked against abTEM in float64 (Python oracle, pinned
-inputs, `docs/registration-slice-*.md`). The algorithms and the Lobato–Van Dyck (2014) parameters are abTEM's; credit
+It is a port of [abTEM](https://github.com/abtem/abtem) 1.0.10, checked against abTEM in float64 (Python reference, pinned
+inputs; the design and validation notes are `docs/registration-slice-*.md`). The algorithms and the Lobato–Van Dyck (2014) parameters are abTEM's; credit
 for the method belongs to the abTEM authors. Licence: GPL-3.0-or-later (`LICENSE`, `NOTICE`); software built on
 SimulatoKit must be GPL-compatible. It is a library of numbers, not an application, and has no UI.
 
@@ -29,6 +29,36 @@ path included, builds for both (MPSGraph's FFT needs macOS 14 / iOS 17, `Synchro
 tests and the consumer checks run on macOS, where the numbers are validated. Developed and tested on macOS 27.
 Build with `-c release`: the FFT and potential loops are many times slower unoptimised. Grid lengths are f · 2^m with
 f ∈ {1, 3, 5, 15} and m ≥ 3 (the lengths Accelerate's DFT accepts). Cells are orthogonal.
+
+## From abTEM
+
+Names checked against the sources and `docs/parity.md` (which lists every abTEM entry, ported or not).
+
+| abTEM | SimulatoKit |
+|---|---|
+| `Potential(atoms, gpts, slice_thickness)` | `Potential(structure:nx:ny:sliceThickness:)` |
+| `PlaneWave(...)` | `Waves.planeWave(beam:grid:)` |
+| `Probe(semiangle_cutoff, energy, ...)` | `Probe(beam:grid:aperture:aberrations:)` |
+| `waves.multislice(potential)` | `Multislice.run(_:through:exitPlanes:backend:)` |
+| `waves.intensity()` | `Waves.intensity()` |
+| `waves.diffraction_patterns(max_angle=...)` | `Waves.diffractionPattern(maxAngle:)` |
+| `CTF(...)`, `waves.apply_ctf(ctf)` | `ContrastTransferFunction(aberrations:...)`, `Waves.applying(_:)` |
+| `GridScan(start, end, gpts)` | `GridScan(start:end:nx:ny:)` |
+| `probe.scan(potential, scan, detectors)` | `STEM.scan(probe:potentials:scan:detectors:backend:)` |
+| `AnnularDetector`, `PixelatedDetector`, `SegmentedDetector` | the same names, with labelled initialisers |
+| `FrozenPhonons(atoms, num_configs, sigmas, seed)` | `FrozenPhonons(structure:sigmas:configurations:seed:directions:)` |
+
+## Platform
+
+macOS 15 or later and iOS/iPadOS 18 or later (`Package.swift`). Linux is not supported yet: the FFT uses Apple's
+Accelerate framework, and the GPU backend uses Metal and MPSGraph.
+
+## Please cite
+
+SimulatoKit is a port of abTEM. If you use it in published work, please cite abTEM: J. Madsen and T. Susi, "The abTEM
+code: transmission electron microscopy from first principles", Open Research Europe 1, 24 (2021), and, for the
+scattering parameters, I. Lobato and D. Van Dyck, Acta Cryst. A 70, 636-649 (2014), doi:10.1107/S205327331401643X.
+`CITATION.cff` has the same references in machine-readable form.
 
 ## Quick start
 
@@ -84,9 +114,9 @@ numbers, the potential included; `docs/registration-performance.md`):
 | 512² | 0.13 s / 4.4 s | 90 s / 2521 s | 1.3 GB |
 | 1024² | 0.28 s / 54 s | 408 s / 15157 s | 1.7 GB |
 
-The CPU scans run 8 threads and were timed on a subset of positions and scaled (linear in positions). These first
-numbers were taken on a heavily loaded machine (other builds running), which slows the CPU side most: read the ratios
-as upper bounds until a quiet re-measure.
+The CPU scans run 8 threads and were timed on a subset of positions and scaled (linear in positions). Caveat: these
+first numbers were taken on a heavily loaded machine (other builds were running), which slows the CPU side most, so
+read the Metal-to-CPU ratios as upper bounds until the table is re-measured on an idle machine.
 
 ## Choices and their defaults
 
@@ -110,17 +140,19 @@ let exits = try Multislice.runBatch(probes, through: potential, backend: backend
 
 - **Pins against abTEM 1.0.10** (`164e644`) in float64: wavelength, potentials, probes, exit waves, patterns, detectors,
   CTF kernels and HRTEM images agree within 1e−10 of the array's maximum or tighter (measured 1e−13 to 1e−16, with
-  abTEM's float32 π reproduced by `.abTEMFloat32`), and within 1e−6 with the kit's default exact π. Each slice has a written registration with its bounds and amendments:
+  abTEM's float32 π reproduced by `.abTEMFloat32`), and within 1e−6 with the kit's default exact π. Each slice has design and validation notes with its bounds and later corrections:
   `docs/registration-slice-1.md` (potentials, multislice), `docs/registration-slice-2.md` (frozen phonons, scans,
   detectors), `docs/registration-slice-3.md` (CTF), `docs/registration-performance.md` (the Metal path) and
   `docs/registration-generality.md` (the defaults as parameters).
 - **Truth tests** independent of abTEM: Kirkland's table, the k = 0 identity, the far field, vacuum propagation, slice
   symmetry, the probe, the aberration phase, the thickness series.
-- **Mutants**: every new test is broken on purpose and must fail (`docs/slice-*-mutants-2026-10-15.md`).
-- **Refuters**: an independent attempt to break the agreement on new inputs for each slice (recorded in the registrations).
+- **Deliberate breakage**: every new test is run against a deliberately broken copy of the code and must fail
+  (`docs/slice-*-mutants-2026-10-15.md`).
+- **Independent re-checks**: for each slice, a separate attempt to break the agreement on new inputs (recorded in the
+  design and validation notes).
 - **`docs/parity.md`** lists abTEM's public API entry by entry: done, partial or absent (planned or not planned).
 - **`tools/consumer-check`**: a separate package that uses the whole public API from outside, with negative controls.
-- **`docs/status.md`** has the measured table of every gate.
+- **`docs/status.md`** has the measured results of every check.
 
 ## What is not claimed
 
@@ -151,13 +183,14 @@ The CIF must have an orthogonal cell.
 ## Tests
 
 ```sh
-tools/test.sh    # swift test -c release; stamps .build/last-green on a clean tree
+tools/test.sh    # swift test -c release
 ```
 
-Never run `swift build --build-tests -c release`; `tools/test.sh` is the gate. The abTEM oracle (a Python venv) is not in the
-repository: `docs/registration-slice-1.md` section 2 says how it is pinned, and `tools/slice-*/pins.py` regenerate the fixtures.
+Use `tools/test.sh` (or `swift test -c release`) rather than `swift build --build-tests -c release`, which fails on the
+current toolchain. The abTEM reference (a Python virtual environment) is not in the repository:
+`docs/registration-slice-1.md` section 2 says how it is pinned, and `tools/slice-*/pins.py` regenerate the fixtures.
 
 ## Contributing and licence
 
-Issues and pull requests are welcome. A change that moves a number needs a test that fails when the code is broken and a
-comparison against abTEM; say which. GPL-3.0-or-later; see `LICENSE` and `NOTICE`.
+Issues and pull requests are welcome; see `CONTRIBUTING.md`. A change that moves a number needs a test that fails when
+the code is broken and a comparison against abTEM; say which. GPL-3.0-or-later; see `LICENSE` and `NOTICE`.

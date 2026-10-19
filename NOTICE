@@ -11,8 +11,7 @@ WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
 No simulated image or pattern in this library is validated against a
-micrograph: slice 1 has no frozen phonons, no partial coherence and no
-detector (docs/registration-slice-1.md, section 7).
+micrograph. See README.md, "What is not claimed".
 
 
 ================================================================================
@@ -53,7 +52,7 @@ Text
 
     E. J. Kirkland, Advanced Computing in Electron Microscopy, 2nd ed.,
     Springer (2010): the method, and the tabulated wavelengths and interaction
-    parameters used as truth (registration section 5, item 1).
+    parameters used as truth (docs/registration-slice-1.md, section 5, item 1).
 
 ================================================================================
 Constants
