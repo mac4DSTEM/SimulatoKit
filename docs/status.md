@@ -1,5 +1,7 @@
 # SimulatoKit status
 
+**Hand-off 2026-10-20:** done: D12 wording in CLAUDE.md, docs and test comments (63154bf); next: convert the tests that assert numerics exactly against a Python reference to written per-function tolerances (a code change, one per release).
+
 ## State (2026-10-15, ~15:30: 0.2.1)
 
 - **0.2.1 candidate**: the owner accepted the floored Metal detector bound (performance amendment 4):
