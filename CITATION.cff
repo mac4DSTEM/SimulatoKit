@@ -1,0 +1,40 @@
+cff-version: 1.2.0
+message: "If you use SimulatoKit in published work, please cite it, and please also cite abTEM, of which it is a port."
+title: "SimulatoKit"
+type: software
+authors:
+  - name: "mac4DSTEM contributors"
+license: GPL-3.0-or-later
+repository-code: "https://github.com/mac4DSTEM/SimulatoKit"
+abstract: "A Swift library for electron-scattering simulation on Apple platforms (projected potentials, multislice, frozen phonons, probes, STEM scans, detectors and the HRTEM contrast transfer function), ported from abTEM and checked against it."
+keywords:
+  - electron microscopy
+  - multislice
+  - STEM
+  - HRTEM
+  - Swift
+references:
+  - type: article
+    title: "The abTEM code: transmission electron microscopy from first principles"
+    authors:
+      - family-names: Madsen
+        given-names: J.
+      - family-names: Susi
+        given-names: T.
+    journal: "Open Research Europe"
+    volume: 1
+    start: 24
+    year: 2021
+  - type: article
+    title: "An accurate parameterization for scattering factors, electron densities and electrostatic potentials for neutral atoms that obey all physical constraints"
+    authors:
+      - family-names: Lobato
+        given-names: I.
+      - family-names: Van Dyck
+        given-names: D.
+    journal: "Acta Crystallographica Section A"
+    volume: 70
+    start: 636
+    end: 649
+    year: 2014
+    doi: "10.1107/S205327331401643X"

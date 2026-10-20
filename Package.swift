@@ -3,7 +3,7 @@
 // propagation and frozen phonons (SimulatoMultislice), probes, aberrations and scans (SimulatoProbe), detectors and the
 // STEM driver (SimulatoDetector) on a
 // shared core of beams, grids, structures and waves (SimulatoCore). A Swift port of abTEM (GPL-3.0-or-later), checked
-// against abTEM 1.0.10 (164e644) in float64; docs/registration-slice-1.md is the first registration.
+// against abTEM 1.0.10 (164e644) in float64; docs/registration-slice-1.md holds the first design and validation notes.
 //
 // Every accelerated path keeps a CPU reference path with a registered tolerance: the CPU path is float64 on Accelerate
 // (vDSP), the Metal path float32 on MPSGraph, one API with the backend as a parameter.
@@ -38,7 +38,7 @@ let package = Package(
         // grids; slice 3: the CTF with its envelopes and the closed forms, applied to waves for HRTEM images.
         .target(name: "SimulatoProbe", dependencies: ["SimulatoCore"], swiftSettings: settings),
         // Slice 2: annular (BF, ADF, HAADF), pixelated and segmented detectors and the STEM driver, averaged over
-        // frozen-phonon configurations (docs/registration-slice-2.md).
+        // frozen-phonon configurations (design and validation notes: docs/registration-slice-2.md).
         .target(name: "SimulatoDetector", dependencies: ["SimulatoCore", "SimulatoMultislice", "SimulatoProbe"],
                 swiftSettings: settings),
         // The first ten minutes: a CIF in, an HRTEM image and a STEM HAADF scan out (not a product).

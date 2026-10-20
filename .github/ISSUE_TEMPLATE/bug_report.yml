@@ -1,0 +1,40 @@
+name: Bug report
+description: Something gives a wrong number, crashes or does not build
+labels: ["bug"]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: SimulatoKit version or commit
+    validations:
+      required: true
+  - type: input
+    id: platform
+    attributes:
+      label: macOS or iOS version, and hardware
+      placeholder: macOS 15.x, Apple M-series
+    validations:
+      required: true
+  - type: dropdown
+    id: backend
+    attributes:
+      label: Backend
+      options:
+        - .cpu
+        - .metal
+        - both
+        - not applicable
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what did you expect?
+      description: If a number differs from abTEM, give the abTEM version and the inputs.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Minimal code that shows the problem
+      render: swift
