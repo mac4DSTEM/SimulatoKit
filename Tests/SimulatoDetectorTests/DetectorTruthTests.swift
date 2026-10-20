@@ -45,7 +45,7 @@ struct DetectorTruthTests {
         let exit = try Self.alExit(at: SIMD2(1.3, 2.9))
         let p = try DiffractionIntensity(exit)
         let a = p.angularSampling
-        let edge = Grid.fftfreq(exit.grid.nx, 1 / a.x / Double(exit.grid.nx))[5]  // the pixel (5, 0)'s angle, bit for bit
+        let edge = Grid.fftfreq(exit.grid.nx, 1 / a.x / Double(exit.grid.nx))[5]  // the pixel (5, 0)'s angle, exact
         let inner = try AnnularDetector(inner: 0, outer: edge).detect(p)[0]
         let outer = try AnnularDetector(inner: edge, outer: 2 * edge).detect(p)[0]
         let both = try AnnularDetector(inner: 0, outer: 2 * edge).detect(p)[0]

@@ -26,7 +26,7 @@ Count at 2026-10-15, slices 1 to 3 and the performance lane (`docs/registration-
 | `Accelerator`, `HasAcceleratorMixin` (`energy`, `wavelength`, `sigma`, `lock_energy`, `match`, `check_match`) | `ElectronBeam(energy:)` | **partial**: energy, wavelength and σ; an undefined energy (None), `lock_energy` and `match` not offered; the energy must be finite and positive |
 | `core.constants.kappa` | `PhysicalConstants.kappa` | **done** (the same double) |
 | `Grid`, `HasGrid2DMixin` (`extent`, `gpts`, `sampling`, `reciprocal_space_sampling`, `endpoint`) | `Grid(nx:ny:extentX:extentY:)`, `.samplingX`/`Y`, `.reciprocalSamplingX`/`Y`, `.matches(_:)` | **partial**: gpts and extent only (no `sampling=` input; two dimensions; endpoint False); gpts restricted to f · 2^m with f in {1, 3, 5, 15} and m ≥ 3 (abTEM takes any); the reciprocal sampling is abTEM's expression (bit-equal, slice-2 refuter B1) |
-| `core.grid.spatial_frequencies`, NumPy `fftfreq` | `Grid.fftfreq`, `.frequenciesX`/`Y` | **done** (bit for bit, `SimulatoCoreTests`) |
+| `core.grid.spatial_frequencies`, NumPy `fftfreq` | `Grid.fftfreq`, `.frequenciesX`/`Y` | **done** (exact today, `SimulatoCoreTests`; D12 allows a tolerance) |
 | `BaseWaves.angular_sampling`, `.cutoff_angles`, `.antialias_cutoff_gpts`, `.antialias_valid_gpts`, `.rectangle_cutoff_angles`, `.full_cutoff_angles`, `.cutoff_frequencies` | `DiffractionIntensity.angularSampling`, `.cutoffAngles`, `Antialias.cutoffPatternSize(on:)` | **partial**: angular sampling, cutoff angles and the odd cutoff size; the valid size only inside `PixelatedDetector(.valid)`; the rectangle and full cutoff angles and the cutoff frequencies not offered |
 | `abtem.config` (dask, device, precision, antialias settings), `abtem.axes` (axis metadata) | | **absent**: not planned: global configuration and ensemble-axis metadata belong to abTEM's lazy array objects; the kit takes explicit arguments |
 | `abtem.distributions` (parameter distributions for ensembles) | | **absent**: not planned: a caller loops over a parameter and averages (focal series, tilt series) |
@@ -35,7 +35,7 @@ Count at 2026-10-15, slices 1 to 3 and the performance lane (`docs/registration-
 
 | abTEM | SimulatoKit | State |
 |---|---|---|
-| `Potential(atoms, gpts, slice_thickness, parametrization="lobato", projection="infinite")`, the lazy potential, and its `device` | `Potential(structure:nx:ny:sliceThickness:parameterization:)`, `.build() -> ProjectedPotential` (registration-performance.md section 1) | **done**: the grid, the slice thicknesses, the wrapped atoms with their slice and the parameterisation, without the arrays; `build()` is bit for bit the former eager construction; on `.metal` the potential is built on the GPU (V within 1e−5 × max V of the CPU's, section 3 there) |
+| `Potential(atoms, gpts, slice_thickness, parametrization="lobato", projection="infinite")`, the lazy potential, and its `device` | `Potential(structure:nx:ny:sliceThickness:parameterization:)`, `.build() -> ProjectedPotential` (registration-performance.md section 1) | **done**: the grid, the slice thicknesses, the wrapped atoms with their slice and the parameterisation, without the arrays; `build()` equals the former eager construction (asserted exactly today; D12 allows a tolerance); on `.metal` the potential is built on the GPU (V within 1e−5 × max V of the CPU's, section 3 there) |
 | `ase.Atoms` as the atoms argument (cell, positions, numbers, `pbc`) | `AtomicStructure(box:atoms:)`, `.repeated(_:_:_:)` | **partial**: orthogonal (diagonal) boxes, atomic number and Cartesian position only; periodic on all axes (abTEM honours ASE's `pbc`: amendment 3, item 5); repeats in ASE's order; no ASE or CIF reader in the library; a local type, marked for replacement by DiffractoKit's cell types |
 | `Potential(slice_thickness=float or sequence)`, `SliceIndexedAtoms` | `sliceThickness:`, `sliceThicknesses:`, `Slicing.thicknesses`, `.validated`, `.wrapped`, `.sliceIndices` | **done**: ⌈Lz / s⌉ equal slices, or a list that must sum to Lz (NumPy `isclose`), periodic wrap, top-face rule; no default of 1 Å (the thickness is required); an atom in the gap of a short slice list is kept, abTEM drops it (amendment 3, item 3) |
 | `Potential(sampling=)` | | **absent**: planned: SimulatoMultislice (the grid from a sampling) |
@@ -194,7 +194,7 @@ abTEM runs on NumPy, or on CuPy with `device="gpu"`. SimulatoKit has two backend
 
 | | Precision and engine | Role | Agreement |
 |---|---|---|---|
-| `.cpu` | float64, Accelerate; a batch of positions on at most 8 threads, bit for bit equal to sequential runs | the reference | against abTEM 1.0.10 (float64 configuration) at the pins' bounds, `docs/registration-slice-1.md` section 4 (V 1e−11 × max V, exit waves, intensities and patterns 1e−10 × max with `.abTEMFloat32`; 1e−6 with `.exact`), slice 2 (annular and pixelated 1e−10, segmented 1e−6) and slice 3 (kernels 1e−12, images 1e−10) |
+| `.cpu` | float64, Accelerate; a batch of positions on at most 8 threads, equal to sequential runs (exact today; D12 allows a tolerance) | the reference | against abTEM 1.0.10 (float64 configuration) at the pins' bounds, `docs/registration-slice-1.md` section 4 (V 1e−11 × max V, exit waves, intensities and patterns 1e−10 × max with `.abTEMFloat32`; 1e−6 with `.exact`), slice 2 (annular and pixelated 1e−10, segmented 1e−6) and slice 3 (kernels 1e−12, images 1e−10) |
 | `.metal` | float32, MPSGraph FFT | abTEM's `device="gpu"` counterpart | against `.cpu`, registered bounds: `docs/registration-slice-1.md` section 4 (exit wave 1e−4, intensity and pattern 2e−4 of the maximum; Σ\|ψ\|² 1.5e−6 per slice, amendment 2), slice 2 (scans 2e−4), and `docs/registration-performance.md` section 3 (V built on the GPU 1e−5 × max V, GPU probe 1e−5 × max \|ψ\|, grids to 1024²) |
 
 The Metal bounds hold to 100 slices (slice-1 amendment 3, item 7); MPSGraph's float32 FFT is not exactly unitary, a known
@@ -209,7 +209,7 @@ counterparts are its `max_batch` and dask settings, which are not counted as mis
 
 - The Metal backend (`Backend.metal`) and the batched scan (`Multislice.runBatch`), registered against the CPU path; MPSGraph's float32 FFT gain is a known limit
   (registration amendment 2).
-- The CPU batch on up to `ExecutionOptions.maximumCPUThreads` (8 by default) threads, bit for bit equal to sequential runs.
+- The CPU batch on up to `ExecutionOptions.maximumCPUThreads` (8 by default) threads, equal to sequential runs (exact today; D12 allows a tolerance).
 - The constants of the CTF closed forms as parameters (`factor:` of `scherzerDefocus`, 1.5 by default as abTEM; `divisor:` of
   `pointResolution`, 6; `oversampling:` of `nyquistSampling`, 4).
 - `LobatoParameterization.PiConstant`: the exact π by default, abTEM's float32 π on request.

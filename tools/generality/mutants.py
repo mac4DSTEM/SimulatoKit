@@ -57,7 +57,7 @@ m1.MUTANTS = [
     ("G17", O, "    public var metalExecutableCacheLimit: Int { didSet { metalExecutableCacheLimit = max(1, metalExecutableCacheLimit) } }",
      "    public var metalExecutableCacheLimit: Int", F, "a cache limit set through the var not clamped"),
 ]
-# Equivalent by design, not run: the thread cap and the CPU scan chunk change no number (bit for bit; tested as such).
+# Equivalent by design, not run: the thread cap and the CPU scan chunk change no number (tested with == today; D12 allows a tolerance).
 m1.EXTRA = {}
 
 if __name__ == "__main__":

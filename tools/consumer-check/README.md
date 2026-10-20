@@ -17,7 +17,7 @@ the package, where `package` is visible) never notice.
   `repeated`).
 - **SimulatoMultislice**: `LobatoParameterization` (f(0) = 16π Σ A/B³, both `PiConstant`s), `Slicing`, `ProjectedPotential` (Σ V = f(0)/ΔxΔy,
   periodic wrap, every init), `ExitPlanes` (`every(m)` plane indices), `Multislice` (`run`, `runBatch`, `transmissionFunctions`,
-  `propagator`, `maximumCPUThreads`, a vacuum plane wave stays 1, batch = single runs bit for bit), `Backend.metal` only if
+  `propagator`, `maximumCPUThreads`, a vacuum plane wave stays 1, batch = single runs, exact today; D12 allows a tolerance), `Backend.metal` only if
   `Multislice.metalIsAvailable` (otherwise a SKIP line with the reason, and the `metalUnavailable` refusal is checked),
   `FrozenPhonons` (σ = 0 equals the static potential, directions, seeds, statistics, every refusal), `GaussianGenerator`.
 - **SimulatoProbe**: `Aperture`, `Aberrations` (`chi` closed forms, `dChiDAlpha` and `dChiDPhi` against central differences),

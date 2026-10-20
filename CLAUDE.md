@@ -38,6 +38,12 @@ in `MetalEngine.swift`), `SimulatoProbe` (slice 1; slice 2: `GridScan`; slice 3:
   agreement, not truth: truth is a closed form, a symmetry, a conservation law or a convergence (registration section 5).
 - **Pins are generated before the Swift**, by `tools/slice-<n>/pins.py`, which also re-derives every quantity from the
   registration's text; a difference is a failure of the port, never a tolerance to widen.
+- **Numerical testing policy (D12, Paul 2026-10-19).** Readers, I/O, indices and metadata are tested exact. Numerics are
+  compared against the pinned Python reference within a tolerance written per function (`assert_allclose` style: about
+  1e-7 relative for float64, 1e-5 for float32), never widened to hide a bug. During an app-to-kit switch, bit for bit is
+  only a quick check that nothing moved by accident; if it fails, verify against the Python reference within tolerance
+  and do not block. A moved pinned number gets its own commit with the reason. Some tests here still assert `==` on
+  floats; converting them to the written tolerance is a later code change.
 - **The π choice.** abTEM evaluates π in the Lobato factor as float32; `LobatoParameterization(piConstant: .exact)` is the
   default, `.abTEMFloat32` reproduces abTEM bit-closely. Tests against the pins use `.abTEMFloat32`.
 - **Every accelerated path keeps the CPU path** as its reference with a registered tolerance. The Metal path's known limit:
@@ -68,8 +74,8 @@ in `MetalEngine.swift`), `SimulatoProbe` (slice 1; slice 2: `GridScan`; slice 3:
 - **Consumer check**: `tools/consumer-check/run.sh` (the whole public API from a separate package, then `readme.sh`, the
   README's code built verbatim) and `controls.sh` (negative controls); run both before a tag.
 - **Every choice is a parameter** (0.2.0, `docs/registration-generality.md`): a new policy gets a parameter whose default
-  is the validated value, and the defaults must reproduce every fixture bit for bit. No application or suite name in
-  Sources, Tests, README, DocC, `Package.swift` or the example (the registrations and consumer notes keep the record).
+  is the validated value, and the defaults must reproduce every fixture (D12: within the written tolerance; exact today). No application or
+  suite name in Sources, Tests, README, DocC, `Package.swift` or the example (the registrations and consumer notes keep the record).
 - **DocC**: one catalogue per module in `Sources/<Module>/<Module>.docc`, one article each; links must resolve
   (`xcrun docc convert` per module with that module's symbol graph).
 - **Suite board**: this repo's row is `lanes/simulatokit`; how a session opens and closes it is in `../CLAUDE.md`.

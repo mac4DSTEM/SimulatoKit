@@ -75,7 +75,7 @@ struct STEMPinsTests {
         return try AnnularDetector(inner: 70, outer: 130).detect(DiffractionIntensity(exit))[0]
     }
 
-    /// The parallel CPU batch equals one sequential run per position, bit for bit, and its time is printed.
+    /// The parallel CPU batch equals one sequential run per position (`==` today; D12 allows a tolerance), and its time is printed.
     @Test func parallelCPUBatchEqualsSequentialRuns() throws {
         let potentials = try Pins2.potentials("S1", pi: .exact)
         let probe = try Pins2.probe("S1", grid: potentials[0].grid)
@@ -135,7 +135,7 @@ struct STEMPinsTests {
         }
     }
 
-    /// registration-generality.md: a CPU scan in chunks of one position equals the default bit for bit.
+    /// registration-generality.md: a CPU scan in chunks of one position equals the default (asserted exactly today; D12).
     @Test func theScanChunkIsAParameter() throws {
         let potentials = try Pins2.potentials("S1", pi: .exact)
         let probe = try Pins2.probe("S1", grid: potentials[0].grid)

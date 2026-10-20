@@ -44,7 +44,8 @@ builds the README's quick start verbatim; the macOS 15 floor measured again (the
 
 ## 3. Tests of the parameter paths (tier 2)
 
-`maximumCPUThreads` 1 equals the default bit for bit; `scanChunkBytes` of one position equals the default bit for bit;
+`maximumCPUThreads` 1 equals the default (D12: within tolerance; the test asserts `==` today);
+`scanChunkBytes` of one position likewise;
 `metalBatchBytes` small enough for batches of one or two, and `.exact` shapes, within 1e−6 of the default (the GPU's FFT
 may pick another kernel for another batch); `metalExecutableCacheLimit` 2 holds at most 2; `metalRenormalization` off
 drifts more than on; `MetalAccuracy.registered` equals the registered numbers; `Grid.matches` refuses a 1e−10 offset by
@@ -63,7 +64,7 @@ on the pass's code; every fixture passes unchanged (`tools/test.sh`, 84 test fun
 Metal batching of `runBatch` and of scans now comes from one function, `batchPlan` (a package hook,
 `Multislice.metalBatchPlan`, lets a test read it), so `metalBatchBytes` and `metalBatchShapes`, which change rounding only,
 have an observable effect to test. Two planned mutants are equivalent by design and are not run: ignoring
-`maximumCPUThreads` or `scanChunkBytes` changes no number (both are tested bit for bit against the default). The macOS
+`maximumCPUThreads` or `scanChunkBytes` changes no number (both are tested against the default, D12). The macOS
 floor, measured again on this code: it builds at macOS 15; at macOS 14 only `Synchronization.Mutex` fails (four uses in
 `MetalEngine.swift`); the declaration stays macOS 27.
 
