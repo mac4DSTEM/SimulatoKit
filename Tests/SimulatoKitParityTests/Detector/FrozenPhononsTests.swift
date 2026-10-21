@@ -5,6 +5,7 @@
 //        truth 2 (σ = 0 is slice 1).
 //
 
+import SimulatoKitTestSupport
 import Foundation
 import Testing
 import SimulatoCore

@@ -5,6 +5,7 @@
 //        weak-phase contrast at Scherzer, the textbook values).
 //
 
+import SimulatoKitTestSupport
 import CryptoKit
 import Foundation
 import Testing
@@ -13,7 +14,7 @@ import SimulatoMultislice
 import SimulatoProbe
 
 enum Pins3 {
-    static let directory = URL(fileURLWithPath: #filePath).deletingLastPathComponent().appendingPathComponent("Fixtures")
+    static let directory = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Fixtures")
 
     struct Loaded: @unchecked Sendable {  // immutable after load
         let json: [String: Any]

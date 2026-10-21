@@ -5,6 +5,7 @@
 //        maximum; the Metal checks use the kit's registered float32 bound.
 //
 
+import SimulatoKitTestSupport
 import CryptoKit
 import Foundation
 import Testing
@@ -13,7 +14,7 @@ import SimulatoMultislice
 import SimulatoProbe
 
 enum Slice4Pins {
-    static let directory = URL(fileURLWithPath: #filePath).deletingLastPathComponent().appendingPathComponent("Fixtures")
+    static let directory = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Fixtures")
 
     struct Loaded: @unchecked Sendable {
         let json: [String: Any]

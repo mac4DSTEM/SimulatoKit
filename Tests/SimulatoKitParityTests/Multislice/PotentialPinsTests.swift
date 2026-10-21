@@ -5,6 +5,7 @@
 //        function, truth 2 (the k = 0 identity) on every slice of every case, and the planted slicing rules.
 //
 
+import SimulatoKitTestSupport
 import Testing
 import SimulatoCore
 import SimulatoMultislice

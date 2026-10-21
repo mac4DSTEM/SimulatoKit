@@ -5,6 +5,7 @@
 //        reason when no Metal device exists.
 //
 
+import SimulatoKitTestSupport
 import Testing
 import SimulatoCore
 import SimulatoMultislice

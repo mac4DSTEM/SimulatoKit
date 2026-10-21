@@ -20,7 +20,7 @@ if ! swift build --disable-dependency-cache -c release -j 4 >$log 2>&1; then
 fi
 warnings=$(grep -c "warning:" $log || true)
 (( warnings == 0 )) || { grep "warning:" $log | head >&2; die "$warnings warning(s) in the build" }
-if grep -qE "SimulatoCoreTests|SimulatoMultisliceTests|SimulatoProbeTests|SimulatoDetectorTests|SimulatoExample" $log; then
+if grep -qE "SimulatoCoreTests|SimulatoMultisliceTests|SimulatoProbeTests|SimulatoDetectorTests|SimulatoKitParityTests|SimulatoKitTestSupport|SimulatoExample" $log; then
   die "the build log names a test-only or example target"
 fi
 bin=$(swift build --disable-dependency-cache -c release --show-bin-path)

@@ -4,6 +4,7 @@
 //        truth 1 (Kirkland's tabulated λ and σ).
 //
 
+import SimulatoKitTestSupport
 import Testing
 import SimulatoCore
 import SimulatoMultislice

@@ -4,6 +4,7 @@
 //        configurations, S2 static, S3 vacuum, S4 single atoms), CPU path; and the Metal path against the CPU path.
 //
 
+import SimulatoKitTestSupport
 import Testing
 import SimulatoCore
 import SimulatoDetector

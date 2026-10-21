@@ -4,6 +4,7 @@
 //        against the recorded sha256), the cases' structures, displacements, probes and detectors.
 //
 
+import SimulatoKitTestSupport
 import CryptoKit
 import Foundation
 import SimulatoCore
@@ -12,7 +13,7 @@ import SimulatoMultislice
 import SimulatoProbe
 
 enum Pins2 {
-    static let directory = URL(fileURLWithPath: #filePath).deletingLastPathComponent().appendingPathComponent("Fixtures")
+    static let directory = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Fixtures")
 
     struct Loaded: @unchecked Sendable {  // immutable after load
         let json: [String: Any]

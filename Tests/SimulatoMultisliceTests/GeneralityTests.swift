@@ -8,11 +8,12 @@ import Testing
 import SimulatoCore
 import SimulatoMultislice
 import SimulatoProbe
+import SimulatoKitTestSupport
 
 @Suite("Policies as parameters (registration-generality.md)")
 struct GeneralityTests {
     static func batch(_ n: Int) throws -> (Potential, [Waves]) {
-        let lazy = try Potential(structure: GPUCases.aluminium(cells: (2, 2, 3)), nx: 64, ny: 64, sliceThickness: 2.025)
+        let lazy = try Potential(structure: aluminiumStructure(cells: (2, 2, 3)), nx: 64, ny: 64, sliceThickness: 2.025)
         let probe = try Probe(beam: ElectronBeam(energy: 200e3), grid: lazy.grid, aperture: Aperture(semiangleCutoff: 20))
         return (lazy, try (0..<n).map { try probe.build(at: SIMD2(0.2 * Double($0), 0.13 * Double($0))) })
     }
@@ -87,7 +88,7 @@ struct GeneralityTests {
 
     @Test(.enabled(if: Multislice.metalIsAvailable, "no Metal device"))
     func renormalizationOffDriftsMore() throws {
-        let lazy = try Potential(structure: GPUCases.aluminium(cells: (4, 4, 50)), nx: 256, ny: 256, sliceThickness: 2.025)
+        let lazy = try Potential(structure: aluminiumStructure(cells: (4, 4, 50)), nx: 256, ny: 256, sliceThickness: 2.025)
         let probe = try Probe(beam: ElectronBeam(energy: 300e3), grid: lazy.grid, aperture: Aperture(semiangleCutoff: 25))
         let wave = try probe.build(at: SIMD2(4.1, 3.7))
         let cpu = try Multislice.run(wave, through: lazy, backend: .cpu)[0].totalIntensity
@@ -104,7 +105,7 @@ struct GeneralityTests {
     }
 
     @Test func theSliceCeilingIsAParameter() throws {
-        let s = try GPUCases.aluminium(cells: (1, 1, 1))
+        let s = try aluminiumStructure(cells: (1, 1, 1))
         #expect(throws: SimulatoError.invalidSliceThickness(0.3)) {
             try Potential(structure: s, nx: 32, ny: 32, sliceThickness: 0.3, maximumSliceCount: 10)
         }
@@ -133,7 +134,7 @@ struct GeneralityTests {
         #expect(g.matches(g, relativeTolerance: -1) && g.matches(g, relativeTolerance: .nan) && g.matches(g, relativeTolerance: 0))
         let far = try Grid(nx: 64, ny: 64, extentX: 20, extentY: 10)
         #expect(!g.matches(far, relativeTolerance: .nan) && g.matches(far, relativeTolerance: .infinity))
-        let s = try GPUCases.aluminium(cells: (1, 1, 1))
+        let s = try aluminiumStructure(cells: (1, 1, 1))
         #expect(throws: SimulatoError.invalidSliceThickness(0.3)) {
             try ProjectedPotential(structure: s, nx: 32, ny: 32, sliceThickness: 0.3, maximumSliceCount: 10)
         }

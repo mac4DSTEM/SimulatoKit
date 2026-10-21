@@ -5,6 +5,7 @@
 //        1e−12) and with the exact π (1e−6).
 //
 
+import SimulatoKitTestSupport
 import Testing
 import SimulatoCore
 import SimulatoMultislice

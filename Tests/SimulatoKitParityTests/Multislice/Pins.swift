@@ -11,7 +11,7 @@ import SimulatoMultislice
 import SimulatoProbe
 
 enum Pins {
-    static let directory = URL(fileURLWithPath: #filePath).deletingLastPathComponent().appendingPathComponent("Fixtures")
+    static let directory = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Fixtures")
 
     struct Loaded: @unchecked Sendable {  // immutable after load
         let json: [String: Any]
@@ -111,28 +111,3 @@ enum Pins {
         return try probe.build(at: SIMD2(p[0], p[1]))
     }
 }
-
-/// max |a − b| / max |b| (0 when both are zero).
-func relMax(_ a: [Double], _ b: [Double]) -> Double {
-    precondition(a.count == b.count, "relMax: \(a.count) vs \(b.count) values")
-    var d = 0.0, m = 0.0
-    for i in a.indices {
-        d = max(d, abs(a[i] - b[i]))
-        m = max(m, abs(b[i]))
-    }
-    return m > 0 ? d / m : d
-}
-
-/// max |a − b| / max |b| for complex fields.
-func relMax(_ a: ComplexField, _ b: ComplexField) -> Double {
-    precondition(a.nx == b.nx && a.ny == b.ny)
-    var d = 0.0, m = 0.0
-    for i in a.real.indices {
-        let dr = a.real[i] - b.real[i], di = a.imaginary[i] - b.imaginary[i]
-        d = max(d, (dr * dr + di * di).squareRoot())
-        m = max(m, (b.real[i] * b.real[i] + b.imaginary[i] * b.imaginary[i]).squareRoot())
-    }
-    return m > 0 ? d / m : d
-}
-
-func relDiff(_ a: Double, _ b: Double) -> Double { b == 0 ? abs(a) : abs(a - b) / abs(b) }

@@ -5,6 +5,7 @@
 //        the Gaussian filter is float64 (assert_allclose's default, rtol 1e-7). Poisson noise is statistical.
 //
 
+import SimulatoKitTestSupport
 import CryptoKit
 import Foundation
 import Testing
@@ -14,7 +15,7 @@ import SimulatoMultislice
 import SimulatoProbe
 
 enum Slice4ScanPins {
-    static let directory = URL(fileURLWithPath: #filePath).deletingLastPathComponent().appendingPathComponent("Fixtures")
+    static let directory = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Fixtures")
 
     struct Loaded: @unchecked Sendable {
         let json: [String: Any]

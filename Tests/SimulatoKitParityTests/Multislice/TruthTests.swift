@@ -5,6 +5,7 @@
 //        the thickness series (8). Truth 1 is in BeamAndScatteringTests, truth 2 in PotentialPinsTests.
 //
 
+import SimulatoKitTestSupport
 import Foundation
 import Testing
 import SimulatoCore
