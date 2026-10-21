@@ -5,7 +5,7 @@ target sampling, and the exit waves of a plane wave and a probe through Al on gr
 untilted and tilted. abTEM states no tolerance for these paths; the tests use assert_allclose's defaults for float64
 (rtol 1e-7) with atol 1e-12 of the wave's maximum.
 
-Run:  refs/abtem/bin/python -I -B SimulatoKit/tools/slice-4/pins.py
+Run:  References/python/abtem/bin/python -I -B SimulatoKit/tools/slice-4/pins.py
 """
 
 from __future__ import annotations

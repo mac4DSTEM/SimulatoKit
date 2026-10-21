@@ -1,6 +1,6 @@
 # Parity with abTEM
 
-The coverage table of abTEM 1.0.10 (`refs/abtem`, git `164e644`): its public classes and functions, their options, read from
+The coverage table of abTEM 1.0.10 (`References/python/abtem`, git `164e644`): its public classes and functions, their options, read from
 the source in `site-packages/abtem` against SimulatoKit. Rewritten for 0.3.0 (the growing phase's kit audit); every row
 has one state and one priority.
 

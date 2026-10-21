@@ -4,7 +4,7 @@ abTEM 1.0.10 (float64, numpy FFT, eager): CTF kernels, HRTEM images (apply_ctf t
 the closed forms. Every quantity is re-derived from the registration's text in NumPy and asserted equal to abTEM's.
 Writes Tests/SimulatoProbeTests/Fixtures/slice-3-pins.json and slice-3-arrays.bin.
 
-Run:  References/abtem-venv/bin/python -I -B tools/slice-3/pins.py
+Run:  ../References/python/abtem/bin/python -I -B tools/slice-3/pins.py
 """
 
 from __future__ import annotations

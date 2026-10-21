@@ -47,7 +47,7 @@ out.append(f"- Machine: {sh('sysctl', '-n', 'machdep.cpu.brand_string')}, macOS 
 py = subprocess.run([os.path.join(ROOT, "..", "refs", "abtem", "bin", "python"), "-I", "-c",
                     "import sys, numpy, scipy; print(sys.version.split()[0], numpy.__version__, scipy.__version__)"],
                    capture_output=True, text=True).stdout.split()
-out.append(f"- Python {py[0]} (NumPy {py[1]}, SciPy {py[2]}), abTEM 1.0.10, NumPy/SciPy from `refs/abtem` (CPU, NumPy's FFT; no GPU)")
+out.append(f"- Python {py[0]} (NumPy {py[1]}, SciPy {py[2]}), abTEM 1.0.10, NumPy/SciPy from `References/python/abtem` (CPU, NumPy's FFT; no GPU)")
 out.append("- Kit CPU is float64 on Accelerate (one thread per call); Metal is float32 on MPSGraph; abTEM is shown in float64 and float32")
 out.append("- Run while other sessions used the machine (load average 6 to 11): the spread columns show it; treat ratios within 20% as equal")
 out.append("- Sizes: 64² to 256² small and typical; **1024² and above: nightly** (not run in the session that wrote this table)\n")

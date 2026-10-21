@@ -4,7 +4,7 @@ Writes Tests/SimulatoDetectorTests/Fixtures/slice-4-scan-pins.json and slice-4-s
 is complex64 (its own float32 accumulation), so the test bound there is 1e-5 of the largest value; the Gaussian filter
 is scipy's in float64 (assert_allclose default, rtol 1e-7).
 
-Run:  refs/abtem/bin/python -I -B SimulatoKit/tools/slice-4/scan_pins.py
+Run:  References/python/abtem/bin/python -I -B SimulatoKit/tools/slice-4/scan_pins.py
 """
 
 from __future__ import annotations

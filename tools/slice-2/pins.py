@@ -8,7 +8,7 @@ tools/slice-1/pins.py) and asserted equal to abTEM's; a failure stops the genera
   Tests/SimulatoDetectorTests/Fixtures/slice-2-pins.json
   Tests/SimulatoDetectorTests/Fixtures/slice-2-arrays.bin   (float64 little-endian; complex interleaved)
 
-Run:  References/abtem-venv/bin/python -I -B tools/slice-2/pins.py
+Run:  ../References/python/abtem/bin/python -I -B tools/slice-2/pins.py
 """
 
 from __future__ import annotations

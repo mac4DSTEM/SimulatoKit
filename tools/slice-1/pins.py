@@ -8,7 +8,7 @@ paths) and asserts the two agree; then writes
   Tests/SimulatoMultisliceTests/Fixtures/slice-1-arrays.bin  (float64 little-endian; complex as interleaved re, im)
   Sources/SimulatoMultislice/LobatoTable.swift               (abTEM's lobato.json, verbatim numbers, with its sha256)
 
-Run from any directory:  References/abtem-venv/bin/python -I -B tools/slice-1/pins.py
+Run from any directory:  ../References/python/abtem/bin/python -I -B tools/slice-1/pins.py
 A failed assertion stops the generator: the text of section 3 is then incomplete or wrong, and that is an amendment.
 """
 

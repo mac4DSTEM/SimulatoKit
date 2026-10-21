@@ -5,7 +5,7 @@ Per-function timings of SimulatoKit against abTEM 1.0.10 on the same inputs (Al 
 each cell is the median in milliseconds with (min-max). Written by `tools/benchmarks/run.sh` and `merge.py`.
 
 - Machine: Apple M5 Pro, macOS 27.0.1, Apple Swift version 6.4 (swiftlang-6.4.0.34.1 clang-2100.3.34.1)
-- Python 3.12.14 (NumPy 2.5.4, SciPy 1.18.1), abTEM 1.0.10, NumPy/SciPy from `refs/abtem` (CPU, NumPy's FFT; no GPU)
+- Python 3.12.14 (NumPy 2.5.4, SciPy 1.18.1), abTEM 1.0.10, NumPy/SciPy from `References/python/abtem` (CPU, NumPy's FFT; no GPU)
 - Kit CPU is float64 on Accelerate (one thread per call); Metal is float32 on MPSGraph; abTEM is shown in float64 and float32
 - Run while other sessions used the machine (load average 6 to 11): the spread columns show it; treat ratios within 20% as equal
 - Sizes: 64² to 256² small and typical; **1024² and above: nightly** (not run in the session that wrote this table)
