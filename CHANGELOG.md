@@ -5,12 +5,23 @@ All notable changes to SimulatoKit. Each release's Migration paragraph is the re
 No release dates are given: the repository has no git tags yet, so a date for each version could not be verified.
 Anything not stated here, in the README or in the git history is left out.
 
+## 0.3.1
+
+Documentation only; no source change and no number moves.
+
+- The 0.3.0 entry no longer claims Bluestein runs at NumPy's speed; it is 2x to 7x slower (`docs/open-items.md` 1), as measured.
+- README: install line `from: "0.3.1"` (was `"0.1.0"`); the "no noise" sentence now names `ScanMeasurement.poissonNoise`.
+- The 0.3.0 Migration paragraph now lists the defaulted `tilt:` argument on `Probe.init`, `Waves.planeWave` and `Multislice.propagator`, not only `Waves.init`.
+- Added `docs/status.md`.
+
+**Migration.** None.
+
 ## 0.3.0
 
 - Any grid size: `Grid`, `Potential` and every FFT accept any length of at least 2, on `.cpu` and `.metal` (before:
   f · 2^m with f in 1, 3, 5, 15 and m ≥ 3). vDSP's DFT runs where it has the length, Bluestein's algorithm (own
-  implementation; ImagoKit's FFT is not a dependency, the kits stay standalone) elsewhere, at the speed of NumPy's FFT on the
-  odd size measured. Added `Grid.hasDirectTransform(_:)`. A 90 x 75 grid is pinned against abTEM (rtol 1e−7, plane wave and
+  implementation; ImagoKit's FFT is not a dependency, the kits stay standalone) elsewhere. Bluestein is slower than NumPy's
+  mixed-radix FFT: 2x to 7x on the sizes measured (3.8 ms against 0.57 ms at 250², `docs/open-items.md` 1); the numbers are right, only speed is open. Added `Grid.hasDirectTransform(_:)`. A 90 x 75 grid is pinned against abTEM (rtol 1e−7, plane wave and
   probe).
 - Added `Potential(structure:sampling:sliceThickness:)` (a sampling or an (x, y) pair), `Grid(extentX:extentY:samplingX:samplingY:)`
   and `GridScan(start:end:samplingX:samplingY:endpoint:)`: ⌈extent / sampling⌉ points (one more with `endpoint`), as abTEM.
@@ -27,7 +38,8 @@ Anything not stated here, in the README or in the git history is left out.
 **Migration.** Nothing is required. `SimulatoError` gained two cases, so an exhaustive `switch` over it needs a `default` or the
 two new cases. `Grid.isSupportedLength(_:)` is now true for every n ≥ 2: code that used it to pick vDSP lengths should call
 `Grid.hasDirectTransform(_:)`. The `Waves` initialiser has a new defaulted `tilt:` argument, so a type that mirrors its
-signature must add it.
+signature must add it. The same defaulted `tilt:` (zero) is new on `Probe.init`, `Waves.planeWave` and `Multislice.propagator`: a call
+that worked in 0.2.1 compiles and gives the same numbers, and a type that mirrors any of those signatures must add it.
 
 ## 0.2.1
 

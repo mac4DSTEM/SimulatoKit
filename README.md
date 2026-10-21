@@ -19,7 +19,7 @@ SimulatoKit must be GPL-compatible. It is a library of numbers, not an applicati
 ## Installation
 
 ```swift
-.package(url: "https://github.com/mac4DSTEM/SimulatoKit", from: "0.1.0")
+.package(url: "https://github.com/mac4DSTEM/SimulatoKit", from: "0.3.1")
 // target dependencies, as needed:
 .product(name: "SimulatoMultislice", package: "SimulatoKit")  // also SimulatoCore, SimulatoProbe, SimulatoDetector
 ```
@@ -153,7 +153,7 @@ Numbers are held to the Python reference within its own tolerance; `docs/parity.
 
 
 - Nothing is validated against a micrograph. Partial coherence is abTEM's envelope approximation; there is no detector
-  response or noise. Frozen phonons use Einstein σ given by the caller, and agree with abTEM exactly only when abTEM's
+  response; the only noise is `ScanMeasurement.poissonNoise` (the kit's own generator, not NumPy's stream). Frozen phonons use Einstein σ given by the caller, and agree with abTEM exactly only when abTEM's
   displacements are supplied (otherwise in distribution).
 - Metal's float32 FFT is not exactly unitary (it loses about 8e−7 of the total intensity per slice; a per-step
   renormalisation brings that to 5e−7 or less); the Metal bounds are registered to 100 slices, and past 300 slices the
