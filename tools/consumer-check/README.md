@@ -52,30 +52,6 @@ warnings allowed), runs, and prints `readme-consumer: the README's quick start b
 stops defining `hrtem`, `haadf` or `scan` the script fails with a message saying so. The generated `main.swift` is gitignored
 (`readme/.gitignore`); the README code is never edited by the script, so a quick start that stops compiling turns this red.
 
-## The negative controls
-
-    tools/consumer-check/controls.sh                 # all ten, about 1.5 to 3 minutes (10 of 10 caught on 2026-10-15)
-    tools/consumer-check/controls.sh "Probe.build(at:)"
-
-Copies the kit with rsync (without `.build`, `References`, `.git`) into `.build/consumer-check-controls/<kit name>`, builds the
-consumer against the unedited copy first (the baseline), then, one at a time, reverts ONE `public` to `package` in the copy,
-builds, and requires the build to fail with an `error:` line that names the symbol; the edited file is restored before the next
-control, and the restored copy must build again at the end. One warm `.build` serves all, so every control after the first is an
-incremental build.
-
-| control | the diagnostic that catches it |
-| --- | --- |
-| `ProjectedPotential.init(structure:nx:ny:sliceThickness:parameterization:)` | `incorrect argument label in call (have 'structure:nx:ny:sliceThickness:', ...)` (the public sibling init is chosen) |
-| `Multislice.run` | `'run' is inaccessible due to 'package' protection level`, or (the `Potential` overload chosen instead) `cannot convert value of type 'ProjectedPotential' to expected argument type 'Potential'` |
-| `Potential` | `cannot find 'Potential' in scope`, or a public declaration that uses it refused |
-| `Probe.build(at:)` | `'build' is inaccessible ...` |
-| `AnnularDetector` | `cannot find 'AnnularDetector' in scope` |
-| `ContrastTransferFunction` | the kit refuses: `method cannot be declared public because its parameter uses a package type` (at a line naming the type) |
-| `GridScan.positions` | `'positions' is inaccessible ...` |
-| `FrozenPhonons.init(structure:sigmas:configurations:seed:directions:)` | `extra arguments at positions #2, #3, #4` at the consumer line holding `sigmas:` |
-| `Grid.fftfreq` | `'fftfreq' is inaccessible ...` |
-| `Detector` (protocol) | the kit refuses: `... parameter uses a package type` at the line naming `Detector` |
-
 ## Public declarations a consumer cannot use fully (by design or worth a look)
 
 - `PotentialSlice` has no public initialiser: a consumer can read slices but build a `ProjectedPotential` from slices only by reusing

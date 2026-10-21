@@ -8,15 +8,15 @@ Thank you for your interest. Issues and pull requests are welcome.
 swift test -c release
 ```
 
-Build in release mode: the FFT and potential loops are many times slower unoptimised. (`tools/test.sh` runs the same
-command.) Do not use `swift build --build-tests -c release`; it fails on the current toolchain. The GPU (Metal) tests
+Build in release mode: the FFT and potential loops are many times slower unoptimised. Do not use `swift build --build-tests -c release`; it fails on the current toolchain. The GPU (Metal) tests
 skip themselves with a stated reason when no Metal device is present.
 
 ## How numbers are checked
 
 - The CPU path is float64 and is compared with [abTEM](https://github.com/abtem/abtem) 1.0.10, using fixtures generated
   by the scripts in `tools/slice-*/pins.py`. A test reads the fixture and states its tolerance.
-- A difference from abTEM is a bug in the port, not a tolerance to widen. If you believe abTEM is wrong, open an issue
+- A test's tolerance is the one the Python package's own tests use for that function; a result outside it is a bug. A change
+  that moves a fixture says why in the pull request and in the CHANGELOG. If you believe abTEM is wrong, open an issue
   with the evidence.
 - A change that moves a number needs a test that fails when the code is broken, and a comparison against abTEM (or a
   closed form); say which in the pull request.

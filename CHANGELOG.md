@@ -1,9 +1,9 @@
 # Changelog
 
-All notable changes to SimulatoKit. Versions follow the notes in `docs/consumers-*.md`.
+All notable changes to SimulatoKit. Each release's Migration paragraph is the record for consumers.
 
 No release dates are given: the repository has no git tags yet, so a date for each version could not be verified.
-Anything not stated in `docs/consumers-*.md`, the README or the git history is left out.
+Anything not stated here, in the README or in the git history is left out.
 
 ## 0.2.1
 
@@ -55,3 +55,5 @@ name. An empty array literal passed to the functions above now needs its type (`
 
 Unverified: the notes for 0.0.1 and 0.1.0 describe changes relative to the earlier untagged `main`; the exact
 commit of each version could not be confirmed without tags.
+
+Consumer notes for 0.0.1 to 0.2.1 are archived.

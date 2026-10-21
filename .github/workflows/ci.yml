@@ -6,6 +6,7 @@ name: CI
 on:
   push:
     branches: [main]
+    tags: ['*']
   pull_request:
     branches: [main]
 
@@ -24,6 +25,18 @@ jobs:
       # Metal suites skip themselves with a named reason when MTLCreateSystemDefaultDevice() is nil (hosted runners
       # may have no GPU); the CPU float64 reference tests always run.
       - name: Test
-        run: tools/test.sh
+        run: swift test -c release
       - name: Build the libraries for iOS
         run: xcodebuild -scheme SimulatoDetector -destination 'generic/platform=iOS Simulator' -quiet build
+  version:
+    name: CHANGELOG version matches the tag
+    runs-on: ubuntu-latest
+    needs: test
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compare
+        run: |
+          top=$(grep -m1 -E '^## [0-9]+\.[0-9]+\.[0-9]+' CHANGELOG.md | sed -E 's/^## ([0-9]+\.[0-9]+\.[0-9]+).*/\1/')
+          tag=${GITHUB_REF_NAME#v}
+          [ "$top" = "$tag" ] || { echo "CHANGELOG top is $top, tag is $tag"; exit 1; }

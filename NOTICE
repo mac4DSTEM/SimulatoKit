@@ -52,7 +52,7 @@ Text
 
     E. J. Kirkland, Advanced Computing in Electron Microscopy, 2nd ed.,
     Springer (2010): the method, and the tabulated wavelengths and interaction
-    parameters used as truth (docs/registration-slice-1.md, section 5, item 1).
+    parameters used as truth (slice-1 design note, archived in the suite's private folder).
 
 ================================================================================
 Constants

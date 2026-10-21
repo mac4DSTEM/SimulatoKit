@@ -1,11 +1,10 @@
 #!/bin/zsh
 # SimulatoKit consumer check: build tools/consumer-check (a separate package that depends on SimulatoKit by path) in
-# RELEASE, as the kit's tests run (tools/test.sh uses -c release), and run it. Exit 0 only if the build is
+# RELEASE, as the kit's tests run (the kit's tests use -c release), and run it. Exit 0 only if the build is
 # warning-free, no test-only target was built, and every check passed.
 #
 #   run.sh            build, run the checks, print "consumer-check: all passed — N checks ..." and exit 0.
 #
-# Negative controls (reverting one `public` to `package` in a copy and requiring the build to fail): controls.sh.
 set -euo pipefail
 here=${0:A:h}
 root=${here:h:h}

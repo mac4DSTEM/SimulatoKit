@@ -3,7 +3,7 @@
 A Swift package for simulating electron scattering on Apple platforms: projected potentials, multislice propagation,
 frozen phonons, probes with aberrations, STEM scans with detectors, and the contrast transfer function for HRTEM images.
 It is a port of [abTEM](https://github.com/abtem/abtem) 1.0.10, checked against abTEM in float64 (Python reference, pinned
-inputs; the design and validation notes are `docs/registration-slice-*.md`). The algorithms and the Lobato–Van Dyck (2014) parameters are abTEM's; credit
+inputs). The algorithms and the Lobato–Van Dyck (2014) parameters are abTEM's; credit
 for the method belongs to the abTEM authors. Licence: GPL-3.0-or-later (`LICENSE`, `NOTICE`); software built on
 SimulatoKit must be GPL-compatible. It is a library of numbers, not an application, and has no UI.
 
@@ -100,13 +100,13 @@ slice by slice, the transmission functions always are, the wave stays on the dev
 diffraction intensities there too; one compiled step is encoded per slice into one command buffer. Without a Metal
 device it throws `SimulatoError.metalUnavailable` (`Multislice.metalIsAvailable` tells beforehand). The registered
 tolerances of Metal against the CPU: exit wave 1e−4, intensity, diffraction pattern and detector images 2e−4 relative to
-the maximum, total intensity 1.5e−6 per slice, up to 100 slices (`docs/registration-performance.md`); measured, the wave
+the maximum, total intensity 1.5e−6 per slice, up to 100 slices; measured, the wave
 is within about 5e−5 and the total intensity within 5e−7 per slice (1.4e−7 on light elements) at up to 1024² with 100
 slices. Detector images are bounded by 2e−4 × max(their maximum, 1e−5 of the probe's intensity): weaker signals sit at
 float32's noise floor (`MetalAccuracy.registered.detectorBound(imageMaximum:incidentIntensity:)`).
 
 Measured speed (Apple M5 Pro, macOS 27; fcc Al at 300 keV, 100 slices, about 0.047 Å per pixel; from the structure to the
-numbers, the potential included; `docs/registration-performance.md`):
+numbers, the potential included):
 
 | Grid | Plane wave exit: Metal / CPU | 64 × 64 HAADF scan: Metal / CPU | Metal peak memory |
 |---|---|---|---|
@@ -138,25 +138,17 @@ let exits = try Multislice.runBatch(probes, through: potential, backend: backend
 
 ## How the numbers are checked
 
+Numbers are held to the Python reference within its own tolerance; `docs/parity.md` lists each function, its state and its tolerance.
+
 - **Pins against abTEM 1.0.10** (`164e644`) in float64: wavelength, potentials, probes, exit waves, patterns, detectors,
   CTF kernels and HRTEM images agree within 1e−10 of the array's maximum or tighter (measured 1e−13 to 1e−16, with
-  abTEM's float32 π reproduced by `.abTEMFloat32`), and within 1e−6 with the kit's default exact π. Each slice has design and validation notes with its bounds and later corrections:
-  `docs/registration-slice-1.md` (potentials, multislice), `docs/registration-slice-2.md` (frozen phonons, scans,
-  detectors), `docs/registration-slice-3.md` (CTF), `docs/registration-performance.md` (the Metal path) and
-  `docs/registration-generality.md` (the defaults as parameters).
+  abTEM's float32 π reproduced by `.abTEMFloat32`), and within 1e−6 with the kit's default exact π.
 - **Truth tests** independent of abTEM: Kirkland's table, the k = 0 identity, the far field, vacuum propagation, slice
   symmetry, the probe, the aberration phase, the thickness series.
-- **Deliberate breakage**: every new test is run against a deliberately broken copy of the code and must fail
-  (`docs/slice-*-mutants-2026-10-15.md`).
-- **Independent re-checks**: for each slice, a separate attempt to break the agreement on new inputs (recorded in the
-  design and validation notes).
-- **`docs/parity.md`** lists abTEM's public API entry by entry: done, partial or absent (planned or not planned).
-- **`tools/consumer-check`**: a separate package that uses the whole public API from outside, with negative controls.
-- **`docs/status.md`** has the measured results of every check.
+- **`tools/consumer-check`**: a separate package that uses the whole public API from outside.
 
 ## What is not claimed
 
-Details in `docs/status.md`, "Known limits".
 
 - Nothing is validated against a micrograph. Partial coherence is abTEM's envelope approximation; there is no detector
   response or noise. Frozen phonons use Einstein σ given by the caller, and agree with abTEM exactly only when abTEM's
@@ -167,6 +159,18 @@ Details in `docs/status.md`, "Known limits".
 - Cells are orthogonal and always periodic; atoms in the gap of a short slice list are kept (abTEM drops them);
   `.afterSlices` always adds the last slice. Finite projections, rotated or cut cells and some of abTEM's options are not
   ported (`docs/parity.md`). `AtomicStructure` and the example's CIF reader are minimal local stand-ins.
+
+## Known limits
+
+- MPSGraph's float32 FFT is not exactly unitary (`tools/metal-fft-gain/`); weak high-angle signals on Metal sit at
+  float32's floor, so the detector bound is floored (`MetalAccuracy.detectorBound`); use `.cpu` for them. Unphysical
+  phases (σV above about 200 rad in one pixel column) break the Metal bounds.
+- The Metal bounds hold to 100 slices and grids to 1024²; past 300 slices the pattern error exceeded its bound (not
+  re-measured with the renormalisation). Re-measure after OS updates.
+- Not validated against a micrograph; frozen phonons agree with abTEM only when abTEM's displacements are given; segmented
+  detectors sum in float64 where abTEM sums in float32 (agreement about 2e−7).
+- A `ProjectedPotential` on `.metal` uploads every slice; prefer `Potential` for large Metal runs. `AtomicStructure` and the
+  example's CIF reader are local stand-ins for DiffractoKit's cell types.
 
 ## Running the example
 
@@ -183,12 +187,11 @@ The CIF must have an orthogonal cell.
 ## Tests
 
 ```sh
-tools/test.sh    # swift test -c release
+swift test -c release
 ```
 
-Use `tools/test.sh` (or `swift test -c release`) rather than `swift build --build-tests -c release`, which fails on the
-current toolchain. The abTEM reference (a Python virtual environment) is not in the repository:
-`docs/registration-slice-1.md` section 2 says how it is pinned, and `tools/slice-*/pins.py` regenerate the fixtures.
+Use `swift test -c release` rather than `swift build --build-tests -c release`, which fails on the current toolchain. The
+abTEM reference (a Python virtual environment) is not in the repository; `tools/slice-*/pins.py` regenerate the fixtures.
 
 ## Contributing and licence
 
