@@ -17,6 +17,15 @@ public struct ScanMeasurement: Sendable {
     public let valueShape: [Int]
     public let values: [Double]
 
+    /// - Precondition: `values` holds scanShape[0] × scanShape[1] × (the product of `valueShape`) numbers.
+    public init(scanShape: [Int], valueShape: [Int], values: [Double]) {
+        precondition(scanShape.count == 2 && values.count == scanShape[0] * scanShape[1] * valueShape.reduce(1, *),
+                     "ScanMeasurement: the values do not fill the shapes")
+        self.scanShape = scanShape
+        self.valueShape = valueShape
+        self.values = values
+    }
+
     var valueCount: Int { valueShape.reduce(1, *) }
 
     /// The values at scan position (ix, iy).
@@ -46,7 +55,7 @@ public enum STEM {
         case .metal:
             return try metalScan(probe: probe, count: potentials.count, scan: scan, detectors: detectors) { k, s, n, r, d in
                 try Multislice.metalScanIntensities(spectrum: s, positions: n, ramps: r, through: potentials[k],
-                                                    beam: probe.beam, options: options, deliver: d)
+                                                    beam: probe.beam, tilt: probe.tilt, options: options, deliver: d)
             }
         }
     }
@@ -63,7 +72,7 @@ public enum STEM {
         case .metal:
             return try metalScan(probe: probe, count: potentials.count, scan: scan, detectors: detectors) { k, s, n, r, d in
                 try Multislice.metalScanIntensities(spectrum: s, positions: n, ramps: r, through: potentials[k],
-                                                    beam: probe.beam, options: options, deliver: d)
+                                                    beam: probe.beam, tilt: probe.tilt, options: options, deliver: d)
             }
         }
     }

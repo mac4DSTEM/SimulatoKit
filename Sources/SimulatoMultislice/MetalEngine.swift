@@ -277,7 +277,8 @@ extension MetalMultislice {
         return perSlice.map { $0.sorted { $0.key < $1.key }.map { ($0.key, $0.value) } }
     }
 
-    static func prepare(_ potential: Potential, beam: ElectronBeam, engine: MetalEngine) throws -> MetalPreparedPotential {
+    static func prepare(_ potential: Potential, beam: ElectronBeam, tilt: SIMD2<Double> = .zero,
+                        engine: MetalEngine) throws -> MetalPreparedPotential {
         let grid = potential.grid
         let elements = Set(potential.atoms.map(\.atomicNumber)).sorted()
         let e = max(elements.count, 1)
@@ -305,11 +306,11 @@ extension MetalMultislice {
             grid: grid, source: .atoms(elements: e, contributions: m), indices: indices, weights: weights, values: [],
             kernels: try engine.floats(k, [e, grid.nx, grid.ny]),
             aperture: try engine.floats(Antialias.aperture(on: grid).map(Float.init), [grid.nx, grid.ny]),
-            propagators: try propagators(potential.sliceThicknesses, grid: grid, beam: beam, engine: engine),
+            propagators: try propagators(potential.sliceThicknesses, grid: grid, beam: beam, tilt: tilt, engine: engine),
             sigma: try engine.floats([Float(beam.interactionParameter)], [1]))
     }
 
-    static func prepare(_ potential: ProjectedPotential, beam: ElectronBeam,
+    static func prepare(_ potential: ProjectedPotential, beam: ElectronBeam, tilt: SIMD2<Double> = .zero,
                         engine: MetalEngine) throws -> MetalPreparedPotential {
         let grid = potential.grid
         return MetalPreparedPotential(
@@ -317,17 +318,17 @@ extension MetalMultislice {
             values: try potential.slices.map { try engine.floats($0.values.map(Float.init), [grid.nx, grid.ny]) },
             kernels: nil,
             aperture: try engine.floats(Antialias.aperture(on: grid).map(Float.init), [grid.nx, grid.ny]),
-            propagators: try propagators(potential.slices.map(\.thickness), grid: grid, beam: beam, engine: engine),
+            propagators: try propagators(potential.slices.map(\.thickness), grid: grid, beam: beam, tilt: tilt, engine: engine),
             sigma: try engine.floats([Float(beam.interactionParameter)], [1]))
     }
 
     /// One complex64 propagator per distinct thickness, computed by the CPU path's code in float64.
-    static func propagators(_ thicknesses: [Double], grid: Grid, beam: ElectronBeam,
+    static func propagators(_ thicknesses: [Double], grid: Grid, beam: ElectronBeam, tilt: SIMD2<Double> = .zero,
                             engine: MetalEngine) throws -> [MPSGraphTensorData] {
         var byThickness: [Double: MPSGraphTensorData] = [:]
         return try thicknesses.map { dz in
             if let p = byThickness[dz] { return p }
-            let p = try engine.complex(Multislice.propagator(grid: grid, beam: beam, thickness: dz))
+            let p = try engine.complex(Multislice.propagator(grid: grid, beam: beam, thickness: dz, tilt: tilt))
             byThickness[dz] = p
             return p
         }
@@ -469,7 +470,7 @@ extension MetalMultislice {
         try propagate(p, psi: psi, batch: 1, planes: wanted, options: options, engine: engine) { j, data in
             guard wanted.contains(j) else { return }
             result.append(Waves(field: fields(data, batch: 1, grid: p.grid)[0], grid: p.grid, beam: incident.beam,
-                                normalization: incident.normalization))
+                                normalization: incident.normalization, tilt: incident.tilt))
         }
         return result
     }
@@ -658,10 +659,10 @@ extension Multislice {
     package static func metalScanIntensities(spectrum: ComplexField, positions: Int,
                                              ramps: (Int) throws -> (x: ComplexField, y: ComplexField),
                                              through potential: ProjectedPotential, beam: ElectronBeam,
-                                             options: ExecutionOptions = .standard,
+                                             tilt: SIMD2<Double> = .zero, options: ExecutionOptions = .standard,
                                              deliver: (Int, [Double]) throws -> Void) throws {
         let engine = try MetalEngine.require()
-        let prepared = try MetalMultislice.prepare(potential, beam: beam, engine: engine)
+        let prepared = try MetalMultislice.prepare(potential, beam: beam, tilt: tilt, engine: engine)
         try MetalMultislice.scanIntensities(spectrum: spectrum, positions: positions, ramps: ramps, potential: prepared,
                                             intensityScale: 1, options: options, deliver: deliver)
     }
@@ -670,10 +671,10 @@ extension Multislice {
     package static func metalScanIntensities(spectrum: ComplexField, positions: Int,
                                              ramps: (Int) throws -> (x: ComplexField, y: ComplexField),
                                              through potential: Potential, beam: ElectronBeam,
-                                             options: ExecutionOptions = .standard,
+                                             tilt: SIMD2<Double> = .zero, options: ExecutionOptions = .standard,
                                              deliver: (Int, [Double]) throws -> Void) throws {
         let engine = try MetalEngine.require()
-        let prepared = try MetalMultislice.prepare(potential, beam: beam, engine: engine)
+        let prepared = try MetalMultislice.prepare(potential, beam: beam, tilt: tilt, engine: engine)
         try MetalMultislice.scanIntensities(spectrum: spectrum, positions: positions, ramps: ramps, potential: prepared,
                                             intensityScale: 1, options: options, deliver: deliver)
     }

@@ -117,7 +117,12 @@ func checkMultislice(_ r: inout Report) {
         r.refuses("unsupported element Z = 104", .unsupportedElement(104)) {
             try ProjectedPotential(structure: singleAtomStructure(z: 104), nx: 32, ny: 32, sliceThickness: 2)
         }
-        r.refusesCase("grid length 7", "unsupportedGridLength") { try ProjectedPotential(structure: s, nx: 7, ny: 32, sliceThickness: 2) }
+        r.refusesCase("grid length 1", "unsupportedGridLength") { try ProjectedPotential(structure: s, nx: 1, ny: 32, sliceThickness: 2) }
+        r.check("grid length 7 is accepted (any length)", (try? ProjectedPotential(structure: s, nx: 7, ny: 32, sliceThickness: 2)) != nil)
+        let sampled = try Potential(structure: s, sampling: 0.5, sliceThickness: 2)
+        r.check("Potential(sampling:) = ceil(box / sampling)", sampled.grid.nx == Int((s.box.x / 0.5).rounded(.up)))
+        let tilted = Waves.planeWave(beam: try ElectronBeam(energy: 100e3), grid: sampled.grid, tilt: SIMD2(1, -2))
+        r.check("Waves.tilt is carried", tilted.tilt == SIMD2(1, -2) && Waves.planeWave(beam: tilted.beam, grid: tilted.grid).tilt == .zero)
         r.refusesCase("slice thicknesses not summing to the box", "sliceThicknessesDoNotSumToBox") {
             try ProjectedPotential(structure: s, nx: 32, ny: 32, sliceThicknesses: [1, 1])
         }

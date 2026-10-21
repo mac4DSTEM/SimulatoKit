@@ -29,6 +29,23 @@ public struct Potential: Sendable, Hashable {
                       maximumSliceCount: maximumSliceCount)
     }
 
+    /// The grid from a target `sampling` [Å] (abTEM's `Potential(sampling=)`): ⌈box / sampling⌉ points per axis.
+    public init(structure: AtomicStructure, sampling: Double, sliceThickness: Double,
+                parameterization: LobatoParameterization = LobatoParameterization(),
+                maximumSliceCount: Int = Slicing.maximumSliceCount) throws {
+        try self.init(structure: structure, sampling: (sampling, sampling), sliceThickness: sliceThickness,
+                      parameterization: parameterization, maximumSliceCount: maximumSliceCount)
+    }
+
+    /// The same with a sampling per axis (x, y).
+    public init(structure: AtomicStructure, sampling: (x: Double, y: Double), sliceThickness: Double,
+                parameterization: LobatoParameterization = LobatoParameterization(),
+                maximumSliceCount: Int = Slicing.maximumSliceCount) throws {
+        let grid = try Grid(extentX: structure.box.x, extentY: structure.box.y, samplingX: sampling.x, samplingY: sampling.y)
+        try self.init(structure: structure, nx: grid.nx, ny: grid.ny, sliceThickness: sliceThickness,
+                      parameterization: parameterization, maximumSliceCount: maximumSliceCount)
+    }
+
     /// The given slice thicknesses (they must sum to the box's depth), at most `maximumSliceCount`.
     public init(structure: AtomicStructure, nx: Int, ny: Int, sliceThicknesses: [Double],
                 parameterization: LobatoParameterization = LobatoParameterization(),

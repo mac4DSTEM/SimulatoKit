@@ -50,7 +50,8 @@ struct BeamAndScatteringTests {
         #expect(throws: (any Error).self) { try ElectronBeam(energy: .nan) }
         #expect(throws: (any Error).self) { try LobatoParameterization.parameters(atomicNumber: 104) }
         #expect(throws: (any Error).self) { try LobatoParameterization.parameters(atomicNumber: 0) }
-        #expect(throws: (any Error).self) { try Grid(nx: 100, ny: 128, extentX: 10, extentY: 10) }
+        #expect(throws: (any Error).self) { try Grid(nx: 1, ny: 128, extentX: 10, extentY: 10) }
+        #expect(throws: Never.self) { try Grid(nx: 100, ny: 127, extentX: 10, extentY: 10) }
         #expect(throws: (any Error).self) { try Grid(nx: 128, ny: 128, extentX: 0, extentY: 10) }
         #expect(throws: Never.self) { try Grid(nx: 120, ny: 160, extentX: 10, extentY: 10) }
     }

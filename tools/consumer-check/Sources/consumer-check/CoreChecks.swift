@@ -52,14 +52,14 @@ func checkCore(_ r: inout Report) {
 
     r.section("Core: errors") { r in
         let all: [SimulatoError] = [
-            .invalidEnergy(-1), .unsupportedGridLength(7), .invalidExtent(0, 1), .invalidBox(0, 1, 1), .unsupportedElement(0),
+            .invalidEnergy(-1), .unsupportedGridLength(7), .invalidSampling(0, 1), .invalidTilt("x"), .invalidExtent(0, 1), .invalidBox(0, 1, 1), .unsupportedElement(0),
             .invalidPosition(index: 3), .invalidSliceThickness(0), .sliceThicknessesDoNotSumToBox(sum: 1, depth: 2),
             .invalidExitPlanes("x"), .gridMismatch, .invalidAperture(0), .invalidAberration("x"), .metalUnavailable("x"),
             .metalFailure("x"), .invalidFrozenPhonons("x"), .invalidScan("x"), .invalidDetector("x"),
         ]
-        r.equal("SimulatoError: 17 cases built", all.count, 17)
+        r.equal("SimulatoError: 19 cases built", all.count, 19)
         r.check("SimulatoError: every description is non-empty and distinct",
-                Set(all.map(\.description)).count == 17 && all.allSatisfy { !$0.description.isEmpty })
+                Set(all.map(\.description)).count == 19 && all.allSatisfy { !$0.description.isEmpty })
         r.equal("SimulatoError.invalidEnergy description", SimulatoError.invalidEnergy(-1).description,
                 "electron energy must be finite and positive, got -1.0 eV")
         r.check("SimulatoError is Equatable", SimulatoError.invalidPosition(index: 3) == .invalidPosition(index: 3)
@@ -82,9 +82,11 @@ func checkCore(_ r: inout Report) {
         r.equal("Grid.frequenciesX = fftfreq(nx, samplingX)", g.frequenciesX, Grid.fftfreq(32, 0.25))
         r.equal("Grid.frequenciesY = fftfreq(ny, samplingY)", g.frequenciesY, Grid.fftfreq(48, 0.25))
         r.equal("Grid.frequenciesX[nx / 2] = −Nyquist", g.frequenciesX[16], -2.0)
-        // f · 2^m, f in {1, 3, 5, 15}, m ≥ 3
-        let supported = [8, 16, 24, 32, 40, 48, 64, 120, 480, 512, 960]
-        let unsupported = [0, 1, 4, 7, 9, 12, 20, 36, 45, 360, 100]
+        // any n ≥ 2 (0.3.0); hasDirectTransform: f · 2^m, f in {1, 3, 5, 15}, m ≥ 3
+        let supported = [2, 4, 7, 8, 9, 12, 16, 24, 45, 64, 100, 120, 360, 480, 512, 960]
+        let unsupported = [-8, 0, 1]
+        r.check("Grid.hasDirectTransform: vDSP's lengths only", [8, 24, 120, 960].allSatisfy(Grid.hasDirectTransform)
+                && [4, 7, 12, 100, 360].allSatisfy { !Grid.hasDirectTransform($0) })
         r.check("Grid.isSupportedLength accepts \(supported)", supported.allSatisfy(Grid.isSupportedLength))
         r.check("Grid.isSupportedLength refuses \(unsupported)", unsupported.allSatisfy { !Grid.isSupportedLength($0) })
         let nearly = try Grid(nx: 32, ny: 48, extentX: 8 * (1 + 1e-13), extentY: 12)
@@ -93,8 +95,12 @@ func checkCore(_ r: inout Report) {
         r.check("Grid.matches: itself and within 1e-12 relative", g.matches(g) && g.matches(nearly))
         r.check("Grid.matches refuses another extent or size", !g.matches(wider) && !g.matches(coarser))
         r.check("Grid is Hashable", g == (try Grid(nx: 32, ny: 48, extentX: 8, extentY: 12)) && Set([g, g]).count == 1)
-        r.refuses("Grid nx = 7", .unsupportedGridLength(7)) { try Grid(nx: 7, ny: 8, extentX: 1, extentY: 1) }
-        r.refuses("Grid ny = 12", .unsupportedGridLength(12)) { try Grid(nx: 8, ny: 12, extentX: 1, extentY: 1) }
+        r.refuses("Grid nx = 1", .unsupportedGridLength(1)) { try Grid(nx: 1, ny: 8, extentX: 1, extentY: 1) }
+        r.refuses("Grid ny = 0", .unsupportedGridLength(0)) { try Grid(nx: 8, ny: 0, extentX: 1, extentY: 1) }
+        r.check("Grid nx = 7, ny = 12 (any length)", (try? Grid(nx: 7, ny: 12, extentX: 1, extentY: 1)) != nil)
+        let fromSampling = try Grid(extentX: 8, extentY: 12, samplingX: 0.3, samplingY: 0.25)
+        r.check("Grid(extent:sampling:) = ceil(extent / sampling)", fromSampling.nx == 27 && fromSampling.ny == 48)
+        r.refusesCase("Grid sampling 0", "invalidSampling") { try Grid(extentX: 8, extentY: 12, samplingX: 0, samplingY: 1) }
         r.refuses("Grid extent 0", .invalidExtent(0, 1)) { try Grid(nx: 8, ny: 8, extentX: 0, extentY: 1) }
         r.refusesCase("Grid extent NaN", "invalidExtent") { try Grid(nx: 8, ny: 8, extentX: 1, extentY: .nan) }
         r.refusesCase("Grid extent negative", "invalidExtent") { try Grid(nx: 8, ny: 8, extentX: -1, extentY: 1) }

@@ -26,21 +26,27 @@ public struct Waves: Sendable, Hashable {
     public let grid: Grid
     public let beam: ElectronBeam
     public let normalization: Normalization
+    /// The small-angle beam tilt (x, y) [mrad] (abTEM's `base_tilt`): it does not change the wave itself; every Fresnel
+    /// propagator the wave meets carries the phase e^{−2πi (kx tan(tx) + ky tan(ty)) Δz} (abTEM `multislice.py`,
+    /// `_apply_tilt_to_fresnel_propagator_array`), and the exit waves keep it.
+    public let tilt: SIMD2<Double>
 
-    public init(field: ComplexField, grid: Grid, beam: ElectronBeam, normalization: Normalization) {
+    public init(field: ComplexField, grid: Grid, beam: ElectronBeam, normalization: Normalization,
+                tilt: SIMD2<Double> = .zero) {
         precondition(field.nx == grid.nx && field.ny == grid.ny, "Waves: the field must match the grid")
         self.field = field
         self.grid = grid
         self.beam = beam
         self.normalization = normalization
+        self.tilt = tilt
     }
 
     /// The plane wave ψ = 1 at every pixel (abTEM's `PlaneWave(normalize=False)`).
-    public static func planeWave(beam: ElectronBeam, grid: Grid) -> Waves {
+    public static func planeWave(beam: ElectronBeam, grid: Grid, tilt: SIMD2<Double> = .zero) -> Waves {
         Waves(field: ComplexField(nx: grid.nx, ny: grid.ny,
                                   real: [Double](repeating: 1, count: grid.count),
                                   imaginary: [Double](repeating: 0, count: grid.count)),
-              grid: grid, beam: beam, normalization: .values)
+              grid: grid, beam: beam, normalization: .values, tilt: tilt)
     }
 
     /// |ψ|² per pixel, sampled as the grid.

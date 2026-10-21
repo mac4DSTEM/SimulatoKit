@@ -166,6 +166,45 @@ public struct PixelatedDetector: Detector, Hashable {
     }
 }
 
+/// The centre of mass of the pattern (abTEM's `DiffractionPatterns.center_of_mass`) over a pixelated detector's region:
+/// Σ P · α along x and along y, not divided by Σ P (as abTEM, whose patterns of a normalised probe sum to about 1),
+/// with the pixel at index m/2 of the shifted axis at zero angle. Two values: x then y.
+public struct CenterOfMassDetector: Detector, Hashable {
+    public enum Units: Sendable, Hashable {
+        /// Scattering angle [mrad].
+        case milliradians
+        /// Spatial frequency [1/Å].
+        case inverseAngstroms
+    }
+
+    public let region: PixelatedDetector
+    public let units: Units
+
+    public init(maxAngle: PixelatedDetector.MaxAngle = .valid, units: Units = .inverseAngstroms) {
+        region = PixelatedDetector(maxAngle: maxAngle)
+        self.units = units
+    }
+
+    public func shape(for grid: Grid, beam: ElectronBeam) throws -> [Int] { [2] }
+
+    public func detect(_ p: DiffractionIntensity) throws -> [Double] {
+        let s = region.size(p.grid)
+        let pattern = p.cropped(s.nx, s.ny)
+        let a = p.angularSampling
+        let perAngle = units == .milliradians ? 1.0 : 1.0 / (p.beam.wavelength * 1e3)
+        var cx = 0.0, cy = 0.0
+        for ix in 0..<s.nx {
+            let ax = Double(ix - s.nx / 2) * a.x * perAngle
+            for iy in 0..<s.ny {
+                let value = pattern[ix * s.ny + iy]
+                cx += value * ax
+                cy += value * Double(iy - s.ny / 2) * a.y * perAngle
+            }
+        }
+        return [cx, cy]
+    }
+}
+
 /// The segmented detector (abTEM's `SegmentedDetector`, `polar_binning`): n_r × n_φ bins between inner and outer, the
 /// azimuth measured from `rotation`; summed in float64 (abTEM sums in float32: amendment 1).
 public struct SegmentedDetector: Detector, Hashable {

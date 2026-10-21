@@ -26,6 +26,21 @@ public struct Grid: Sendable, Hashable {
         self.extentY = extentY
     }
 
+    /// The grid abTEM builds from an extent and a target sampling (`Grid._adjust_gpts`): ⌈extent / sampling⌉ points per
+    /// axis, so the realised sampling is extent / gpts, never coarser than asked.
+    /// - Throws: `invalidSampling` for a non-finite or non-positive sampling, `invalidExtent` as `init(nx:...)`.
+    public init(extentX: Double, extentY: Double, samplingX: Double, samplingY: Double) throws {
+        guard samplingX.isFinite, samplingY.isFinite, samplingX > 0, samplingY > 0 else {
+            throw SimulatoError.invalidSampling(samplingX, samplingY)
+        }
+        guard extentX.isFinite, extentY.isFinite, extentX > 0, extentY > 0 else {
+            throw SimulatoError.invalidExtent(extentX, extentY)
+        }
+        let px = (extentX / samplingX).rounded(.up), py = (extentY / samplingY).rounded(.up)
+        guard px < 1e9, py < 1e9 else { throw SimulatoError.invalidSampling(samplingX, samplingY) }
+        try self.init(nx: Int(px), ny: Int(py), extentX: extentX, extentY: extentY)
+    }
+
     /// Sampling along x and y [Å per pixel] (extent / gpts, as abTEM's `Grid`).
     public var samplingX: Double { extentX / Double(nx) }
     public var samplingY: Double { extentY / Double(ny) }
@@ -37,8 +52,12 @@ public struct Grid: Sendable, Hashable {
     public var reciprocalSamplingX: Double { 1 / (Double(nx) * samplingX) }
     public var reciprocalSamplingY: Double { 1 / (Double(ny) * samplingY) }
 
-    /// The lengths both backends accept: f · 2^m with f ∈ {1, 3, 5, 15} and m ≥ 3 (vDSP's DFT lengths).
-    public static func isSupportedLength(_ n: Int) -> Bool {
+    /// The lengths the kit accepts: any n ≥ 2. The CPU transform runs vDSP's DFT where it has one
+    /// (`hasDirectTransform`) and Bluestein's algorithm otherwise.
+    public static func isSupportedLength(_ n: Int) -> Bool { n >= 2 }
+
+    /// The lengths vDSP's DFT takes directly: f · 2^m with f ∈ {1, 3, 5, 15} and m ≥ 3 (the rest go through Bluestein).
+    public static func hasDirectTransform(_ n: Int) -> Bool {
         guard n >= 8 else { return false }
         var m = n
         var power = 0

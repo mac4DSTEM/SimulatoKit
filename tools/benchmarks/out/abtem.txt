@@ -1,0 +1,70 @@
+BENCH|fft2+ifft2|64|float64|0.000056|0.000055|0.000063
+BENCH|fft2+ifft2|58|float64|0.000104|0.000104|0.000106
+BENCH|potential build (infinite)|64|float64|0.002089|0.001755|0.002698
+BENCH|multislice 10 slices (plane wave, built potential)|64|float64|0.003495|0.003211|0.004553
+BENCH|probe build|64|float64|0.000840|0.000732|0.001148
+BENCH|STEM scan 8x8, annular|64|float64|0.047353|0.046972|0.051736
+BENCH|frozen phonons 4 x multislice, built per configuration|64|float64|0.023726|0.020913|0.024616
+BENCH|fft2+ifft2|64|float32|0.000047|0.000045|0.000080
+BENCH|fft2+ifft2|58|float32|0.000081|0.000078|0.000155
+BENCH|potential build (infinite)|64|float32|0.001679|0.001488|0.001814
+BENCH|multislice 10 slices (plane wave, built potential)|64|float32|0.003020|0.002756|0.003118
+BENCH|probe build|64|float32|0.000657|0.000587|0.001089
+BENCH|STEM scan 8x8, annular|64|float32|0.033799|0.031982|0.034543
+BENCH|frozen phonons 4 x multislice, built per configuration|64|float32|0.021515|0.021185|0.022122
+BENCH|fft2+ifft2|128|float64|0.000266|0.000220|0.000401
+BENCH|fft2+ifft2|122|float64|0.000627|0.000601|0.000687
+BENCH|potential build (infinite)|128|float64|0.009691|0.009575|0.010506
+BENCH|multislice 10 slices (plane wave, built potential)|128|float64|0.017491|0.016763|0.017667
+BENCH|probe build|128|float64|0.001404|0.001285|0.001660
+BENCH|STEM scan 8x8, annular|128|float64|0.460975|0.451095|0.464226
+BENCH|frozen phonons 4 x multislice, built per configuration|128|float64|0.129926|0.113556|0.132087
+BENCH|fft2+ifft2|128|float32|0.000234|0.000215|0.000329
+BENCH|fft2+ifft2|122|float32|0.000516|0.000467|0.000537
+BENCH|potential build (infinite)|128|float32|0.004863|0.004229|0.007112
+BENCH|multislice 10 slices (plane wave, built potential)|128|float32|0.012005|0.011128|0.012600
+BENCH|probe build|128|float32|0.001620|0.000928|0.001845
+BENCH|STEM scan 8x8, annular|128|float32|0.206475|0.189904|0.210871
+BENCH|frozen phonons 4 x multislice, built per configuration|128|float32|0.066319|0.061172|0.078942
+BENCH|fft2+ifft2|192|float64|0.000353|0.000351|0.000740
+BENCH|fft2+ifft2|186|float64|0.000898|0.000615|0.001518
+BENCH|potential build (infinite)|192|float64|0.012822|0.012213|0.013541
+BENCH|multislice 10 slices (plane wave, built potential)|192|float64|0.020383|0.019117|0.021466
+BENCH|probe build|192|float64|0.002195|0.002080|0.002375
+BENCH|STEM scan 8x8, annular|192|float64|0.508642|0.492974|0.558879
+BENCH|frozen phonons 4 x multislice, built per configuration|192|float64|0.154736|0.137570|0.220323
+BENCH|fft2+ifft2|192|float32|0.000607|0.000458|0.000936
+BENCH|fft2+ifft2|186|float32|0.000804|0.000765|0.001108
+BENCH|potential build (infinite)|192|float32|0.009974|0.007533|0.010218
+BENCH|multislice 10 slices (plane wave, built potential)|192|float32|0.019109|0.018741|0.019960
+BENCH|probe build|192|float32|0.002332|0.001924|0.002716
+BENCH|STEM scan 8x8, annular|192|float32|0.367283|0.336003|0.415794
+BENCH|frozen phonons 4 x multislice, built per configuration|192|float32|0.094905|0.081125|0.124336
+BENCH|fft2+ifft2|256|float64|0.001037|0.000911|0.001132
+BENCH|fft2+ifft2|250|float64|0.000572|0.000511|0.000684
+BENCH|potential build (infinite)|256|float64|0.041367|0.038513|0.048626
+BENCH|multislice 10 slices (plane wave, built potential)|256|float64|0.071404|0.066754|0.074197
+BENCH|probe build|256|float64|0.005048|0.004315|0.005493
+BENCH|STEM scan 8x8, annular|256|float64|2.388962|2.336583|2.640498
+BENCH|frozen phonons 4 x multislice, built per configuration|256|float64|0.471849|0.410316|0.506216
+BENCH|fft2+ifft2|256|float32|0.001482|0.000999|0.001714
+BENCH|fft2+ifft2|250|float32|0.000939|0.000678|0.001260
+BENCH|potential build (infinite)|256|float32|0.029829|0.027927|0.032091
+BENCH|multislice 10 slices (plane wave, built potential)|256|float32|0.056057|0.053658|0.065626
+BENCH|probe build|256|float32|0.003038|0.002936|0.003260
+BENCH|STEM scan 8x8, annular|256|float32|1.620423|1.522956|1.657417
+BENCH|frozen phonons 4 x multislice, built per configuration|256|float32|0.300632|0.289844|0.457750
+BENCH|fft2+ifft2|512|float64|0.007285|0.006729|0.008275
+BENCH|fft2+ifft2|506|float64|0.009342|0.007855|0.010093
+BENCH|potential build (infinite)|512|float64|0.250561|0.219853|0.379152
+BENCH|multislice 10 slices (plane wave, built potential)|512|float64|0.678418|0.641908|0.723797
+BENCH|probe build|512|float64|0.042408|0.028762|0.046358
+BENCH|STEM scan 8x8, annular|512|float64|8.843229|8.751986|9.416269
+BENCH|frozen phonons 4 x multislice, built per configuration|512|float64|1.638356|1.618987|1.641844
+BENCH|fft2+ifft2|512|float32|0.004540|0.004445|0.005471
+BENCH|fft2+ifft2|506|float32|0.004490|0.004273|0.004620
+BENCH|potential build (infinite)|512|float32|0.119838|0.117184|0.121133
+BENCH|multislice 10 slices (plane wave, built potential)|512|float32|0.228445|0.225107|0.236849
+BENCH|probe build|512|float32|0.010214|0.009461|0.010766
+BENCH|STEM scan 8x8, annular|512|float32|8.389148|8.103826|9.730879
+BENCH|frozen phonons 4 x multislice, built per configuration|512|float32|1.378739|1.341783|1.457249

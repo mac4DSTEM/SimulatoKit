@@ -8,6 +8,8 @@ public enum SimulatoError: Error, Sendable, Equatable, CustomStringConvertible {
     case invalidEnergy(Double)
     case unsupportedGridLength(Int)
     case invalidExtent(Double, Double)
+    case invalidSampling(Double, Double)
+    case invalidTilt(String)
     case invalidBox(Double, Double, Double)
     case unsupportedElement(Int)
     case invalidPosition(index: Int)
@@ -27,8 +29,10 @@ public enum SimulatoError: Error, Sendable, Equatable, CustomStringConvertible {
         switch self {
         case .invalidEnergy(let e): return "electron energy must be finite and positive, got \(e) eV"
         case .unsupportedGridLength(let n):
-            return "grid length \(n) is not supported: lengths are f * 2^m with f in {1, 3, 5, 15} and m >= 3"
+            return "grid length \(n) is not supported: lengths must be at least 2"
         case .invalidExtent(let x, let y): return "grid extent must be finite and positive, got (\(x), \(y)) Å"
+        case .invalidSampling(let x, let y): return "grid sampling must be finite and positive and give fewer than 1e9 points, got (\(x), \(y)) Å"
+        case .invalidTilt(let why): return "invalid tilt: \(why)"
         case .invalidBox(let x, let y, let z): return "the box must be orthogonal with finite positive sides, got (\(x), \(y), \(z)) Å"
         case .unsupportedElement(let z): return "element Z = \(z) has no Lobato parameters (Z = 1 ... 103 are tabulated)"
         case .invalidPosition(let i): return "atom \(i) has a non-finite position"

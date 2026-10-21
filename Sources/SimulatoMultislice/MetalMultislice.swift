@@ -60,7 +60,8 @@ extension Multislice {
                                       last: potential.slices.count - 1, threads: options.maximumCPUThreads)
         case .metal:
             let engine = try MetalEngine.require()
-            let prepared = try MetalMultislice.prepare(potential, beam: first.beam, engine: engine)
+            let prepared = try MetalMultislice.prepare(potential, beam: first.beam, tilt: try sharedTilt(incidents),
+                                                       engine: engine)
             return try metalBatch(incidents, prepared, options)
         }
     }
@@ -75,16 +76,26 @@ extension Multislice {
             return try runBatch(incidents, through: potential.build(), backend: .cpu, options: options)
         case .metal:
             let engine = try MetalEngine.require()
-            let prepared = try MetalMultislice.prepare(potential, beam: first.beam, engine: engine)
+            let prepared = try MetalMultislice.prepare(potential, beam: first.beam, tilt: try sharedTilt(incidents),
+                                                       engine: engine)
             return try metalBatch(incidents, prepared, options)
         }
+    }
+
+    /// A Metal batch shares its propagators, so its waves must share their tilt.
+    static func sharedTilt(_ incidents: [Waves]) throws -> SIMD2<Double> {
+        let first = incidents[0].tilt
+        guard incidents.allSatisfy({ $0.tilt == first }) else {
+            throw SimulatoError.invalidTilt("the waves of one .metal batch must share one tilt; run each tilt separately")
+        }
+        return first
     }
 
     static func metalBatch(_ incidents: [Waves], _ prepared: MetalPreparedPotential,
                            _ options: ExecutionOptions) throws -> [Waves] {
         let fields = try MetalMultislice.runBatch(incidents.map(\.field), prepared: prepared, options: options)
         return zip(incidents, fields).map {
-            Waves(field: $0.1, grid: prepared.grid, beam: $0.0.beam, normalization: $0.0.normalization)
+            Waves(field: $0.1, grid: prepared.grid, beam: $0.0.beam, normalization: $0.0.normalization, tilt: $0.0.tilt)
         }
     }
 }
@@ -105,7 +116,7 @@ extension Multislice {
     package static func runMetal(_ incident: Waves, through potential: Potential, exitPlanes: ExitPlanes = .last,
                                  renormalize: Bool) throws -> [Waves] {
         let engine = try MetalEngine.require()
-        let prepared = try MetalMultislice.prepare(potential, beam: incident.beam, engine: engine)
+        let prepared = try MetalMultislice.prepare(potential, beam: incident.beam, tilt: incident.tilt, engine: engine)
         return try MetalMultislice.run(incident, prepared: prepared,
                                        planes: exitPlanes.planes(sliceCount: potential.sliceCount),
                                        options: ExecutionOptions(metalRenormalization: renormalize))
@@ -114,7 +125,7 @@ extension Multislice {
     package static func runMetal(_ incident: Waves, through potential: ProjectedPotential, exitPlanes: ExitPlanes = .last,
                                  renormalize: Bool) throws -> [Waves] {
         let engine = try MetalEngine.require()
-        let prepared = try MetalMultislice.prepare(potential, beam: incident.beam, engine: engine)
+        let prepared = try MetalMultislice.prepare(potential, beam: incident.beam, tilt: incident.tilt, engine: engine)
         return try MetalMultislice.run(incident, prepared: prepared,
                                        planes: exitPlanes.planes(sliceCount: potential.slices.count),
                                        options: ExecutionOptions(metalRenormalization: renormalize))

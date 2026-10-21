@@ -59,7 +59,7 @@ public enum Multislice {
             return try runCPU(incident, potential: potential, transmissions: transmissions, planes: planes)
         case .metal:
             let engine = try MetalEngine.require()
-            let prepared = try MetalMultislice.prepare(potential, beam: incident.beam, engine: engine)
+            let prepared = try MetalMultislice.prepare(potential, beam: incident.beam, tilt: incident.tilt, engine: engine)
             return try MetalMultislice.run(incident, prepared: prepared, planes: planes, options: options)
         }
     }
@@ -75,7 +75,7 @@ public enum Multislice {
         case .metal:
             let planes = try exitPlanes.planes(sliceCount: potential.sliceCount)
             let engine = try MetalEngine.require()
-            let prepared = try MetalMultislice.prepare(potential, beam: incident.beam, engine: engine)
+            let prepared = try MetalMultislice.prepare(potential, beam: incident.beam, tilt: incident.tilt, engine: engine)
             return try MetalMultislice.run(incident, prepared: prepared, planes: planes, options: options)
         }
     }
@@ -104,7 +104,10 @@ public enum Multislice {
     }
 
     /// The Fresnel propagator over Δz, bandlimited: exp(−iπλΔz k²) · A (abTEM `_fresnel_propagator_array`, order 1).
-    public static func propagator(grid: Grid, beam: ElectronBeam, thickness dz: Double) -> ComplexField {
+    /// With a beam `tilt` [mrad] it carries e^{−2πi (kx tan(tx/1000) + ky tan(ty/1000)) Δz} as well (abTEM
+    /// `_apply_tilt_to_fresnel_propagator_array`), applied after the aperture.
+    public static func propagator(grid: Grid, beam: ElectronBeam, thickness dz: Double,
+                                  tilt: SIMD2<Double> = .zero) -> ComplexField {
         let lambda = beam.wavelength
         let kx = grid.frequenciesX, ky = grid.frequenciesY
         let aperture = Antialias.aperture(on: grid)
@@ -114,8 +117,14 @@ public enum Multislice {
                 let i = ix * grid.ny + iy
                 let k2 = kx[ix] * kx[ix] + ky[iy] * ky[iy]
                 let x = -k2 * Double.pi * dz * lambda
-                p.real[i] = cos(x) * aperture[i]
-                p.imaginary[i] = sin(x) * aperture[i]
+                var re = cos(x) * aperture[i], im = sin(x) * aperture[i]
+                if tilt != .zero {
+                    let t = -2 * Double.pi * dz * (kx[ix] * tan(tilt.x / 1e3) + ky[iy] * tan(tilt.y / 1e3))
+                    let (c, s) = (cos(t), sin(t))
+                    (re, im) = (re * c - im * s, re * s + im * c)
+                }
+                p.real[i] = re
+                p.imaginary[i] = im
             }
         }
         return p
@@ -135,12 +144,14 @@ public enum Multislice {
             multiply(&psi, by: t)
             fft.forward(&psi)
             if propagators[slice.thickness] == nil {
-                propagators[slice.thickness] = propagator(grid: grid, beam: incident.beam, thickness: slice.thickness)
+                propagators[slice.thickness] = propagator(grid: grid, beam: incident.beam, thickness: slice.thickness,
+                                                          tilt: incident.tilt)
             }
             multiply(&psi, by: propagators[slice.thickness]!)
             fft.inverse(&psi)
             if wanted.contains(j) {
-                out.append(Waves(field: psi, grid: grid, beam: incident.beam, normalization: incident.normalization))
+                out.append(Waves(field: psi, grid: grid, beam: incident.beam, normalization: incident.normalization,
+                                 tilt: incident.tilt))
             }
         }
         return out

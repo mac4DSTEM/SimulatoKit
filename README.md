@@ -27,8 +27,8 @@ SimulatoKit must be GPL-compatible. It is a library of numbers, not an applicati
 Swift 6.2 tools, Swift 6 language mode. Platforms: macOS 15 and iOS/iPadOS 18 (from 0.2.0). Every module, the Metal
 path included, builds for both (MPSGraph's FFT needs macOS 14 / iOS 17, `Synchronization.Mutex` macOS 15 / iOS 18); the
 tests and the consumer checks run on macOS, where the numbers are validated. Developed and tested on macOS 27.
-Build with `-c release`: the FFT and potential loops are many times slower unoptimised. Grid lengths are f · 2^m with
-f ∈ {1, 3, 5, 15} and m ≥ 3 (the lengths Accelerate's DFT accepts). Cells are orthogonal.
+Build with `-c release`: the FFT and potential loops are many times slower unoptimised. Grid lengths are any integer of at least 2
+(Accelerate's DFT where it has the length, Bluestein's algorithm otherwise; both backends). Cells are orthogonal.
 
 ## From abTEM
 
@@ -37,13 +37,15 @@ Names checked against the sources and `docs/parity.md` (which lists every abTEM 
 | abTEM | SimulatoKit |
 |---|---|
 | `Potential(atoms, gpts, slice_thickness)` | `Potential(structure:nx:ny:sliceThickness:)` |
-| `PlaneWave(...)` | `Waves.planeWave(beam:grid:)` |
-| `Probe(semiangle_cutoff, energy, ...)` | `Probe(beam:grid:aperture:aberrations:)` |
+| `Potential(atoms, sampling=0.1, ...)` | `Potential(structure:sampling:sliceThickness:)` |
+| `PlaneWave(tilt=...)` | `Waves.planeWave(beam:grid:tilt:)` |
+| `Probe(semiangle_cutoff, energy, tilt=...)` | `Probe(beam:grid:aperture:aberrations:tilt:)` |
 | `waves.multislice(potential)` | `Multislice.run(_:through:exitPlanes:backend:)` |
 | `waves.intensity()` | `Waves.intensity()` |
 | `waves.diffraction_patterns(max_angle=...)` | `Waves.diffractionPattern(maxAngle:)` |
 | `CTF(...)`, `waves.apply_ctf(ctf)` | `ContrastTransferFunction(aberrations:...)`, `Waves.applying(_:)` |
-| `GridScan(start, end, gpts)` | `GridScan(start:end:nx:ny:)` |
+| `GridScan(start, end, gpts)`, `GridScan(..., sampling=)` | `GridScan(start:end:nx:ny:)`, `GridScan(start:end:samplingX:samplingY:)` |
+| `dp.center_of_mass()`, `dp.gaussian_source_size(s)`, `.poisson_noise(...)` | `CenterOfMassDetector`, `ScanMeasurement.gaussianSourceSize(...)`, `.poissonNoise(...)` |
 | `probe.scan(potential, scan, detectors)` | `STEM.scan(probe:potentials:scan:detectors:backend:)` |
 | `AnnularDetector`, `PixelatedDetector`, `SegmentedDetector` | the same names, with labelled initialisers |
 | `FrozenPhonons(atoms, num_configs, sigmas, seed)` | `FrozenPhonons(structure:sigmas:configurations:seed:directions:)` |

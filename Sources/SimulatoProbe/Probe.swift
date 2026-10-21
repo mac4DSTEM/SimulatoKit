@@ -54,9 +54,14 @@ public struct Probe: Sendable, Hashable {
     public let grid: Grid
     public let aperture: Aperture
     public let aberrations: Aberrations
+    /// The small-angle beam tilt (x, y) [mrad], carried by the waves (see `Waves.tilt`).
+    public let tilt: SIMD2<Double>
 
-    public init(beam: ElectronBeam, grid: Grid, aperture: Aperture, aberrations: Aberrations = Aberrations()) throws {
+    public init(beam: ElectronBeam, grid: Grid, aperture: Aperture, aberrations: Aberrations = Aberrations(),
+                tilt: SIMD2<Double> = .zero) throws {
         guard aberrations.isFinite else { throw SimulatoError.invalidAberration("every coefficient must be finite") }
+        guard tilt.x.isFinite, tilt.y.isFinite else { throw SimulatoError.invalidTilt("the tilt must be finite") }
+        self.tilt = tilt
         self.beam = beam
         self.grid = grid
         self.aperture = aperture
@@ -100,7 +105,7 @@ public struct Probe: Sendable, Hashable {
             psi.imaginary[i] /= f
         }
         try FFT2D(nx: grid.nx, ny: grid.ny).inverse(&psi)
-        return Waves(field: psi, grid: grid, beam: beam, normalization: .reciprocalSpace)
+        return Waves(field: psi, grid: grid, beam: beam, normalization: .reciprocalSpace, tilt: tilt)
     }
 
     /// Ψ₀ = aperture · exp(−iχ) / ‖·‖ in reciprocal space, unshifted (registration-performance.md 1.6): `build(at:)`

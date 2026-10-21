@@ -1,0 +1,55 @@
+BENCH|fft2+ifft2|64|cpu|0.000044|0.000041|0.000062
+BENCH|fft2+ifft2|58|cpu|0.000145|0.000134|0.000149
+BENCH|potential build (infinite)|64|cpu|0.000626|0.000598|0.000745
+BENCH|fft2+ifft2|128|cpu|0.000301|0.000299|0.000301
+BENCH|fft2+ifft2|122|cpu|0.000427|0.000427|0.000513
+BENCH|multislice 10 slices (plane wave, built potential)|64|cpu|0.000929|0.000907|0.001248
+BENCH|transmission functions|64|cpu|0.000527|0.000513|0.000540
+BENCH|fft2+ifft2|192|cpu|0.001247|0.001119|0.001341
+BENCH|probe build|64|cpu|0.000270|0.000161|0.000296
+BENCH|fft2+ifft2|186|cpu|0.002303|0.001739|0.003636
+BENCH|fft2+ifft2|256|cpu|0.002429|0.001921|0.002946
+BENCH|potential build (infinite)|128|cpu|0.005528|0.003130|0.007329
+BENCH|fft2+ifft2|250|cpu|0.003751|0.003280|0.004938
+BENCH|potential build (infinite)|192|cpu|0.013180|0.012151|0.013375
+BENCH|multislice 10 slices (plane wave, built potential)|128|cpu|0.011622|0.010550|0.016291
+BENCH|transmission functions|128|cpu|0.005652|0.004630|0.015596
+BENCH|probe build|128|cpu|0.000824|0.000691|0.001148
+BENCH|STEM scan 8x8, annular|64|cpu|0.027928|0.019527|0.039812
+BENCH|fft2+ifft2|512|cpu|0.009033|0.008822|0.013504
+BENCH|potential build (infinite)|256|cpu|0.031286|0.021051|0.035768
+BENCH|frozen phonons 4 x multislice, built per configuration|64|cpu|0.010615|0.006032|0.025249
+BENCH|multislice 10 slices (plane wave, built potential)|192|cpu|0.025896|0.023570|0.066287
+BENCH|fft2+ifft2|506|cpu|0.020612|0.013823|0.036171
+BENCH|multislice 10 slices (plane wave, built potential)|64|metal|0.004987|0.004492|0.005389
+BENCH|transmission functions|192|cpu|0.013603|0.011984|0.035718
+BENCH|probe build|192|cpu|0.003023|0.002094|0.004848
+BENCH|multislice 10 slices (plane wave, potential built on the GPU)|64|metal|0.006036|0.005961|0.006314
+BENCH|STEM scan 8x8, annular|64|metal|0.009388|0.008710|0.009762
+BENCH|multislice 10 slices (plane wave, built potential)|256|cpu|0.060141|0.045801|0.078572
+BENCH|transmission functions|256|cpu|0.027558|0.023373|0.065146
+BENCH|probe build|256|cpu|0.003644|0.003592|0.012258
+BENCH|STEM scan 8x8, annular|128|cpu|0.175710|0.142888|0.246466
+BENCH|potential build (infinite)|512|cpu|0.154679|0.116508|0.179960
+BENCH|frozen phonons 4 x multislice, built per configuration|128|cpu|0.077188|0.058900|0.119272
+BENCH|multislice 10 slices (plane wave, built potential)|128|metal|0.006526|0.005497|0.010470
+BENCH|multislice 10 slices (plane wave, potential built on the GPU)|128|metal|0.008142|0.007634|0.008895
+BENCH|STEM scan 8x8, annular|128|metal|0.013825|0.013660|0.018762
+BENCH|multislice 10 slices (plane wave, built potential)|512|cpu|0.298520|0.230220|0.451454
+BENCH|STEM scan 8x8, annular|192|cpu|0.458912|0.385753|0.610998
+BENCH|transmission functions|512|cpu|0.107249|0.095629|0.122494
+BENCH|probe build|512|cpu|0.015237|0.014397|0.056798
+BENCH|frozen phonons 4 x multislice, built per configuration|192|cpu|0.172653|0.112744|0.308290
+BENCH|multislice 10 slices (plane wave, built potential)|192|metal|0.007837|0.006742|0.008131
+BENCH|multislice 10 slices (plane wave, potential built on the GPU)|192|metal|0.010105|0.009497|0.010467
+BENCH|STEM scan 8x8, annular|192|metal|0.035328|0.034861|0.038223
+BENCH|STEM scan 8x8, annular|256|cpu|0.713701|0.447964|0.768395
+BENCH|frozen phonons 4 x multislice, built per configuration|256|cpu|0.413501|0.314351|0.559329
+BENCH|multislice 10 slices (plane wave, built potential)|256|metal|0.010343|0.009345|0.010676
+BENCH|multislice 10 slices (plane wave, potential built on the GPU)|256|metal|0.007853|0.006785|0.011714
+BENCH|STEM scan 8x8, annular|256|metal|0.050605|0.049070|0.052095
+BENCH|STEM scan 8x8, annular|512|cpu|3.009585|2.643123|3.344279
+BENCH|frozen phonons 4 x multislice, built per configuration|512|cpu|1.323991|1.123601|1.389074
+BENCH|multislice 10 slices (plane wave, built potential)|512|metal|0.010184|0.010082|0.011083
+BENCH|multislice 10 slices (plane wave, potential built on the GPU)|512|metal|0.015704|0.011836|0.017875
+BENCH|STEM scan 8x8, annular|512|metal|0.176433|0.173997|0.179290

@@ -5,6 +5,30 @@ All notable changes to SimulatoKit. Each release's Migration paragraph is the re
 No release dates are given: the repository has no git tags yet, so a date for each version could not be verified.
 Anything not stated here, in the README or in the git history is left out.
 
+## 0.3.0
+
+- Any grid size: `Grid`, `Potential` and every FFT accept any length of at least 2, on `.cpu` and `.metal` (before:
+  f · 2^m with f in 1, 3, 5, 15 and m ≥ 3). vDSP's DFT runs where it has the length, Bluestein's algorithm (own
+  implementation; ImagoKit's FFT is not a dependency, the kits stay standalone) elsewhere, at the speed of NumPy's FFT on the
+  odd size measured. Added `Grid.hasDirectTransform(_:)`. A 90 x 75 grid is pinned against abTEM (rtol 1e−7, plane wave and
+  probe).
+- Added `Potential(structure:sampling:sliceThickness:)` (a sampling or an (x, y) pair), `Grid(extentX:extentY:samplingX:samplingY:)`
+  and `GridScan(start:end:samplingX:samplingY:endpoint:)`: ⌈extent / sampling⌉ points (one more with `endpoint`), as abTEM.
+- Added beam tilt [mrad]: `Waves.tilt`, `Waves.planeWave(…tilt:)`, `Probe(…tilt:)` and `Multislice.propagator(…tilt:)`. As in
+  abTEM it enters the Fresnel propagator only; exit waves keep it. Pinned against abTEM (plane wave and probe); `.metal`
+  matches `.cpu` at the registered bound. A `.metal` batch must share one tilt (`SimulatoError.invalidTilt`).
+- Added `CenterOfMassDetector`, `ScanMeasurement.gaussianSourceSize(…)`, `ScanMeasurement.poissonNoise(…)` and a public
+  `ScanMeasurement.init`. The Poisson draw uses the kit's generator, not NumPy's stream.
+- `docs/parity.md` rewritten from abTEM's source (28 present, 36 partial, 59 missing of 123 rows, each marked study, useful or
+  not planned); `docs/benchmarks.md` and `tools/benchmarks/` added; `docs/open-items.md` added.
+- Added `SimulatoError.invalidSampling` and `.invalidTilt`; `.unsupportedGridLength` is now thrown only for a length below 2.
+- No number moves for a grid or call that worked in 0.2.1.
+
+**Migration.** Nothing is required. `SimulatoError` gained two cases, so an exhaustive `switch` over it needs a `default` or the
+two new cases. `Grid.isSupportedLength(_:)` is now true for every n ≥ 2: code that used it to pick vDSP lengths should call
+`Grid.hasDirectTransform(_:)`. The `Waves` initialiser has a new defaulted `tilt:` argument, so a type that mirrors its
+signature must add it.
+
 ## 0.2.1
 
 - Added `MetalAccuracy.detectorFloor` (1e-5) and `MetalAccuracy.detectorBound(imageMaximum:incidentIntensity:)`: the
