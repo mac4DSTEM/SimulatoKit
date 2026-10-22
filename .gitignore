@@ -4,3 +4,4 @@
 .swiftpm/
 *.xcresult
 /Examples/output/
+.docs-site/
