@@ -130,7 +130,7 @@ public struct LineScan: Sendable, Hashable, ScanPattern {
     public func addingMargin(_ margin: Double) throws -> LineScan { try addingMargin(before: margin, after: margin) }
 
     /// The end points of a line of `extent` [Å] centred on `center` at `angle` [deg] to the first axis (abTEM's arithmetic).
-    static func endpoints(center: SIMD2<Double>, extent: Double, angle: Double) -> (start: SIMD2<Double>, end: SIMD2<Double>) {
+    public static func endpoints(center: SIMD2<Double>, extent: Double, angle: Double) -> (start: SIMD2<Double>, end: SIMD2<Double>) {
         let a = angle * (Double.pi / 180)
         let d = SIMD2(cos(a), sin(a))
         return (SIMD2(center.x - extent / 2 * d.x, center.y - extent / 2 * d.y),
