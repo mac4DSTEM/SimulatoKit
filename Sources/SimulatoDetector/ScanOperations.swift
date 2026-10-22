@@ -23,6 +23,7 @@ extension ScanMeasurement {
         guard samplingX.isFinite, samplingY.isFinite, samplingX > 0, samplingY > 0 else {
             throw SimulatoError.invalidScan("the scan sampling must be finite and positive, got (\(samplingX), \(samplingY)) Å")
         }
+        guard scanShape.count == 2 else { throw SimulatoError.invalidScan("the source size filters a two-axis scan; a line scan has one axis") }
         let nx = scanShape[0], ny = scanShape[1], v = valueCount
         var data = values
         // Along y (the second scan axis) then x, each with its own kernel; scipy filters the axes in order.

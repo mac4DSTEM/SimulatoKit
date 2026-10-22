@@ -17,9 +17,10 @@ public struct ScanMeasurement: Sendable {
     public let valueShape: [Int]
     public let values: [Double]
 
-    /// - Precondition: `values` holds scanShape[0] × scanShape[1] × (the product of `valueShape`) numbers.
+    /// - Precondition: `scanShape` has one axis (a `LineScan`) or two (a `GridScan`), and `values` holds the product of
+    ///   `scanShape` × the product of `valueShape` numbers.
     public init(scanShape: [Int], valueShape: [Int], values: [Double]) {
-        precondition(scanShape.count == 2 && values.count == scanShape[0] * scanShape[1] * valueShape.reduce(1, *),
+        precondition((1...2).contains(scanShape.count) && values.count == scanShape.reduce(1, *) * valueShape.reduce(1, *),
                      "ScanMeasurement: the values do not fill the shapes")
         self.scanShape = scanShape
         self.valueShape = valueShape
@@ -30,13 +31,14 @@ public struct ScanMeasurement: Sendable {
 
     /// The values at scan position (ix, iy).
     public subscript(ix: Int, iy: Int) -> [Double] {
+        precondition(scanShape.count == 2, "ScanMeasurement: (ix, iy) needs a two-axis scan; use the one-index subscript for a line scan")
         let base = (ix * scanShape[1] + iy) * valueCount
         return Array(values[base..<(base + valueCount)])
     }
 
     /// The image of a one-number detector (annular), sampled as the scan.
     public func image(samplingX: Double, samplingY: Double) -> RealField? {
-        guard valueCount == 1 else { return nil }
+        guard valueCount == 1, scanShape.count == 2 else { return nil }
         return RealField(nx: scanShape[0], ny: scanShape[1], values: values, samplingX: samplingX, samplingY: samplingY)
     }
 }
@@ -45,7 +47,7 @@ public enum STEM {
     /// Scans `probe` over `scan` through every potential (one per frozen-phonon configuration; one for a static
     /// structure) and returns each detector's measurement averaged over the potentials. On `.metal` the probes, the
     /// transmissions and the diffraction intensities are computed on the GPU (registration-performance.md 1.6).
-    public static func scan(probe: Probe, potentials: [ProjectedPotential], scan: GridScan, detectors: [any Detector],
+    public static func scan(probe: Probe, potentials: [ProjectedPotential], scan: some ScanPattern, detectors: [any Detector],
                             backend: Backend = .cpu, options: ExecutionOptions = .standard) throws -> [ScanMeasurement] {
         guard !potentials.isEmpty else { throw SimulatoError.invalidScan("no potential") }
         for p in potentials where !p.grid.matches(probe.grid) { throw SimulatoError.gridMismatch }
@@ -61,7 +63,7 @@ public enum STEM {
     }
 
     /// The same through unbuilt potentials: on `.cpu` each is built (`build()`), on `.metal` each slice is built on the GPU.
-    public static func scan(probe: Probe, potentials: [Potential], scan: GridScan, detectors: [any Detector],
+    public static func scan(probe: Probe, potentials: [Potential], scan: some ScanPattern, detectors: [any Detector],
                             backend: Backend = .cpu, options: ExecutionOptions = .standard) throws -> [ScanMeasurement] {
         guard !potentials.isEmpty else { throw SimulatoError.invalidScan("no potential") }
         for p in potentials where !p.grid.matches(probe.grid) { throw SimulatoError.gridMismatch }
@@ -77,7 +79,7 @@ public enum STEM {
         }
     }
 
-    static func cpuScan(probe: Probe, potentials: [ProjectedPotential], scan: GridScan,
+    static func cpuScan(probe: Probe, potentials: [ProjectedPotential], scan: some ScanPattern,
                         detectors: [any Detector], options: ExecutionOptions) throws -> [ScanMeasurement] {
         let positions = scan.positions
         let shapes = try detectors.map { try $0.shape(for: probe.grid, beam: probe.beam) }
@@ -102,7 +104,7 @@ public enum STEM {
     typealias Ramps = (Int) throws -> (x: ComplexField, y: ComplexField)
 
     /// Potentials outer, positions inner: each position still sums its configurations in potential order.
-    static func metalScan(probe: Probe, count: Int, scan: GridScan, detectors: [any Detector],
+    static func metalScan(probe: Probe, count: Int, scan: some ScanPattern, detectors: [any Detector],
                           run: (Int, ComplexField, Int, Ramps, (Int, [Double]) throws -> Void) throws -> Void)
         throws -> [ScanMeasurement] {
         let positions = scan.positions
@@ -128,9 +130,9 @@ public enum STEM {
         }
     }
 
-    static func average(_ sums: [[Double]], _ shapes: [[Int]], scan: GridScan, over n: Int) -> [ScanMeasurement] {
+    static func average(_ sums: [[Double]], _ shapes: [[Int]], scan: some ScanPattern, over n: Int) -> [ScanMeasurement] {
         zip(sums, shapes).map { values, shape in
-            ScanMeasurement(scanShape: [scan.nx, scan.ny], valueShape: shape, values: values.map { $0 / Double(n) })
+            ScanMeasurement(scanShape: scan.shape, valueShape: shape, values: values.map { $0 / Double(n) })
         }
     }
 }
