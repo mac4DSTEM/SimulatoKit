@@ -11,7 +11,7 @@ import Foundation
 public enum ImageOperationError: Error, Sendable, Equatable, CustomStringConvertible {
     /// The two components of a gradient differ in shape or sampling.
     case gradientComponentsDiffer
-    /// A repetition count below 1.
+    /// A repetition count below 1, or a tiled image of more than 2^28 values (or one whose size overflows).
     case invalidRepetitions(Int, Int)
     /// A disc position or radius that is not finite, or a radius that is not positive.
     case invalidDisc(String)
@@ -21,7 +21,7 @@ public enum ImageOperationError: Error, Sendable, Equatable, CustomStringConvert
     public var description: String {
         switch self {
         case .gradientComponentsDiffer: return "the two gradient components must have the same shape and sampling"
-        case .invalidRepetitions(let x, let y): return "repetitions must be at least 1 along both axes, got (\(x), \(y))"
+        case .invalidRepetitions(let x, let y): return "repetitions must be at least 1 along both axes and give at most 2^28 values, got (\(x), \(y))"
         case .invalidDisc(let why): return "invalid integration disc: \(why)"
         case .discOutsideImage: return "the integration region is outside the image"
         }
@@ -46,10 +46,13 @@ extension RealField {
     }
 
     /// The tiled image (abTEM `Images.tile`): `repetitionsX` × `repetitionsY` copies; the sampling stays.
-    /// - Throws: `ImageOperationError.invalidRepetitions` for a count below 1.
+    /// - Throws: `ImageOperationError.invalidRepetitions` for a count below 1 or a result of more than 2^28 values.
     public func tiled(repetitionsX: Int, repetitionsY: Int) throws -> RealField {
         guard repetitionsX >= 1, repetitionsY >= 1 else { throw ImageOperationError.invalidRepetitions(repetitionsX, repetitionsY) }
-        let mx = nx * repetitionsX, my = ny * repetitionsY
+        let (mx, o1) = nx.multipliedReportingOverflow(by: repetitionsX)
+        let (my, o2) = ny.multipliedReportingOverflow(by: repetitionsY)
+        let (total, o3) = mx.multipliedReportingOverflow(by: my)
+        guard !o1, !o2, !o3, total <= 1 << 28 else { throw ImageOperationError.invalidRepetitions(repetitionsX, repetitionsY) }
         var out = [Double](repeating: 0, count: mx * my)
         for ix in 0..<mx {
             let row = (ix % nx) * ny
@@ -70,13 +73,20 @@ extension RealField {
     /// (abTEM `integrate_disc`, no `interpolate`): the pixels of the bounding box with a soft edge, weight
     /// 1 − clip((r − radius) / mean sampling, 0, 1). The distances are abTEM's, which place the box's pixels on
     /// linspace(0, m d, m) with the endpoint (spacing m d / (m − 1), not d); ported as they are.
+    /// With `mean` and a disc whose pixels all have weight 0 the result is NaN, as abTEM's 0 / 0.
     /// - Throws: `ImageOperationError.invalidDisc` for a non-finite position or a radius that is not finite and positive,
+    ///   or a disc or position of more than 2^31 pixels across or 2^53 pixels from the origin,
     ///   `discOutsideImage` for `.raise` at the border.
     public func integrateDisc(x: Double, y: Double, radius: Double, mean: Bool = false, border: Border = .wrap) throws -> Double {
         guard x.isFinite, y.isFinite else { throw ImageOperationError.invalidDisc("the position must be finite, got (\(x), \(y)) Å") }
         guard radius.isFinite, radius > 0 else { throw ImageOperationError.invalidDisc("the radius must be finite and positive, got \(radius) Å") }
         guard samplingX.isFinite, samplingY.isFinite, samplingX > 0, samplingY > 0 else {
             throw SimulatoError.invalidSampling(samplingX, samplingY)
+        }
+        // Int(...) of a huge Double traps: the box must fit 2^31 pixels per axis and the corner 2^53 pixels from the origin.
+        guard 2 * radius / samplingX < 0x1p31, 2 * radius / samplingY < 0x1p31,
+              abs(x / samplingX) < 0x1p53, abs(y / samplingY) < 0x1p53 else {
+            throw ImageOperationError.invalidDisc("the disc of radius \(radius) Å at (\(x), \(y)) Å is too large for the sampling (\(samplingX), \(samplingY)) Å")
         }
         let mx = Int((2 * radius / samplingX).rounded(.up)), my = Int((2 * radius / samplingY).rounded(.up))
         let cornerX = Int((x / samplingX).rounded(.down)) - mx / 2

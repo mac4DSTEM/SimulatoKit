@@ -24,6 +24,9 @@ public enum SimulatoError: Error, Sendable, Equatable, CustomStringConvertible {
     case invalidFrozenPhonons(String)
     case invalidScan(String)
     case invalidDetector(String)
+    /// A resampled wave of `rows` × `columns` points needs `required` bytes, more than the `limit` allowed (`Int.max`
+    /// bytes for a size that overflows).
+    case gridTooLarge(rows: Int, columns: Int, required: Int, limit: Int)
 
     public var description: String {
         switch self {
@@ -47,6 +50,8 @@ public enum SimulatoError: Error, Sendable, Equatable, CustomStringConvertible {
         case .invalidFrozenPhonons(let why): return "invalid frozen phonons: \(why)"
         case .invalidScan(let why): return "invalid scan: \(why)"
         case .invalidDetector(let why): return "invalid detector: \(why)"
+        case .gridTooLarge(let r, let c, let need, let limit):
+            return "a wave of \(r) x \(c) points needs \(need) bytes, more than the \(limit) bytes allowed (half of the physical memory)"
         }
     }
 }

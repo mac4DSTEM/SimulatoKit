@@ -4,13 +4,24 @@
 //        extent (`core/fft.py`: `fft_interpolation_masks`, `fft_crop`, `fft_interpolate` with normalization "values").
 //
 
+import Foundation
+
 extension Waves {
     /// The wave resampled to `rows` × `columns` points over the same extent by Fourier-space cropping (smaller) or
     /// zero-padding (larger), as abTEM's `fft_interpolate(..., normalization="values")` does for `WavesDetector(gpts)`:
     /// FFT, keep the lowest frequencies (the first ⌊m/2⌋ + 1 and last ⌊m/2⌋ of an odd axis, m/2 and m/2 of an even one),
     /// inverse FFT, scaled so the amplitude of the values is kept. The beam, normalisation and tilt are kept.
-    /// - Throws: `SimulatoError.unsupportedGridLength` for fewer than 2 points per axis.
+    /// - Throws: `SimulatoError.unsupportedGridLength` for fewer than 2 points per axis, `SimulatoError.gridTooLarge` when
+    ///   the result would not fit in half of the physical memory (or its size overflows).
     public func resampled(rows: Int, columns: Int) throws -> Waves {
+        guard Grid.isSupportedLength(rows) else { throw SimulatoError.unsupportedGridLength(rows) }
+        guard Grid.isSupportedLength(columns) else { throw SimulatoError.unsupportedGridLength(columns) }
+        let limit = Int(ProcessInfo.processInfo.physicalMemory / 2)
+        let (points, o1) = rows.multipliedReportingOverflow(by: columns)
+        let (bytes, o2) = points.multipliedReportingOverflow(by: 16)
+        guard !o1, !o2, bytes <= limit else {
+            throw SimulatoError.gridTooLarge(rows: rows, columns: columns, required: o1 || o2 ? .max : bytes, limit: limit)
+        }
         let target = try Grid(nx: rows, ny: columns, extentX: grid.extentX, extentY: grid.extentY)
         var f = field
         try FFT2D(nx: grid.nx, ny: grid.ny).forward(&f)
