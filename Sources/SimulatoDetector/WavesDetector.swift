@@ -79,8 +79,13 @@ public struct ScanWaves: Sendable {
 
     /// - Precondition: the arrays hold positions × rows × columns numbers.
     public init(scanShape: [Int], template: Waves, real: [Double], imaginary: [Double]) {
-        precondition(scanShape.count == 2 && real.count == scanShape[0] * scanShape[1] * template.grid.count
-                     && imaginary.count == real.count, "ScanWaves: the values do not fill the shapes")
+        var filled = scanShape.count == 2
+        if filled {
+            let (a, o1) = scanShape[0].multipliedReportingOverflow(by: scanShape[1])
+            let (b, o2) = a.multipliedReportingOverflow(by: template.grid.count)
+            filled = !o1 && !o2 && real.count == b && imaginary.count == real.count
+        }
+        precondition(filled, "ScanWaves: the values do not fill the shapes")
         self.scanShape = scanShape
         self.template = template
         self.real = real
@@ -132,7 +137,10 @@ extension STEM {
 
     private static func checkMemory(probe: Probe, scan: GridScan, detector: WavesDetector, limit: Int) throws {
         let r = detector.rows ?? probe.grid.nx, c = detector.columns ?? probe.grid.ny
-        let positions = scan.nx * scan.ny
+        let (positions, overflow) = scan.nx.multipliedReportingOverflow(by: scan.ny)
+        guard !overflow else {
+            throw WavesDetectorError.tooLarge(positions: .max, rows: r, columns: c, required: .max, limit: limit)
+        }
         let need = WavesDetector.requiredBytes(positions: positions, rows: r, columns: c)
         guard need <= limit else {
             throw WavesDetectorError.tooLarge(positions: positions, rows: r, columns: c, required: need, limit: limit)
@@ -143,9 +151,13 @@ extension STEM {
                                 run: ([Waves]) throws -> [Waves]) throws -> ScanWaves {
         let positions = scan.positions
         let r = detector.rows ?? probe.grid.nx, c = detector.columns ?? probe.grid.ny
+        let need = WavesDetector.requiredBytes(positions: positions.count, rows: r, columns: c)
+        guard need != .max else {
+            throw WavesDetectorError.tooLarge(positions: positions.count, rows: r, columns: c, required: .max, limit: .max)
+        }
         var re = [Double](), im = [Double]()
-        re.reserveCapacity(positions.count * r * c)
-        im.reserveCapacity(positions.count * r * c)
+        re.reserveCapacity(need / 16)
+        im.reserveCapacity(need / 16)
         var template: Waves?
         // Chunks as the measurement scan: the incident and exit waves of one chunk only, besides the result.
         let chunk = max(1, options.scanChunkBytes / (probe.grid.count * 16 * 2))

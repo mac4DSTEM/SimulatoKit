@@ -50,6 +50,7 @@ public enum STEM {
     public static func scan(probe: Probe, potentials: [ProjectedPotential], scan: some ScanPattern, detectors: [any Detector],
                             backend: Backend = .cpu, options: ExecutionOptions = .standard) throws -> [ScanMeasurement] {
         guard !potentials.isEmpty else { throw SimulatoError.invalidScan("no potential") }
+        try checkShape(scan)
         for p in potentials where !p.grid.matches(probe.grid) { throw SimulatoError.gridMismatch }
         switch backend {
         case .cpu:
@@ -66,6 +67,7 @@ public enum STEM {
     public static func scan(probe: Probe, potentials: [Potential], scan: some ScanPattern, detectors: [any Detector],
                             backend: Backend = .cpu, options: ExecutionOptions = .standard) throws -> [ScanMeasurement] {
         guard !potentials.isEmpty else { throw SimulatoError.invalidScan("no potential") }
+        try checkShape(scan)
         for p in potentials where !p.grid.matches(probe.grid) { throw SimulatoError.gridMismatch }
         switch backend {
         case .cpu:
@@ -76,6 +78,18 @@ public enum STEM {
                 try Multislice.metalScanIntensities(spectrum: s, positions: n, ramps: r, through: potentials[k],
                                                     beam: probe.beam, tilt: probe.tilt, options: options, deliver: d)
             }
+        }
+    }
+
+    /// A custom `ScanPattern` must have one or two axes whose product is its number of positions.
+    static func checkShape(_ scan: some ScanPattern) throws {
+        let shape = scan.shape
+        let (product, overflow) = shape.reduce((1, false)) { acc, n in
+            let r = acc.0.multipliedReportingOverflow(by: n)
+            return (r.partialValue, acc.1 || r.overflow)
+        }
+        guard (1...2).contains(shape.count), !overflow, product == scan.positions.count else {
+            throw SimulatoError.invalidScan("the scan shape \(shape) must have one or two axes whose product is the \(scan.positions.count) positions")
         }
     }
 

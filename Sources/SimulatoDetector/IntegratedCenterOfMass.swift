@@ -11,10 +11,13 @@ import SimulatoCore
 extension ScanMeasurement {
     /// The x and y components of a two-value measurement (a `CenterOfMassDetector`'s) as two images over the scan, with the
     /// scan's pixel sizes `samplingX` and `samplingY` [Å].
-    /// - Throws: `SimulatoError.invalidScan` unless every position holds exactly two values.
+    /// - Throws: `SimulatoError.invalidScan` unless every position holds exactly two values and the scan has two axes.
     public func gradientImages(samplingX: Double, samplingY: Double) throws -> (x: RealField, y: RealField) {
         guard valueShape == [2] else {
             throw SimulatoError.invalidScan("a centre-of-mass image needs two values per position (x, y), this measurement has shape \(valueShape)")
+        }
+        guard scanShape.count == 2 else {
+            throw SimulatoError.invalidScan("a centre-of-mass image needs a two-axis scan, this measurement has scan shape \(scanShape)")
         }
         let n = scanShape[0] * scanShape[1]
         var gx = [Double](repeating: 0, count: n), gy = gx

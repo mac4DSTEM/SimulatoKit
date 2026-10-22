@@ -89,6 +89,7 @@ extension LineProfiles {
     /// `ensembleShape` order (one number for a single profile). abTEM stores them as float32; these are float64.
     /// - Throws: `invalidScan` for a profile that never crosses the height (abTEM raises an IndexError).
     public func width(height: Double = 0.5) throws -> [Double] {
+        guard count >= 1 else { throw SimulatoError.invalidScan("a profile of \(count) points has no width") }
         var out: [Double] = []
         out.reserveCapacity(profileCount)
         for p in 0..<profileCount {
@@ -124,6 +125,7 @@ extension LineProfiles {
     /// - Throws: `invalidScan` for both `sampling` and `gpts`, a non-positive value, or an order outside 0 to 5.
     public func interpolate(sampling newSampling: Double? = nil, gpts: Int? = nil, order: Int = 3,
                             endpoint: Bool = false) throws -> Self {
+        guard count >= 1 else { throw SimulatoError.invalidScan("a profile of \(count) points cannot be interpolated") }
         if gpts != nil && newSampling != nil { throw SimulatoError.invalidScan("give sampling or gpts to interpolate, not both") }
         guard SplineInterpolation.orders.contains(order) else {
             throw SimulatoError.invalidScan("the spline order must be 0 to 5, got \(order)")
@@ -136,7 +138,13 @@ extension LineProfiles {
             guard c >= 1, c < 1e9 else { throw SimulatoError.invalidScan("sampling \(s) gives \(c) points") }
             n = Int(c)
         }
-        guard let points = n, points >= 1 else { throw SimulatoError.invalidScan("gpts must be at least 1") }
+        guard let points = n, points >= 1, points < 1_000_000_000 else {
+            throw SimulatoError.invalidScan("gpts must be at least 1 and below 1e9")
+        }
+        let (total, overflow) = profileCount.multipliedReportingOverflow(by: points)
+        guard !overflow, total <= 1 << 31 else {
+            throw SimulatoError.invalidScan("\(profileCount) profiles of \(points) points are too many values")
+        }
         if s == nil { s = extent / Double(points) }
         // abTEM: wrap-pad by 3, then linspace(3, N + 3, gpts, endpoint) in the padded index space.
         let positions = GridScan.linspace(3.0, Double(count + 6) - 3.0, points, endpoint: endpoint)

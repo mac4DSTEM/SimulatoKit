@@ -71,6 +71,9 @@ extension RealField {
         let direction = (scan.end - scan.start) / length
         let perpendicular = SIMD2(-direction.y, direction.x)
         let n = (width / minSampling / 2).rounded(.down) * 2 + 1
+        guard n.isFinite, n < 1e6 else {
+            throw SimulatoError.invalidScan("a width of \(width) Å at sampling \(minSampling) Å gives \(n) points across the line")
+        }
         let across = GridScan.linspace(-n / 2, n / 2, Int(n), endpoint: true)
         var out = [Double](repeating: 0, count: pixels.count)
         for (k, p) in pixels.enumerated() {
