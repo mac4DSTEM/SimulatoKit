@@ -5,6 +5,30 @@ All notable changes to SimulatoKit. Each release's Migration paragraph is the re
 No release dates are given: the repository has no git tags yet, so a date for each version could not be verified.
 Anything not stated here, in the README or in the git history is left out.
 
+## 0.4.0
+
+The study release: line scans and their profiles, integrated centre of mass, and exit waves per scan position (suite task 23). Pinned against abTEM 1.0.10 float64 (`tools/linescan/pins.py`, `tools/icom/pins.py`, `tools/waves/pins.py`); `docs/parity.md` goes to 37 present, 36 partial, 55 missing of 128 rows (from 28, 36, 59 of 123).
+
+### Added
+- `LineScan(start:end:gpts:sampling:endpoint:fractional:extent:)` with `addingMargin` and `atPosition` (abTEM `LineScan`, `.add_margin`, `.at_position`); `STEM.scan` takes any `ScanPattern` (`GridScan` or `LineScan`) and returns `scanShape` `[n]` for a line.
+- `RealSpaceLineProfiles` and `ReciprocalSpaceLineProfiles` with `width(height:)` and `interpolate(sampling:gpts:order:endpoint:)`; `ScanMeasurement.lineProfiles(for:)` turns a line-scan measurement into profiles.
+- `RealField.interpolateLine`, `interpolateLineAtPosition` and, for centred diffraction patterns, `interpolateReciprocalLine`, `interpolateReciprocalLineAtPosition` (abTEM `interpolate_line`, `interpolate_line_at_position`: spline orders 0 to 5, width, margin, fractional coordinates).
+- `RealField.integratingGradient(x:y:)` and `ComplexField.integratedGradient(samplingX:samplingY:)`: abTEM's `Images.integrate_gradient`, the Fourier-space integral of a two-component gradient field (NumPy `fftfreq`, zero frequency set to 0, no padding, minimum shifted to 0), CPU float64 on the kit's FFT, any length from 2.
+- `ScanMeasurement.integratedCenterOfMass(samplingX:samplingY:)` and `gradientImages(...)`: the integrated centre of mass (iCOM / DPC) of a `CenterOfMassDetector` scan, as abTEM's `integrated_center_of_mass`.
+- `RealField.integrateDisc(x:y:radius:mean:border:)` (abTEM `integrate_disc`) and `RealField.tiled(repetitionsX:repetitionsY:)` (`Images.tile`).
+- `ImageOperationError`.
+- `WavesDetector` (abTEM's `WavesDetector(gpts)`): `STEM.scan(probe:potentials:scan:detector:backend:options:memoryLimit:)`
+  returns a `ScanWaves`, the complex exit wave at every scan position (`[position][row][column]`, subscript `scanWaves[ix, iy]`
+  gives a `Waves`). `WavesDetector(rows:columns:)` resamples each wave in Fourier space (crop or zero-pad over the same
+  extent), as abTEM's `fft_interpolate`. Pinned against abTEM 1.0.10 float64 at 1.8e-15 of the wave maximum (assert_allclose
+  rtol 1e-7, atol 1e-12 of the maximum); `.metal` (float32) holds `MetalAccuracy.registered.wave` (measured 3.6e-7).
+- `Waves.resampled(rows:columns:)` (SimulatoCore): abTEM's `fft_interpolate` for a wave, odd and even sizes, crop and pad.
+- `WavesDetectorError`: `tooLarge` (positions x rows x columns x 16 bytes above half of the physical memory, or the
+  `memoryLimit` given) and `severalPotentials` (frozen phonons).
+
+### Migration
+`STEM.scan(scan:)` is now generic over `ScanPattern`; a caller passing a `GridScan` needs no change. `ScanMeasurement.scanShape` can have one entry for a line scan: code that indexes `scanShape[1]` must check `scanShape.count` first, and the `(ix, iy)` subscript and `image(...)` need two scan axes. `STEM.scan` with a `WavesDetector` returns `ScanWaves`, a different type from the measurement of the other detectors (one potential only: a frozen-phonon list is refused with `WavesDetectorError.severalPotentials`; scan each configuration alone). Everything else is additive.
+
 ## 0.3.1
 
 Documentation only; no source change and no number moves.

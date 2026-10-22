@@ -20,8 +20,7 @@ A plain list, most important first. Benchmarks: `docs/benchmarks.md`; coverage: 
 
 ## Work items by priority
 
-- **Study, next:** `LineScan`, integrated centre of mass and DPC (`Images.integrate_gradient`), `WavesDetector`
-  (parity.md, "study" rows still missing).
+- **Study, next:** the study rows still missing in `docs/parity.md` (the 0.4.0 rows `LineScan`, integrated centre of mass and `WavesDetector` are done).
 - **Study, with DiffractoKit:** non-orthogonal and rotated cells, `periodic=False`, `orthogonalize_cell` and
   `standardize_cell` through `CrystalStructure` and `CIFImport`, replacing the local `AtomicStructure` stand-in. Finite
   projection, the Kirkland, Peng and Ewald parametrisations, Debye–Waller tables.
@@ -30,3 +29,11 @@ A plain list, most important first. Benchmarks: `docs/benchmarks.md`; coverage: 
   (ROADMAP); the benchmark table has no 1024² row yet (nightly).
 - **Poisson noise:** `samples > 1` and the NumPy random stream are not offered (the draws are the kit's own).
 - **Tilt ensembles:** a distribution of tilts (abTEM's tilt axis) is not offered; loop over tilts. A `.metal` batch needs one tilt.
+
+0.4.0 notes (line scans, iCOM, waves):
+
+- **Fast test target for SimulatoDetector:** `Package.swift` has none; the scan, refusal and Metal tests of `LineScan`, `WavesDetector` and iCOM live in `SimulatoKitParityTests` (skipped by the per-session gate). Add `SimulatoDetectorTests` (dependencies SimulatoDetector, SimulatoMultislice, SimulatoProbe, SimulatoCore, SimulatoKitTestSupport) and move `memoryRefusalIsTyped` and `frozenPhononsAreRefused` there.
+- **WavesDetector with frozen phonons:** one potential per call; abTEM's `ensemble_mean=False` for waves is a loop over `STEM.scan` calls, no batch API. abTEM 1.0.10's own `probe.scan(..., WavesDetector(gpts=...))` raises a broadcast error (the detector does not declare its output shape); the pins use `probe.multislice` then `WavesDetector(gpts).detect`, abTEM's per-wave code.
+- **Line profiles:** `ScanMeasurement.lineProfiles(for:)` takes detectors of one number or a vector; abTEM returns other measurement types for segmented and pixelated line scans, which the kit leaves as the raw `ScanMeasurement`. `ReciprocalSpaceLineProfiles` has no producer in a scan yet (the azimuthal average is not ported); `interpolateReciprocalLine` produces them. `LineScan` has no `end=None` or probe-matched sampling default: pass `end` and `gpts` or `sampling`.
+- **iCOM:** no calibration beyond abTEM's (the image is in units of the centre of mass times Å, minimum 0); a phase or potential scaling is not in abTEM and not built; `integrate_disc(interpolate:)` and the DPC measurement of a `SegmentedDetector` are not built.
+- **Lobato π:** the pins of 0.4.0 use `LobatoParameterization(piConstant: .abTEMFloat32)` like the other slices; with the default `.exact` they differ by 2.6e-8 of the maximum.

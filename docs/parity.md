@@ -4,8 +4,8 @@ The coverage table of abTEM 1.0.10 (`References/python/abtem`, git `164e644`): i
 the source in `site-packages/abtem` against SimulatoKit. Rewritten for 0.3.0 (the growing phase's kit audit); every row
 has one state and one priority.
 
-**Totals (123 rows): 28 present, 36 partial, 59 missing.** By priority: **study** 23 rows (4 present, 5 partial, 14 missing);
-**useful** 78 (24, 31, 23); **not planned** 22 (all missing, each with its reason).
+**Totals (128 rows): 37 present, 36 partial, 55 missing.** By priority: **study** 27 rows (11 present, 5 partial, 11 missing);
+**useful** 79 (26, 31, 22); **not planned** 22 (all missing, each with its reason).
 
 States:
 
@@ -91,7 +91,8 @@ detector, the Gaussian source size and Poisson noise on a scan.
 | `Probe(semiangle_cutoff, energy, extent, gpts, sampling, soft=True, aperture, aberrations)` | `Probe(beam:grid:aperture:aberrations:tilt:)` | **partial**: `tilt` offered (0.3.0); no `scan_positions`, `metadata`, distributions of parameters, or aberration coefficients as keywords (set on `Aberrations`); a probe is rebuilt to change a parameter | useful |
 | `Probe.build(scan=)` | `Probe.build(at:)` | **partial**: one position per call (a scan: `STEM.scan`); `scan=` as a grid of positions not offered | useful |
 | `Probe.scan(potential, scan, detectors)`, `Probe.multislice(potential, scan, detectors)` | `STEM.scan(probe:potentials:scan:detectors:backend:)` | **present**: slice 2; positions bit-equal, detectors averaged over the potentials; `max_batch` is chosen inside (chunks of at most 256 MB of waves), `lazy` not offered | useful |
-| `Waves.multislice(potential, detectors)`, `PlaneWave.multislice(...)` | `Multislice.run(_:through:exitPlanes:backend:)` | **partial**: waves in, waves at the exit planes out; no `detectors=` (apply a `Detector` to `DiffractionIntensity(exit)`, as `STEM.scan` does per position) | useful |
+| `Waves.multislice(potential, detectors)`, `PlaneWave.multislice(...)` | `Multislice.run(_:through:exitPlanes:backend:)` | **partial**: waves in, waves at the exit planes out; no `detectors=` (apply a `Detector` to `DiffractionIntensity(exit)`, as `STEM.scan` does per position); a `WavesDetector` over a scan is `STEM.scan(... detector:)` | useful |
+| `fft_interpolate(array, new_shape)` for waves | `Waves.resampled(rows:columns:)` | **present**: crop or pad in Fourier space, `normalization="values"`; the 2D case only; pinned through the WavesDetector rows | study |
 | `multislice_and_detect(waves, potential, algorithm=FourierMultislice(order=1))` | `Multislice.run(_:through:exitPlanes:backend:)` | **present**: `.cpu` float64 and `.metal` float32 (Backends) | useful |
 | `FourierMultislice(order=2)`, `conjugate`, `transpose` | | **missing**: planned: SimulatoMultislice | useful |
 | `RealSpaceMultislice` (finite differences, backscattering) | | **missing**: not planned for now (a research option) | not planned |
@@ -144,9 +145,9 @@ detector, the Gaussian source size and Poisson noise on a scan.
 | `GridScan(endpoint=True)` | `endpoint: true` | **partial**: implemented as `linspace(endpoint: true)`; the pins use `endpoint=False`, so it is not pinned against abTEM | study |
 | `GridScan(sampling=)` | `GridScan(start:end:samplingX:samplingY:endpoint:)` | **present**: ⌈extent / sampling⌉ points, pinned on three scans against abTEM (0.3.0); abTEM's default sampling from the probe's Nyquist (`_validate_scan_sampling`) not offered | study |
 | `GridScan(potential=, fractional=, end=None)` (extent from the potential, fractional coordinates, `Atom` start and end) | | **missing**: planned: SimulatoProbe (`start` and `end` are required, in Å) | study |
-| `LineScan(start, end, gpts, sampling, endpoint=True, fractional, potential)`, `.at_position`, `.add_margin` | | **missing**: planned: SimulatoProbe | study |
+| `LineScan(start, end, gpts, sampling, endpoint=True, fractional, potential)`, `.at_position`, `.add_margin` | `LineScan(start:end:gpts:sampling:endpoint:fractional:extent:)`, `.addingMargin`, `LineScan.atPosition`, `.positions`, `.shape` | **present**: pinned on 13 lines against abTEM (positions bit-equal, the end points to the last bit after a margin); a sampling wins over gpts and a margin recomputes the count end by end, as abTEM's setters do; `end` and one of `gpts`/`sampling` are required (abTEM's `end=None` and `match_probe` defaults not offered); `potential=` is the extent `extent:`; `STEM.scan` over a line: 5e-15 of the ADF with abTEM's float32 π, 1.1e-7 with the exact π, `.metal` 1.5e-6 of `.cpu` | study |
 | `CustomScan(positions)` | | **missing**: planned: SimulatoProbe (`Probe.build(at:)` takes any position today; `STEM.scan` takes a `GridScan`) | study |
-| `BaseScan.get_positions`, `.limits`, `.num_positions`, `.shape` | `GridScan.positions`, `.nx`, `.ny` | **partial**: positions and the shape; `limits` not offered | useful |
+| `BaseScan.get_positions`, `.limits`, `.num_positions`, `.shape` | `GridScan.positions`, `.nx`, `.ny`, `LineScan.positions`, `.gpts`, `ScanPattern.shape` | **partial**: positions and the shape; `limits` not offered | useful |
 | `GridScan.add_to_plot`, `LineScan.add_to_plot` | | **missing**: not planned: plotting | not planned |
 
 ## Detectors
@@ -157,7 +158,7 @@ detector, the Gaussian source size and Poisson noise on a scan.
 | `PixelatedDetector(max_angle, resample, reciprocal_space)` | `PixelatedDetector(maxAngle:)` | **partial**: "cutoff", "valid", "full"; numeric angles, `resample` and real-space detection not offered | useful |
 | `SegmentedDetector(nbins_radial, nbins_azimuthal, inner, outer, rotation, offset)` | `SegmentedDetector(radialBins:azimuthalBins:inner:outer:rotation:)` | **partial**: summed in float64 where abTEM sums in float32 (slice-2 amendment 1); inner = outer refused; `offset` not offered | useful |
 | `FlexibleAnnularDetector(step_size, inner, outer)` | | **missing**: planned: SimulatoDetector | useful |
-| `WavesDetector(gpts)` | | **missing**: planned: SimulatoDetector (the complex exit wave per position; `Multislice.run` returns it for one probe today) | study |
+| `WavesDetector(gpts)` | `WavesDetector(rows:columns:)`, `STEM.scan(probe:potentials:scan:detector:)` returning `ScanWaves` | **present**: the exit wave per position, `gpts` as a Fourier crop or pad; pinned at 1.8e-15 of the maximum on a 3 x 2 scan, six `gpts` (crop, pad, mixed, odd, even), `.metal` at 3.6e-7 against `.cpu`; one potential only (a frozen-phonon list is refused: averaging complex waves is not abTEM's `ensemble_mean` of intensities; scan each configuration alone); refuses above half of the physical memory; `to_cpu`, `url` do not apply | study |
 | `BaseDetector.detect(waves)`, `.angular_limits` | `Detector.detect(_:)` on a `DiffractionIntensity`, `.shape(for:beam:)` | **present**: slice 2 | useful |
 | `AnnularDetector.get_detector_region`, `get_detector_regions`, `.show` | | **missing**: not planned: plotting | not planned |
 
@@ -168,7 +169,7 @@ detector, the Gaussian source size and Poisson noise on a scan.
 | `Images(array, sampling)` | `RealField` (`nx`, `ny`, `values`, `samplingX`, `samplingY`, `sum`, `max`), `ScanMeasurement.image(samplingX:samplingY:)` | **partial**: a two-dimensional array with its sampling; no ensemble axes, metadata or units | useful |
 | `DiffractionPatterns(array, sampling, fftshift)` | `RealField` from `Waves.diffractionPattern`, `DiffractionIntensity` (unshifted, with `angularSampling`) | **partial**: the pattern with its sampling in 1/Å; no angular sampling or units stored on the `RealField` | useful |
 | `PolarMeasurements` (`integrate`, `integrate_radial`, `differentials`, `to_diffraction_patterns`) | `ScanMeasurement` of a `SegmentedDetector` (values over radial × azimuthal bins) | **missing**: planned: SimulatoDetector (the operations; the bins exist as raw values) | useful |
-| `RealSpaceLineProfiles`, `ReciprocalSpaceLineProfiles`, `_BaseMeasurement1D.width`, `.interpolate` | | **missing**: planned: SimulatoDetector (with `LineScan`) | useful |
+| `RealSpaceLineProfiles`, `ReciprocalSpaceLineProfiles`, `_BaseMeasurement1D.width`, `.interpolate` | `RealSpaceLineProfiles`, `ReciprocalSpaceLineProfiles`, `LineProfiles.width(height:)`, `.interpolate(sampling:gpts:order:endpoint:)`, `ScanMeasurement.lineProfiles(for:)` | **present**: width to 4.5e-8 and interpolate to 5.5e-8 of the maximum against abTEM (abTEM stores both as float32; `assert_allclose` rtol 1e-7 holds at 0.6 of its bound), on the scan's profile and on planted profiles with ensemble axes, orders 0 to 5, both endpoints; `lineProfiles` only for detectors of one number or a vector (abTEM returns other measurement types for segmented and pixelated); `RealSpaceLineProfiles.tile`, `ReciprocalSpaceLineProfiles.angular_extent`, `show` and the lazy path not offered | useful |
 | `MeasurementsEnsemble`, `BaseMeasurements.to_measurement_ensemble`, `normalize_ensemble` | | **missing**: not planned: Swift arrays; a caller keeps the configurations apart | not planned |
 | `IndexedDiffractionPatterns`, `DiffractionPatterns.index_diffraction_spots` | | **missing**: planned: with DiffractoKit's indexing | useful |
 | `BaseMeasurements.intensity()` | `Waves.intensity()`, `ComplexField.squaredMagnitude()` | **present** | useful |
@@ -180,14 +181,18 @@ detector, the Gaussian source size and Poisson noise on a scan.
 | `DiffractionPatterns.integrate_radial(inner, outer, offset)` | `AnnularDetector.detect(_:)` | **partial**: only as a detector on an exit wave's `DiffractionIntensity`; not a method of a stored pattern; `offset` not offered | useful |
 | `DiffractionPatterns.polar_binning(nbins_radial, nbins_azimuthal, inner, outer, rotation, offset)` | `SegmentedDetector.detect(_:)` | **partial**: as the row above | useful |
 | `DiffractionPatterns.radial_binning(step_size, inner, outer)`, `.azimuthal_average` | | **missing**: planned: SimulatoDetector | useful |
-| `DiffractionPatterns.center_of_mass(units)` | `CenterOfMassDetector(maxAngle:units:)` | **partial**: Σ P·α over the pixelated detector's crop in mrad or 1/Å, not divided by Σ P (as abTEM), pinned within 1e−5 of abTEM's complex64 result (0.3.0); a detector on the exit wave, not a method of a stored pattern; `integrated_center_of_mass` (DPC) missing | study |
+| `DiffractionPatterns.center_of_mass(units)` | `CenterOfMassDetector(maxAngle:units:)` | **partial**: Σ P·α over the pixelated detector's crop in mrad or 1/Å, not divided by Σ P (as abTEM), pinned within 1e−5 of abTEM's complex64 result (0.3.0); a detector on the exit wave, not a method of a stored pattern; `integrated_center_of_mass` is `ScanMeasurement.integratedCenterOfMass` (next row) | study |
+| `DiffractionPatterns.integrated_center_of_mass()` | `ScanMeasurement.integratedCenterOfMass(samplingX:samplingY:)` of a `CenterOfMassDetector` scan | **present**: abTEM's centre of mass through the kit 2e−16 (rtol 1e−7 default); the kit's own centre of mass 5e−8 (its COM is registered at 1e−5); no scaling beyond abTEM's (units of the COM times Å, minimum 0) | study |
+| `Images.integrate_gradient` | `RealField.integratingGradient(x:y:)`, `ComplexField.integratedGradient(samplingX:samplingY:)` | **present** within assert_allclose float64 defaults (rtol 1e−7, atol 1e−12 of the max); measured 8e−16 of the maximum on even, odd, mixed, 2×3 and random (Nyquist) fields; planted potentials recovered to 1e−9 of their range | study |
+| `integrate_disc` (`Images.integrate_disc`) | `RealField.integrateDisc(x:y:radius:mean:border:)` | **present** same tolerance; measured 2e−15 relative; `interpolate` not offered | study |
+| `Images.tile` | `RealField.tiled(repetitionsX:repetitionsY:)` | **present** exact | useful |
 | `DiffractionPatterns.crop(max_angle, max_frequency, gpts)` | `Waves.diffractionPattern(maxAngle: .cutoff / .full)`, `PixelatedDetector(maxAngle:)` | **partial**: the crop is chosen when the pattern is made; not a method of a stored pattern | useful |
 | `DiffractionPatterns.interpolate(sampling, gpts)`, `Images.interpolate(sampling, gpts, method, boundary, order, normalization, cval)` | | **missing**: planned: SimulatoCore | useful |
 | `DiffractionPatterns.gaussian_source_size(sigma)` | `ScanMeasurement.gaussianSourceSize(sigma:samplingX:samplingY:)` | **present**: scipy `gaussian_filter` over the two scan axes, mode wrap, radius ⌊4σ + ½⌋; pinned at rtol 1e−7 (float64) incl. a σ that wraps the scan (0.3.0) | study |
 | `DiffractionPatterns.bandlimit`, `.block_direct`, `.tile_scan` | | **missing**: planned: SimulatoDetector | useful |
 | `Images.crop(extent, offset, centered)` | | **missing**: planned: SimulatoCore | useful |
 | `_BaseMeasurement2D.gaussian_filter(sigma, boundary, cval)` | | **missing**: planned: SimulatoCore | useful |
-| `interpolate_line`, `interpolate_line_at_position`, `integrate_disc`, `Images.integrate_gradient`, `Images.tile` | | **missing**: planned: SimulatoCore | study |
+| `interpolate_line`, `interpolate_line_at_position` | `RealField.interpolateLine`, `.interpolateLineAtPosition` (images), `.interpolateReciprocalLine`, `.interpolateReciprocalLineAtPosition` (centred patterns) | **present**: 38 lines on a 24 × 18 image and a 21 × 20 pattern against abTEM, orders 0 to 5, width, margin, fractional, both endpoints: 3.5e-14 of the maximum, `assert_allclose` ratio below 1.2e-5 of its bound; `end` is required (abTEM's `(0, extent[0])` default not offered); a pattern is assumed centred (zero frequency at n / 2); complex and lazy arrays not offered; in SimulatoDetector, not SimulatoCore, because `LineScan` lives in SimulatoProbe | study |
 | `Images.scan_noise(dwell_time, flyback_time, rms_power, ...)`, `Images.diffractograms()` | | **missing**: not planned for now: scan-noise modelling; diffractograms are the field of an image-analysis kit | not planned |
 | `BaseMeasurements.show`, `to_zarr`, `to_tiff`, `to_hyperspy`, `to_data_array`, `to_quantem` | | **missing**: not planned: plotting and file formats | not planned |
 
