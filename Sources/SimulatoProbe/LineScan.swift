@@ -57,7 +57,11 @@ public struct LineScan: Sendable, Hashable, ScanPattern {
         guard s.x.isFinite, s.y.isFinite, e.x.isFinite, e.y.isFinite else {
             throw SimulatoError.invalidScan("start and end must be finite")
         }
-        if let gpts { guard gpts >= 1 else { throw SimulatoError.invalidScan("gpts must be at least 1, got \(gpts)") } }
+        if let gpts {
+            guard gpts >= 1, gpts < 1_000_000_000 else {
+                throw SimulatoError.invalidScan("gpts must be at least 1 and below 1e9, got \(gpts)")
+            }
+        }
         if let sampling {
             guard sampling.isFinite, sampling > 0 else {
                 throw SimulatoError.invalidScan("sampling must be finite and positive, got \(sampling) Å")
@@ -81,13 +85,13 @@ public struct LineScan: Sendable, Hashable, ScanPattern {
         return (d.x * d.x + d.y * d.y).squareRoot()
     }
 
-    /// The unit vector from `start` to `end`.
+    /// The unit vector from `start` to `end`; NaN in both components for a line of zero length.
     public var direction: SIMD2<Double> {
         let d = end - start
         return d / extent
     }
 
-    /// The angle of the line to the first axis [rad] (abTEM's `angle`, which documents degrees and returns `arctan2`).
+    /// The angle of the line to the first axis [rad] (NaN for a line of zero length) (abTEM's `angle`, which documents degrees and returns `arctan2`).
     public var angle: Double {
         let d = direction
         return atan2(d.y, d.x)
