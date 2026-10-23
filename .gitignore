@@ -5,3 +5,7 @@
 *.xcresult
 /Examples/output/
 .docs-site/
+
+# Local session rules, kept on disk only
+CLAUDE.md
+.claude/
