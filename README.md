@@ -1,4 +1,4 @@
-<p align="center"><img src="docs/banner.png" width="100%" alt="SimulatoKit: electron scattering simulation on Apple platforms"></p>
+<p align="center"><img src="docs/banner.png" width="100%" alt="SimulatoKit: multislice simulation on Apple silicon, HRTEM, CBED and STEM, checked against abTEM"></p>
 
 # SimulatoKit
 
