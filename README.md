@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/banner.png" width="100%" alt="SimulatoKit: electron scattering simulation on Apple platforms"></p>
+
 # SimulatoKit
 
 A Swift package for simulating electron scattering on Apple platforms: projected potentials, multislice propagation,
