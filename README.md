@@ -2,26 +2,35 @@
 
 # SimulatoKit
 
+[![CI](https://github.com/mac4DSTEM/SimulatoKit/actions/workflows/ci.yml/badge.svg)](https://github.com/mac4DSTEM/SimulatoKit/actions/workflows/ci.yml)
+[![Docs](https://github.com/mac4DSTEM/SimulatoKit/actions/workflows/docs.yml/badge.svg)](https://mac4dstem.github.io/SimulatoKit/documentation/)
+[![Release](https://img.shields.io/github/v/tag/mac4DSTEM/SimulatoKit?label=release&sort=semver)](https://github.com/mac4DSTEM/SimulatoKit/tags)
+[![Licence: GPL-3.0-or-later](https://img.shields.io/badge/licence-GPL--3.0--or--later-blue)](LICENSE)
+
 A Swift package for simulating electron scattering on Apple platforms: projected potentials, multislice propagation,
 frozen phonons, probes with aberrations, STEM scans with detectors, and the contrast transfer function for HRTEM images.
 It is a port of [abTEM](https://github.com/abtem/abtem) 1.0.10, checked against abTEM in float64 (Python reference, pinned
 inputs). The algorithms and the Lobato–Van Dyck (2014) parameters are abTEM's; credit
 for the method belongs to the abTEM authors. Licence: GPL-3.0-or-later (`LICENSE`, `NOTICE`); software built on
-SimulatoKit must be GPL-compatible. It is a library of numbers, not an application, and has no UI.
+SimulatoKit must be GPL-compatible. It is a library of numbers, not an application, and has no UI. It stands alone: it
+depends on no other package, and no other package depends on it yet.
+
+Current release: **0.4.0**. API reference (DocC, one catalogue per module):
+[mac4dstem.github.io/SimulatoKit](https://mac4dstem.github.io/SimulatoKit/documentation/), published from every tag.
 
 ## Modules
 
 | Product | What it does |
 |---|---|
-| `SimulatoCore` | the electron beam (wavelength, interaction parameter), grids, complex and real fields, waves (intensity, diffraction pattern), the antialias aperture, a minimal orthogonal-cell `AtomicStructure`, a float64 FFT |
-| `SimulatoMultislice` | the Lobato parameterisation, slicing, the projected potential, transmission and Fresnel propagation, `Multislice.run` / `runBatch` on `.cpu` and `.metal`, frozen phonons |
-| `SimulatoProbe` | the soft aperture, polar aberrations C10 to C56, the probe at a position, `GridScan`, `ContrastTransferFunction` (envelopes, Scherzer defocus, point resolution) and `Waves.applying` for HRTEM |
-| `SimulatoDetector` | annular (BF, ADF, HAADF), pixelated (4D-STEM) and segmented (DPC) detectors, and `STEM.scan`, averaged over frozen-phonon configurations |
+| `SimulatoCore` | the electron beam (wavelength, interaction parameter), grids of any length from 2, complex and real fields, waves (intensity, diffraction pattern, beam tilt, Fourier resampling `Waves.resampled`), the antialias aperture, a minimal orthogonal-cell `AtomicStructure`, a float64 FFT; on images: `integratingGradient`, `integrateDisc`, `tiled` |
+| `SimulatoMultislice` | the Lobato parameterisation, slicing, the projected potential (from a grid or a sampling), transmission and Fresnel propagation, `Multislice.run` / `runBatch` on `.cpu` and `.metal`, frozen phonons, `ExecutionOptions` and `MetalAccuracy` |
+| `SimulatoProbe` | the soft aperture, polar aberrations C10 to C56, the probe at a position, `GridScan` and `LineScan`, `ContrastTransferFunction` (envelopes, Scherzer defocus, point resolution) and `Waves.applying` for HRTEM |
+| `SimulatoDetector` | annular (BF, ADF, HAADF), pixelated (4D-STEM), segmented (DPC), `CenterOfMassDetector` and `WavesDetector` (the exit wave at every position); `STEM.scan` over a grid or a line, averaged over frozen-phonon configurations; line interpolation (`interpolateLine`) and line profiles (`lineProfiles(for:)`), integrated centre of mass (`integratedCenterOfMass`), Gaussian source size and Poisson noise |
 
 ## Installation
 
 ```swift
-.package(url: "https://github.com/mac4DSTEM/SimulatoKit", from: "0.3.1")
+.package(url: "https://github.com/mac4DSTEM/SimulatoKit", from: "0.4.0")
 // target dependencies, as needed:
 .product(name: "SimulatoMultislice", package: "SimulatoKit")  // also SimulatoCore, SimulatoProbe, SimulatoDetector
 ```
@@ -47,6 +56,10 @@ Names checked against the sources and `docs/parity.md` (which lists every abTEM 
 | `waves.diffraction_patterns(max_angle=...)` | `Waves.diffractionPattern(maxAngle:)` |
 | `CTF(...)`, `waves.apply_ctf(ctf)` | `ContrastTransferFunction(aberrations:...)`, `Waves.applying(_:)` |
 | `GridScan(start, end, gpts)`, `GridScan(..., sampling=)` | `GridScan(start:end:nx:ny:)`, `GridScan(start:end:samplingX:samplingY:)` |
+| `LineScan(start, end, gpts)`, `.add_margin`, `.at_position` | `LineScan(start:end:gpts:...)`, `.addingMargin`, `.atPosition` |
+| `measurement.interpolate_line(...)`, `RealSpaceLineProfiles.width` | `RealField.interpolateLine(...)`, `ScanMeasurement.lineProfiles(for:)`, `RealSpaceLineProfiles.width(height:)` |
+| `dp.center_of_mass().integrate_gradient()` (iCOM) | `ScanMeasurement.integratedCenterOfMass(samplingX:samplingY:)` |
+| `WavesDetector(gpts)` | `WavesDetector(rows:columns:)`, `STEM.scan(probe:potentials:scan:detector:...)` → `ScanWaves` |
 | `dp.center_of_mass()`, `dp.gaussian_source_size(s)`, `.poisson_noise(...)` | `CenterOfMassDetector`, `ScanMeasurement.gaussianSourceSize(...)`, `.poissonNoise(...)` |
 | `probe.scan(potential, scan, detectors)` | `STEM.scan(probe:potentials:scan:detectors:backend:)` |
 | `AnnularDetector`, `PixelatedDetector`, `SegmentedDetector` | the same names, with labelled initialisers |
@@ -118,9 +131,8 @@ numbers, the potential included):
 | 512² | 0.13 s / 4.4 s | 90 s / 2521 s | 1.3 GB |
 | 1024² | 0.28 s / 54 s | 408 s / 15157 s | 1.7 GB |
 
-The CPU scans run 8 threads and were timed on a subset of positions and scaled (linear in positions). Caveat: these
-first numbers were taken on a heavily loaded machine (other builds were running), which slows the CPU side most, so
-read the Metal-to-CPU ratios as upper bounds until the table is re-measured on an idle machine.
+The CPU scans run 8 threads and were timed on a subset of positions and scaled (linear in positions). Measured while other builds
+ran, which slows the CPU side most: read the Metal-to-CPU ratios as upper bounds (re-measuring on an idle machine is #5).
 
 ## Choices and their defaults
 
@@ -174,7 +186,7 @@ Numbers are held to the Python reference within its own tolerance; `docs/parity.
 - Not validated against a micrograph; frozen phonons agree with abTEM only when abTEM's displacements are given; segmented
   detectors sum in float64 where abTEM sums in float32 (agreement about 2e−7).
 - A `ProjectedPotential` on `.metal` uploads every slice; prefer `Potential` for large Metal runs. `AtomicStructure` and the
-  example's CIF reader are local stand-ins for DiffractoKit's cell types.
+  example's CIF reader are deliberately minimal: the kit stays standalone.
 
 ## Running the example
 
@@ -195,7 +207,8 @@ swift test -c release
 ```
 
 Use `swift test -c release` rather than `swift build --build-tests -c release`, which fails on the current toolchain. The
-abTEM reference (a Python virtual environment) is not in the repository; `tools/slice-*/pins.py` regenerate the fixtures.
+abTEM reference (a Python virtual environment) is not in the repository; the `pins.py` scripts under `tools/` regenerate
+the fixtures. `swift test -c release --skip SimulatoKitParityTests` runs only the fast unit tests.
 
 ## Contributing and licence
 
