@@ -1,9 +1,7 @@
 //
 //  AtomicStructure.swift
 //  Role: the atoms to simulate: an orthogonal box and atoms with Cartesian positions in Å.
-//        MARKED FOR REPLACEMENT: a minimal local type until DiffractoKit has its first tag; then SimulatoCore takes
-//        DiffractoKit's `CrystalStructure` (cell, sites, symmetry) and keeps only the orthogonal-box view multislice
-//        needs (registration section 1).
+//        A minimal local type on purpose: the kit stays standalone (docs/adr/0001-standalone-structure-types.md).
 //
 
 /// An orthogonal box with atoms in Cartesian coordinates [Å], the beam along z.

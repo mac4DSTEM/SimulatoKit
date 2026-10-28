@@ -1,9 +1,9 @@
 //
 //  BenchmarkTests.swift
-//  Role: registration-performance.md section 5, the speed table (reported, not gated): Al [001] at 300 keV, 100 slices of
-//        a/2, about 0.047 Å per pixel, a plane wave and a 64 × 64 HAADF scan over one cell, `.metal` against `.cpu`, from
-//        the structure to the numbers. Enabled only by SIMULATO_BENCHMARK=1; the CPU scan at 512² and 1024² is timed on a
-//        subset of positions and extrapolated per position (stated in the output).
+//  Role: the speed table (reported, not asserted): Al [001] at 300 keV, 100 slices of a/2, about 0.047 Å per
+//        pixel, a plane wave and a 64 × 64 HAADF scan over one cell, `.metal` against `.cpu`, from the structure to the
+//        numbers. Enabled only by SIMULATO_BENCHMARK=1; the CPU scan at 512² and 1024² is timed on a subset of
+//        positions and extrapolated per position (stated in the output).
 //
 
 import Foundation

@@ -1,7 +1,7 @@
 //
 //  PhysicalConstants.swift
 //  Role: the CODATA 2014 constants abTEM 1.0.10 reads from ASE 3.29.0 (ase.units), and ASE's unit factors, so the
-//        wavelength and the interaction parameter equal abTEM's to the last bit (registration section 3.1).
+//        wavelength and the interaction parameter equal abTEM's to the last bit.
 //
 
 /// CODATA 2014 values (SI), as ASE 3.29.0 and therefore abTEM 1.0.10 use them.

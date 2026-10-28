@@ -1,6 +1,6 @@
 //
 //  Slicing.swift
-//  Role: the slices of a structure along z (registration section 3.4; abTEM `_validate_slice_thickness`,
+//  Role: the slices of a structure along z (abTEM `_validate_slice_thickness`,
 //        `SliceIndexedAtoms`, `_prepare_atoms`): periodic wrap, the top-face rule, equal slices from a requested
 //        thickness, and the nudged cumulative edges.
 //
@@ -18,8 +18,8 @@ public enum Slicing {
                                    maximumCount: Int = Slicing.maximumSliceCount) throws -> [Double] {
         guard s.isFinite, s > 0 else { throw SimulatoError.invalidSliceThickness(s) }
         let n = (depth / s).rounded(.up)
-        // Refuter finding (2026-10-15): a tiny s overflowed Int(n) and trapped. More than `maximumCount` slices is refused.
-        // At most 2^53 whatever `maximumCount` says: Int(n) trapped at n = 2^63 (Gate B of the generality pass).
+        // A tiny s overflowed Int(n) and trapped. More than `maximumCount` slices is refused.
+        // At most 2^53 whatever `maximumCount` says: Int(n) trapped at n = 2^63.
         guard n.isFinite, n >= 1, n <= Double(min(maximumCount, 1 << 53)) else { throw SimulatoError.invalidSliceThickness(s) }
         return [Double](repeating: depth / n, count: Int(n))
     }

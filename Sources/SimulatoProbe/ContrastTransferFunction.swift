@@ -1,8 +1,8 @@
 //
 //  ContrastTransferFunction.swift
-//  Role: slice 3 (registration-slice-3.md section 3): abTEM's CTF — the aberration phase exp(−iχ), the spatial and
-//        temporal envelopes of the quasi-coherent approximation, the aperture — and `apply_ctf` for HRTEM images; the
-//        closed forms Scherzer defocus, point resolution and Nyquist sampling.
+//  Role: abTEM's CTF — the aberration phase exp(−iχ), the spatial and temporal envelopes of the quasi-coherent
+//        approximation, the aperture — and `apply_ctf` for HRTEM images; the closed forms Scherzer defocus, point
+//        resolution and Nyquist sampling.
 //
 
 import Foundation
@@ -127,7 +127,7 @@ public struct ContrastTransferFunction: Sendable, Hashable {
     /// Nyquist sampling [Å] for a semiangle α_c [mrad]: 1 / (oversampling · α_c / λ · 10⁻³); the default 4 is abTEM's
     /// (two samples per period of the probe's highest frequency 2 α_c / λ).
     public static func nyquistSampling(semiangleCutoff: Double, energy: Double, oversampling: Double = 4) throws -> Double {
-        // abTEM raises ZeroDivisionError at 0; a semiangle must be finite and positive (slice-3 refuter).
+        // abTEM raises ZeroDivisionError at 0; a semiangle must be finite and positive.
         guard semiangleCutoff.isFinite, semiangleCutoff > 0 else { throw SimulatoError.invalidAperture(semiangleCutoff) }
         guard oversampling.isFinite, oversampling > 0 else { throw SimulatoError.invalidAperture(oversampling) }
         let lambda = try ElectronBeam(energy: energy).wavelength

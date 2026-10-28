@@ -13,11 +13,11 @@ States:
 - **partial**: ported with options missing (named in the row), or ported and not yet pinned (named).
 - **missing**: not ported; the row says "planned: <where>" or "not planned: <reason>".
 
-Priority: **study** is on Paul's path (the TEM study and the two apps' open kit asks: ROADMAP, SimulatoKit block), **useful**
+Priority: **study** is needed for the TEM study the kit was built for and the apps that use it (`ROADMAP.md`), **useful**
 is worth having, **not planned** has its reason in the row.
 
 Tolerance. abTEM's wheel ships no tests (`tests/` is not in `site-packages`), so its own tolerances cannot be read from
-disk. As the suite rule D17 says, where upstream states none the bound is `numpy.testing.assert_allclose`'s default for the
+disk. Where upstream states none the bound is `numpy.testing.assert_allclose`'s default for the
 dtype: rtol 1e−7 for float64, 1e−6 for float32 (abTEM's complex64 centre of mass is held to 1e−5 of its largest value
 because its float32 sum order is its own). The earlier slices pinned abTEM's exit waves and patterns at 1e−10 of the maximum
 with `.abTEMFloat32`, and 1e−6 with the default `.exact` parameterisation; those pins are tighter than the default and are
@@ -40,7 +40,7 @@ detector, the Gaussian source size and Poisson noise on a scan.
 | `core.energy.energy2mass` | | **missing**: planned: SimulatoCore (`ElectronBeam.mass` = the factor × mₑ) | useful |
 | `Accelerator`, `HasAcceleratorMixin` (`energy`, `wavelength`, `sigma`, `lock_energy`, `match`, `check_match`) | `ElectronBeam(energy:)` | **partial**: energy, wavelength and σ; an undefined energy (None), `lock_energy` and `match` not offered; the energy must be finite and positive | useful |
 | `core.constants.kappa` | `PhysicalConstants.kappa` | **present** (the same double) | useful |
-| `Grid`, `HasGrid2DMixin` (`extent`, `gpts`, `sampling`, `reciprocal_space_sampling`, `endpoint`) | `Grid(nx:ny:extentX:extentY:)`, `Grid(extentX:extentY:samplingX:samplingY:)`, `.samplingX`/`Y`, `.reciprocalSamplingX`/`Y`, `.matches(_:)` | **partial**: any gpts ≥ 2 on both backends (0.3.0; vDSP where it has a length, Bluestein otherwise, pinned 90 x 75 against abTEM); `sampling=` gives ⌈extent / sampling⌉ points as abTEM; two dimensions, endpoint False only; the reciprocal sampling is abTEM's expression (bit-equal, slice-2 refuter B1) | study |
+| `Grid`, `HasGrid2DMixin` (`extent`, `gpts`, `sampling`, `reciprocal_space_sampling`, `endpoint`) | `Grid(nx:ny:extentX:extentY:)`, `Grid(extentX:extentY:samplingX:samplingY:)`, `.samplingX`/`Y`, `.reciprocalSamplingX`/`Y`, `.matches(_:)` | **partial**: any gpts ≥ 2 on both backends (0.3.0; vDSP where it has a length, Bluestein otherwise, pinned 90 x 75 against abTEM); `sampling=` gives ⌈extent / sampling⌉ points as abTEM; two dimensions, endpoint False only; the reciprocal sampling is abTEM's expression (bit-equal) | study |
 | `core.grid.spatial_frequencies`, NumPy `fftfreq` | `Grid.fftfreq`, `.frequenciesX`/`Y` | **present** (exact today, `SimulatoCoreTests`) | useful |
 | `BaseWaves.angular_sampling`, `.cutoff_angles`, `.antialias_cutoff_gpts`, `.antialias_valid_gpts`, `.rectangle_cutoff_angles`, `.full_cutoff_angles`, `.cutoff_frequencies` | `DiffractionIntensity.angularSampling`, `.cutoffAngles`, `Antialias.cutoffPatternSize(on:)` | **partial**: angular sampling, cutoff angles and the odd cutoff size; the valid size only inside `PixelatedDetector(.valid)`; the rectangle and full cutoff angles and the cutoff frequencies not offered | useful |
 | `abtem.config` (dask, device, precision, antialias settings), `abtem.axes` (axis metadata) | | **missing**: not planned: global configuration and ensemble-axis metadata belong to abTEM's lazy array objects; the kit takes explicit arguments | not planned |
@@ -50,14 +50,14 @@ detector, the Gaussian source size and Poisson noise on a scan.
 
 | abTEM | SimulatoKit | State | Priority |
 |---|---|---|---|
-| `Potential(atoms, gpts, slice_thickness, parametrization="lobato", projection="infinite")`, the lazy potential, and its `device` | `Potential(structure:nx:ny:sliceThickness:parameterization:)`, `.build() -> ProjectedPotential` (performance-lane design note, section 1) | **present**: the grid, the slice thicknesses, the wrapped atoms with their slice and the parameterisation, without the arrays; `build()` equals the former eager construction (asserted exactly today); on `.metal` the potential is built on the GPU (V within 1e−5 × max V of the CPU's, section 3 there) | useful |
-| `ase.Atoms` as the atoms argument (cell, positions, numbers, `pbc`) | `AtomicStructure(box:atoms:)`, `.repeated(_:_:_:)` | **partial**: orthogonal (diagonal) boxes, atomic number and Cartesian position only; periodic on all axes (abTEM honours ASE's `pbc`: amendment 3, item 5); repeats in ASE's order; no ASE or CIF reader in the library; a local type, marked for replacement by DiffractoKit's cell types | useful |
-| `Potential(slice_thickness=float or sequence)`, `SliceIndexedAtoms` | `sliceThickness:`, `sliceThicknesses:`, `Slicing.thicknesses`, `.validated`, `.wrapped`, `.sliceIndices` | **present**: ⌈Lz / s⌉ equal slices, or a list that must sum to Lz (NumPy `isclose`), periodic wrap, top-face rule; no default of 1 Å (the thickness is required); an atom in the gap of a short slice list is kept, abTEM drops it (amendment 3, item 3) | useful |
+| `Potential(atoms, gpts, slice_thickness, parametrization="lobato", projection="infinite")`, the lazy potential, and its `device` | `Potential(structure:nx:ny:sliceThickness:parameterization:)`, `.build() -> ProjectedPotential` | **present**: the grid, the slice thicknesses, the wrapped atoms with their slice and the parameterisation, without the arrays; `build()` equals the former eager construction (asserted exactly today); on `.metal` the potential is built on the GPU (V within 1e−5 × max V of the CPU's) | useful |
+| `ase.Atoms` as the atoms argument (cell, positions, numbers, `pbc`) | `AtomicStructure(box:atoms:)`, `.repeated(_:_:_:)` | **partial**: orthogonal (diagonal) boxes, atomic number and Cartesian position only; periodic on all axes (abTEM honours ASE's `pbc`); repeats in ASE's order; no ASE or CIF reader in the library; a local type on purpose (the kit stays standalone, `docs/adr/0001-standalone-structure-types.md`) | useful |
+| `Potential(slice_thickness=float or sequence)`, `SliceIndexedAtoms` | `sliceThickness:`, `sliceThicknesses:`, `Slicing.thicknesses`, `.validated`, `.wrapped`, `.sliceIndices` | **present**: ⌈Lz / s⌉ equal slices, or a list that must sum to Lz (NumPy `isclose`), periodic wrap, top-face rule; no default of 1 Å (the thickness is required); an atom in the gap of a short slice list is kept, abTEM drops it | useful |
 | `Potential(sampling=)` | `Potential(structure:sampling:sliceThickness:)` (one value or an (x, y) pair) | **present**: ⌈box / sampling⌉ points per axis, pinned against abTEM's gpts on six samplings (0.3.0) | study |
-| `Potential(exit_planes=)` | `ExitPlanes` on `Multislice.run` | **present**: `.every(m)` includes the entrance plane as abTEM does; `.afterSlices` always adds the last slice, abTEM's tuple does not (amendment 3, item 6) | useful |
+| `Potential(exit_planes=)` | `ExitPlanes` on `Multislice.run` | **present**: `.every(m)` includes the entrance plane as abTEM does; `.afterSlices` always adds the last slice, abTEM's tuple does not | useful |
 | `Potential(projection="finite")` (`QuadratureProjectionIntegrals`), `SlicedAtoms(xy_padding, z_padding)` | | **missing**: planned: SimulatoMultislice (finite projections for thick slices) | study |
 | `Potential(periodic=False)` (cut cell with margins) | | **missing**: planned: SimulatoMultislice | study |
-| `Potential(plane, origin, box)` (rotated and cut cells, `orthogonalize_cell`) | | **missing**: planned: after DiffractoKit's cell types (`plane="xy"`, `origin` 0 and the cell's own box only) | study |
+| `Potential(plane, origin, box)` (rotated and cut cells, `orthogonalize_cell`) | | **missing**: planned: with non-orthogonal cells in `AtomicStructure` (`plane="xy"`, `origin` 0 and the cell's own box only) | study |
 | `Potential(integrator=)`, `ScatteringFactorProjectionIntegrals`, `GaussianProjectionIntegrals`, `ProjectionIntegralTable` | | **missing**: not planned: the infinite scattering-factor projection is the only integrator | not planned |
 | `Potential.build(first_slice, last_slice, max_batch, lazy)`, `.generate_slices`, iteration | `Potential.build()` | **partial**: the whole potential only; `first_slice`, `last_slice`, `max_batch`, `lazy` (dask) and slice generation not offered | useful |
 | `PotentialArray(array, slice_thickness, extent, sampling, exit_planes)` (the eager potential) | `ProjectedPotential` (`grid`, `slices`, `sliceOfAtom`, `init(grid:slices:)`) | **partial**: built by `Potential.build()` (done); an array from outside cannot be supplied: `PotentialSlice` has no public initialiser; no ensemble axes or stored exit planes | study |
@@ -68,7 +68,7 @@ detector, the Gaussian source size and Poisson noise on a scan.
 | `PotentialArray.tile`, `CrystalPotential` (tiled potentials) | | **missing**: planned: SimulatoMultislice | study |
 | `PotentialArray.depth_profile`, `.show`, `.show_depth_profile` | | **missing**: not planned: plotting (the kits have no UI) | not planned |
 | `crystal_slice_thicknesses(atoms, tolerance)` | | **missing**: planned: SimulatoMultislice (`Slicing`) | study |
-| `ChargeDensityPotential`, `GPAWPotential` | | **missing**: not planned: needs DFT inputs; outside the field's common use of the suite | not planned |
+| `ChargeDensityPotential`, `GPAWPotential` | | **missing**: not planned: needs DFT inputs; outside the common use of the kit | not planned |
 | `orthogonalize_cell`, `standardize_cell`, the helpers of `atoms.py` (`rotate_atoms`, `cut_cell`, `pad_atoms`, `shrink_cell`, ...) | | **missing**: planned: with DiffractoKit's cells | study |
 
 ## Parametrizations
@@ -90,7 +90,7 @@ detector, the Gaussian source size and Poisson noise on a scan.
 | `Waves(array, energy, extent, sampling, reciprocal_space, ensemble_axes_metadata, metadata)` | `Waves(field:grid:beam:normalization:tilt:)` | **partial**: one two-dimensional wave in real space with its tilt; no ensemble axes, reciprocal-space storage or other metadata; `normalization` is `.values` or `.reciprocalSpace` | useful |
 | `Probe(semiangle_cutoff, energy, extent, gpts, sampling, soft=True, aperture, aberrations)` | `Probe(beam:grid:aperture:aberrations:tilt:)` | **partial**: `tilt` offered (0.3.0); no `scan_positions`, `metadata`, distributions of parameters, or aberration coefficients as keywords (set on `Aberrations`); a probe is rebuilt to change a parameter | useful |
 | `Probe.build(scan=)` | `Probe.build(at:)` | **partial**: one position per call (a scan: `STEM.scan`); `scan=` as a grid of positions not offered | useful |
-| `Probe.scan(potential, scan, detectors)`, `Probe.multislice(potential, scan, detectors)` | `STEM.scan(probe:potentials:scan:detectors:backend:)` | **present**: slice 2; positions bit-equal, detectors averaged over the potentials; `max_batch` is chosen inside (chunks of at most 256 MB of waves), `lazy` not offered | useful |
+| `Probe.scan(potential, scan, detectors)`, `Probe.multislice(potential, scan, detectors)` | `STEM.scan(probe:potentials:scan:detectors:backend:)` | **present**: positions bit-equal, detectors averaged over the potentials; `max_batch` is chosen inside (chunks of at most 256 MB of waves), `lazy` not offered | useful |
 | `Waves.multislice(potential, detectors)`, `PlaneWave.multislice(...)` | `Multislice.run(_:through:exitPlanes:backend:)` | **partial**: waves in, waves at the exit planes out; no `detectors=` (apply a `Detector` to `DiffractionIntensity(exit)`, as `STEM.scan` does per position); a `WavesDetector` over a scan is `STEM.scan(... detector:)` | useful |
 | `fft_interpolate(array, new_shape)` for waves | `Waves.resampled(rows:columns:)` | **present**: crop or pad in Fourier space, `normalization="values"`; the 2D case only; pinned through the WavesDetector rows | study |
 | `multislice_and_detect(waves, potential, algorithm=FourierMultislice(order=1))` | `Multislice.run(_:through:exitPlanes:backend:)` | **present**: `.cpu` float64 and `.metal` float32 (Backends) | useful |
@@ -102,7 +102,7 @@ detector, the Gaussian source size and Poisson noise on a scan.
 | `Waves.intensity()` | `Waves.intensity()` | **present** | useful |
 | `Waves.diffraction_patterns(max_angle="cutoff" or "full", fftshift=True)` | `Waves.diffractionPattern(maxAngle:)` | **partial**: `"valid"`, a numeric angle, `block_direct`, `return_complex`, `renormalize=False`, `fftshift=False` and `parity` other than "odd" not offered | useful |
 | `Waves.phase()`, `.real()`, `.imag()`, `.to_images()` | `ComplexField.real`, `.imaginary`, `.squaredMagnitude()` | **partial**: raw arrays; no phase helper and no image-returning methods | useful |
-| `Waves.apply_ctf(ctf)` (HRTEM image formation) | `Waves.applying(_:)` | **present**: slice 3; the `**kwargs` shorthand that builds a CTF is not offered | useful |
+| `Waves.apply_ctf(ctf)` (HRTEM image formation) | `Waves.applying(_:)` | **present**: the `**kwargs` shorthand that builds a CTF is not offered | useful |
 | `Waves.normalize`, `.tile`, `.downsample`, `.convolve`, `.phase_shift`, `.ensure_reciprocal_space`, `.ensure_real_space` | | **missing**: planned as needed: SimulatoCore | useful |
 | `Waves.scan`, `.depth_profile`, `.show_depth_profile`, `.show`, `Probe.profiles`, `.ctf`, `.show` | | **missing**: not planned: plotting and lazy-array helpers | not planned |
 | `Waves.transition_potential_multislice`, `Probe.transition_potential_scan` | | **missing**: not planned: inelastic scattering (see Other abTEM capabilities) | not planned |
@@ -112,12 +112,12 @@ detector, the Gaussian source size and Poisson noise on a scan.
 | abTEM | SimulatoKit | State | Priority |
 |---|---|---|---|
 | `Aperture(semiangle_cutoff, soft=True)`, `soft_aperture`, `hard_aperture` | `Aperture(semiangleCutoff:soft:)`, `.values(on:wavelength:)` | **present** | useful |
-| `Aberrations` coefficients C10 to C56 and φ (25 symbols), χ(α, φ) | `Aberrations` (`C10` ... `phi56`), `.chi(alpha:phi:wavelength:)` | **present**: slice 1 section 3.8, orders 1 to 5 | useful |
+| `Aberrations` coefficients C10 to C56 and φ (25 symbols), χ(α, φ) | `Aberrations` (`C10` ... `phi56`), `.chi(alpha:phi:wavelength:)` | **present**: orders 1 to 5 | useful |
 | `Aberrations` aliases: `defocus` = −C10, `Cs` = C30, and 23 more (`C5`, `astigmatism`, `astigmatism_angle`, `coma`, `trefoil`, `quadrafoil`, `pentafoil`, `hexafoil`, `astigmatism3`, `astigmatism5`, `coma4`, `trefoil4`, `quadrafoil5` and their `_angle`) | `Aberrations.defocus`, `.Cs` | **partial**: `defocus` and `Cs` only; the other 23 by symbol | useful |
 | `Aberrations(aberration_coefficients=dict, **kwargs)`, `set_aberrations`, `.aberration_coefficients` | | **missing**: not planned: the coefficients are stored properties, set directly | not planned |
-| `CTF(semiangle_cutoff, soft, focal_spread, angular_spread, aberration_coefficients, energy, extent, gpts, sampling, flip_phase, wiener_snr)` | `ContrastTransferFunction(aberrations:semiangleCutoff:softAperture:focalSpread:angularSpread:)`, `.kernel(on:wavelength:)` | **partial**: slice 3; `flip_phase` and `wiener_snr` not offered; energy and grid are given at `kernel(on:wavelength:)`, not stored; negative spreads refused (abTEM overflows) | useful |
-| `SpatialEnvelope(angular_spread, aberration_coefficients)`, `TemporalEnvelope(focal_spread)` (partial coherence) | `ContrastTransferFunction.spatialEnvelope`, `.temporalEnvelope` | **present**: slice 3, values at (α, φ) and inside the kernel; the quasi-coherent approximation, as abTEM | useful |
-| `transfer.scherzer_defocus`, `point_resolution`, `nyquist_sampling` (functions) | `ContrastTransferFunction.scherzerDefocus`, `.pointResolution`, `.nyquistSampling` | **present**: slice 3 | useful |
+| `CTF(semiangle_cutoff, soft, focal_spread, angular_spread, aberration_coefficients, energy, extent, gpts, sampling, flip_phase, wiener_snr)` | `ContrastTransferFunction(aberrations:semiangleCutoff:softAperture:focalSpread:angularSpread:)`, `.kernel(on:wavelength:)` | **partial**: `flip_phase` and `wiener_snr` not offered; energy and grid are given at `kernel(on:wavelength:)`, not stored; negative spreads refused (abTEM overflows) | useful |
+| `SpatialEnvelope(angular_spread, aberration_coefficients)`, `TemporalEnvelope(focal_spread)` (partial coherence) | `ContrastTransferFunction.spatialEnvelope`, `.temporalEnvelope` | **present**: values at (α, φ) and inside the kernel; the quasi-coherent approximation, as abTEM | useful |
+| `transfer.scherzer_defocus`, `point_resolution`, `nyquist_sampling` (functions) | `ContrastTransferFunction.scherzerDefocus`, `.pointResolution`, `.nyquistSampling` | **present** | useful |
 | `CTF.scherzer_defocus`, `.point_resolution`, `.crossover_angle` (from the CTF's own Cs and energy), `BaseAperture.nyquist_sampling` | | **missing**: planned: SimulatoProbe (instance forms; the statics take Cs and energy) | useful |
 | `CTF.to_point_spread_functions`, `.profiles`, `.to_diffraction_patterns` | | **missing**: planned: SimulatoProbe | useful |
 | `CTF.show`, `BaseTransferFunction.show` | | **missing**: not planned: plotting | not planned |
@@ -134,14 +134,14 @@ detector, the Gaussian source size and Poisson noise on a scan.
 | `seed` | `seed: UInt64`, `FrozenPhonons.configurationSeed(_:_:)` | **partial**: abTEM's displacements reproduced only when given (`displacements:`, bit-equal); NumPy's PCG64 normals are not ported, the kit's generator (`GaussianGenerator`: SplitMix64, xoshiro256**, Box–Muller) agrees in distribution (KS tests); a seed is required (no None) | useful |
 | `directions="xyz"` | `FrozenPhonons.Directions` (`.x`, `.y`, `.z`, `.all`) | **present** | useful |
 | `ensemble_mean=True` | averaging inside `STEM.scan` | **partial**: the mean only; `ensemble_mean=False` (one measurement per configuration) not offered: planned: SimulatoDetector (a caller can scan each potential alone) | useful |
-| `FrozenPhonons.atoms`, `.randomize`, `.num_configs`, `Potential(frozen_phonons)` | `FrozenPhonons.configuration(_:)`, `.displacements`, `.potentials(nx:ny:sliceThickness:parameterization:)` (lazy: `lazyPotentials`, performance-lane design note, section 1) | **present**: slice 2; one potential per configuration, averaged by `STEM.scan` | useful |
+| `FrozenPhonons.atoms`, `.randomize`, `.num_configs`, `Potential(frozen_phonons)` | `FrozenPhonons.configuration(_:)`, `.displacements`, `.potentials(nx:ny:sliceThickness:parameterization:)` (lazy: `lazyPotentials`) | **present**: one potential per configuration, averaged by `STEM.scan` | useful |
 | `FrozenPhonons.to_atoms_ensemble`, `AtomsEnsemble(trajectory)`, `DummyFrozenPhonons` | | **missing**: planned: SimulatoMultislice (a trajectory of structures, for example from molecular dynamics) | useful |
 
 ## Scans
 
 | abTEM | SimulatoKit | State | Priority |
 |---|---|---|---|
-| `GridScan(start, end, gpts, endpoint=False)` | `GridScan(start:end:nx:ny:endpoint:)`, `.positions`, `GridScan.linspace` | **present**: slice 2; positions bit-equal to abTEM's (NumPy's `linspace`, x the first index); a scan of extent ≤ 0 on both axes refused, as abTEM | useful |
+| `GridScan(start, end, gpts, endpoint=False)` | `GridScan(start:end:nx:ny:endpoint:)`, `.positions`, `GridScan.linspace` | **present**: positions bit-equal to abTEM's (NumPy's `linspace`, x the first index); a scan of extent ≤ 0 on both axes refused, as abTEM | useful |
 | `GridScan(endpoint=True)` | `endpoint: true` | **partial**: implemented as `linspace(endpoint: true)`; the pins use `endpoint=False`, so it is not pinned against abTEM | study |
 | `GridScan(sampling=)` | `GridScan(start:end:samplingX:samplingY:endpoint:)` | **present**: ⌈extent / sampling⌉ points, pinned on three scans against abTEM (0.3.0); abTEM's default sampling from the probe's Nyquist (`_validate_scan_sampling`) not offered | study |
 | `GridScan(potential=, fractional=, end=None)` (extent from the potential, fractional coordinates, `Atom` start and end) | | **missing**: planned: SimulatoProbe (`start` and `end` are required, in Å) | study |
@@ -154,12 +154,12 @@ detector, the Gaussian source size and Poisson noise on a scan.
 
 | abTEM | SimulatoKit | State | Priority |
 |---|---|---|---|
-| `AnnularDetector(inner, outer, offset)` | `AnnularDetector(inner:outer:)` | **partial**: slice 2; `offset` not offered; a negative inner is refused (abTEM squares it); `to_cpu`, `url` do not apply | useful |
+| `AnnularDetector(inner, outer, offset)` | `AnnularDetector(inner:outer:)` | **partial**: `offset` not offered; a negative inner is refused (abTEM squares it); `to_cpu`, `url` do not apply | useful |
 | `PixelatedDetector(max_angle, resample, reciprocal_space)` | `PixelatedDetector(maxAngle:)` | **partial**: "cutoff", "valid", "full"; numeric angles, `resample` and real-space detection not offered | useful |
-| `SegmentedDetector(nbins_radial, nbins_azimuthal, inner, outer, rotation, offset)` | `SegmentedDetector(radialBins:azimuthalBins:inner:outer:rotation:)` | **partial**: summed in float64 where abTEM sums in float32 (slice-2 amendment 1); inner = outer refused; `offset` not offered | useful |
+| `SegmentedDetector(nbins_radial, nbins_azimuthal, inner, outer, rotation, offset)` | `SegmentedDetector(radialBins:azimuthalBins:inner:outer:rotation:)` | **partial**: summed in float64 where abTEM sums in float32; inner = outer refused; `offset` not offered | useful |
 | `FlexibleAnnularDetector(step_size, inner, outer)` | | **missing**: planned: SimulatoDetector | useful |
 | `WavesDetector(gpts)` | `WavesDetector(rows:columns:)`, `STEM.scan(probe:potentials:scan:detector:)` returning `ScanWaves` | **present**: the exit wave per position, `gpts` as a Fourier crop or pad; pinned at 1.8e-15 of the maximum on a 3 x 2 scan, six `gpts` (crop, pad, mixed, odd, even), `.metal` at 3.6e-7 against `.cpu`; one potential only (a frozen-phonon list is refused: averaging complex waves is not abTEM's `ensemble_mean` of intensities; scan each configuration alone); refuses above half of the physical memory; `to_cpu`, `url` do not apply | study |
-| `BaseDetector.detect(waves)`, `.angular_limits` | `Detector.detect(_:)` on a `DiffractionIntensity`, `.shape(for:beam:)` | **present**: slice 2 | useful |
+| `BaseDetector.detect(waves)`, `.angular_limits` | `Detector.detect(_:)` on a `DiffractionIntensity`, `.shape(for:beam:)` | **present** | useful |
 | `AnnularDetector.get_detector_region`, `get_detector_regions`, `.show` | | **missing**: not planned: plotting | not planned |
 
 ## Measurements
@@ -200,7 +200,7 @@ detector, the Gaussian source size and Poisson noise on a scan.
 
 | abTEM | SimulatoKit | State | Priority |
 |---|---|---|---|
-| `SMatrix`, `SMatrixArray` (PRISM) | | **missing**: not planned in 2026 (a later acceleration lane) | not planned |
+| `SMatrix`, `SMatrixArray` (PRISM) | | **missing**: not planned in 2026 (a later acceleration step) | not planned |
 | `BlochWaves`, `StructureFactor` | | **missing**: not planned for now (DiffractoKit owns structure factors; Bloch waves a possible later slice) | not planned |
 | `inelastic.core_loss`, `inelastic.plasmons`, `transition_potential_*` | | **missing**: not planned: SpectroKit's domain if ever | not planned |
 | `mtf.py` (detector MTF), `noise.py` | | **missing**: planned: SimulatoDetector (with the noise rows above) | useful |
@@ -211,25 +211,25 @@ detector, the Gaussian source size and Poisson noise on a scan.
 ## Backends
 
 abTEM runs on NumPy, or on CuPy with `device="gpu"`. SimulatoKit has two backends behind one API (`Backend`, passed to
-`Multislice.run`, `Multislice.runBatch` and `STEM.scan`; a `Potential` on `.metal` builds on the GPU, performance-lane design note, section 1):
+`Multislice.run`, `Multislice.runBatch` and `STEM.scan`; a `Potential` on `.metal` builds on the GPU):
 
 | | Precision and engine | Role | Agreement |
 |---|---|---|---|
-| `.cpu` | float64, Accelerate; a batch of positions on at most 8 threads, equal to sequential runs (exact today) | the reference | against abTEM 1.0.10 (float64 configuration) at the pins' bounds, slice 1 (design note, archived in the suite's private folder) (V 1e−11 × max V, exit waves, intensities and patterns 1e−10 × max with `.abTEMFloat32`; 1e−6 with `.exact`), slice 2 (annular and pixelated 1e−10, segmented 1e−6) and slice 3 (kernels 1e−12, images 1e−10) |
-| `.metal` | float32, MPSGraph FFT | abTEM's `device="gpu"` counterpart | against `.cpu`, registered bounds: slice 1 (registered bounds) (exit wave 1e−4, intensity and pattern 2e−4 of the maximum; Σ\|ψ\|² 1.5e−6 per slice, amendment 2), slice 2 (scans 2e−4), and the performance lane (V built on the GPU 1e−5 × max V, GPU probe 1e−5 × max \|ψ\|, grids to 1024²; a 90 × 75 grid with and without tilt, 0.3.0) |
+| `.cpu` | float64, Accelerate; a batch of positions on at most 8 threads, equal to sequential runs (exact today) | the reference | against abTEM 1.0.10 (float64 configuration) at the pins' bounds: the potential and multislice pins (V 1e−11 × max V, exit waves, intensities and patterns 1e−10 × max with `.abTEMFloat32`; 1e−6 with `.exact`), the detector pins (annular and pixelated 1e−10, segmented 1e−6) and the CTF pins (kernels 1e−12, images 1e−10) |
+| `.metal` | float32, MPSGraph FFT | abTEM's `device="gpu"` counterpart | against `.cpu`, `MetalAccuracy.registered`: exit wave 1e−4, intensity and pattern 2e−4 of the maximum; Σ\|ψ\|² 1.5e−6 per slice; scans 2e−4; V built on the GPU 1e−5 × max V, GPU probe 1e−5 × max \|ψ\|, grids to 1024²; a 90 × 75 grid with and without tilt (0.3.0) |
 
-The Metal bounds hold to 100 slices (slice-1 amendment 3, item 7); MPSGraph's float32 FFT is not exactly unitary, a known
-limit (amendment 2; README "Known limits"). The CTF (`Waves.applying`) runs on the CPU only. A Metal result beyond a bound is a
+The Metal bounds hold to 100 slices; MPSGraph's float32 FFT is not exactly unitary, a known
+limit (`tools/metal-fft-gain`; README "Known limits"). The CTF (`Waves.applying`) runs on the CPU only. A Metal result beyond a bound is a
 failure of the Metal path, never a tolerance to widen. `MetalAccuracy.registered` carries these bounds as a value.
 
-Execution choices are parameters (`ExecutionOptions`, passed as `options:`; 0.2.0, design note, archived in the suite's private folder):
+Execution choices are parameters (`ExecutionOptions`, passed as `options:`; 0.2.0):
 threads, Metal batch memory and shapes, the CPU scan chunk, the renormalisation, the executable cache. abTEM's nearest
 counterparts are its `max_batch` and dask settings, which are not counted as missing options above.
 
 ## Not abTEM's, SimulatoKit's own
 
 - The Metal backend (`Backend.metal`) and the batched scan (`Multislice.runBatch`), registered against the CPU path; MPSGraph's float32 FFT gain is a known limit
-  (amendment 2).
+  (`tools/metal-fft-gain`).
 - The CPU batch on up to `ExecutionOptions.maximumCPUThreads` (8 by default) threads, equal to sequential runs (exact today).
 - The constants of the CTF closed forms as parameters (`factor:` of `scherzerDefocus`, 1.5 by default as abTEM; `divisor:` of
   `pointResolution`, 6; `oversampling:` of `nyquistSampling`, 4).

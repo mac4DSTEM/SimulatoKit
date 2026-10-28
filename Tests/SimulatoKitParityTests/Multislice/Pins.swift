@@ -1,6 +1,6 @@
 //
-//  TestSupport.swift
-//  Role: the pins written by tools/slice-1/pins.py (registration section 4): the JSON and its float64 sidecar (checked
+//  Pins.swift
+//  Role: the pins written by tools/slice-1/pins.py: the JSON and its float64 sidecar (checked
 //        against the sha256 the generator recorded), the cases' structures and beams, and the comparison helpers.
 //
 

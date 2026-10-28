@@ -1,6 +1,6 @@
 //
 //  MetalTests.swift
-//  Role: registration section 4, second table: the Metal path (float32, MPSGraph) against the CPU path (float64) on the
+//  Role: the Metal path (float32, MPSGraph) against the CPU path (float64) on the
 //        same potential, for every pinned case and beam and one 512 × 512, 100-slice crystal. Disabled with a named
 //        reason when no Metal device exists.
 //
@@ -15,7 +15,7 @@ import SimulatoProbe
        .enabled(if: Multislice.metalIsAvailable,
                 "no Metal device (MTLCreateSystemDefaultDevice() returned nil): the Metal path is not tested here"))
 struct MetalTests {
-    /// The total-intensity bound per slice (amendment 2, Gate D: MPSGraph's float32 FFT round trip loses up to 1.43e−6
+    /// The total-intensity bound per slice (MPSGraph's float32 FFT round trip loses up to 1.43e−6
     /// of Σ|ψ|² per round trip on the non-zero frequencies; tools/metal-fft-gain).
     static let totalIntensityPerSlice = MetalAccuracy.registered.totalIntensityPerSlice
 

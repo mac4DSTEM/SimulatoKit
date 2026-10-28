@@ -1,7 +1,7 @@
 //
 //  ElectronBeam.swift
 //  Role: the beam energy and the two numbers multislice needs from it: the relativistic wavelength λ and the
-//        interaction parameter σ (registration section 3.2; abTEM `core/energy.py`, same evaluation order).
+//        interaction parameter σ (abTEM `core/energy.py`, same evaluation order).
 //
 
 import Foundation

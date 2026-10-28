@@ -1,8 +1,8 @@
-"""SimulatoKit slice 2: the pin generator (docs/registration-slice-2.md, sections 2-5).
+"""SimulatoKit frozen phonons, scans and detectors: the pin generator.
 
-Runs abTEM 1.0.10 in float64 (numpy FFT, eager) on the registered cases: frozen phonons (seeds, displacements, the
+Runs abTEM 1.0.10 in float64 (numpy FFT, eager) on these cases: frozen phonons (seeds, displacements, the
 potential of each configuration), GridScan positions, and the annular, pixelated and segmented detectors averaged over
-configurations. Every quantity is re-derived from the registration's text in NumPy (the `text_*` functions here and in
+configurations. Every quantity is re-derived from the published formulas in NumPy (the `text_*` functions here and in
 tools/slice-1/pins.py) and asserted equal to abTEM's; a failure stops the generator. Writes
 
   Tests/SimulatoDetectorTests/Fixtures/slice-2-pins.json
@@ -64,7 +64,7 @@ def check(label, value, bound):
 relmax = s1.relmax
 
 # --------------------------------------------------------------------------------------------------------------------
-# Section 3, written from the registration's text
+# The formulas, written independently of abTEM's code
 # --------------------------------------------------------------------------------------------------------------------
 
 
@@ -88,7 +88,7 @@ def angular_sampling(gpts, sampling, lam):  # mrad per pixel
     return tuple(1.0 / (n * d) * lam * 1e3 for n, d in zip(gpts, sampling))
 
 
-def cutoff_gpts_same(gpts, sampling):  # slice 1's 3.10 with parity "same"
+def cutoff_gpts_same(gpts, sampling):  # the potential pins' cutoff_gpts with parity "same"
     kcut = 2.0 / 3.0 / max(sampling)
     out = []
     for n, d in zip(gpts, sampling):
@@ -278,7 +278,7 @@ def stem_case(name, atoms, gpts, slice_thickness, energy, sigmas, num_configs, s
         mean = mean.reshape(sg + mean.shape[1:])
         m = m.reshape(sg + mean.shape[len(sg):])
         # abTEM accumulates the segments in float32 (measurements.py 3056-3061, numba fastmath), even in float64 mode:
-        # the segmented values agree only to float32 rounding (amendment 1); the text's float64 sum is pinned beside it.
+        # the segmented values agree only to float32 rounding; the text's float64 sum is pinned beside it.
         # Relative to the larger of the image's own maximum and the total intensity (the default-outer annular image's
         # maximum): an image that is pure rounding noise (vacuum ADF beyond the aperture) is judged on the total's scale.
         scale = max(float(np.max(np.abs(m))), float(np.max(np.mean(np.stack(text["annular_default_outer"]), axis=0))))

@@ -1,6 +1,6 @@
 //
 //  GridScan.swift
-//  Role: STEM scan positions (registration-slice-2.md section 3.3; abTEM `GridScan.get_positions`): along each axis
+//  Role: STEM scan positions (abTEM `GridScan.get_positions`): along each axis
 //        NumPy's linspace(start, end, gpts, endpoint), x the first index.
 //
 

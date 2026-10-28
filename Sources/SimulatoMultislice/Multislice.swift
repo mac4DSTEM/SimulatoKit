@@ -1,9 +1,9 @@
 //
 //  Multislice.swift
-//  Role: the multislice loop (registration sections 3.6 and 3.7; abTEM `multislice.py`): per slice, transmit by the
+//  Role: the multislice loop (abTEM `multislice.py`): per slice, transmit by the
 //        bandlimited t = IFFT(FFT(exp(iσV)) · A), then propagate by P = exp(−iπλΔz k²) · A. One API, two backends:
 //        `.cpu` (float64, Accelerate, the reference) and `.metal` (float32, MPSGraph), the tolerance between them
-//        registered (section 4).
+//        in `MetalAccuracy.registered`.
 //
 
 import Foundation
@@ -64,8 +64,7 @@ public enum Multislice {
         }
     }
 
-    /// The same for a `Potential`: on `.cpu` built first (`build()`), on `.metal` built slice by slice on the GPU
-    /// (registration-performance.md 1.3).
+    /// The same for a `Potential`: on `.cpu` built first (`build()`), on `.metal` built slice by slice on the GPU.
     public static func run(_ incident: Waves, through potential: Potential, exitPlanes: ExitPlanes = .last,
                            backend: Backend = .cpu, options: ExecutionOptions = .standard) throws -> [Waves] {
         guard incident.grid.matches(potential.grid) else { throw SimulatoError.gridMismatch }

@@ -1,7 +1,7 @@
 //
 //  ProjectedPotential.swift
 //  Role: the projected potential of each slice, abTEM's default `Potential(parametrization="lobato",
-//        projection="infinite")` (registration section 3.5; `integrals.py` `ScatteringFactorProjectionIntegrals`):
+//        projection="infinite")` (`integrals.py` `ScatteringFactorProjectionIntegrals`):
 //        bilinear deltas per element, FFT, times f(k²) / S(k), inverse FFT, real part, summed over elements.
 //
 
@@ -63,7 +63,7 @@ public struct ProjectedPotential: Sendable, Hashable {
     public var thickness: Double { slices.reduce(0) { $0 + $1.thickness } }
 }
 
-/// The per-grid work of section 3.5: f(k²) / S(k) per element (cached) and the FFT plan.
+/// The per-grid work of the projection: f(k²) / S(k) per element (cached) and the FFT plan.
 final class SliceBuilder {
     let grid: Grid
     let parameterization: LobatoParameterization

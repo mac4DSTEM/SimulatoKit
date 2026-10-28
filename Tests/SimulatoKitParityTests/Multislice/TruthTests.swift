@@ -1,7 +1,7 @@
 //
 //  TruthTests.swift
-//  Role: registration section 5, truth independent of abTEM: the far field of one atom against the analytic Lobato
-//        projected potential (3a–3c, amendment 1), vacuum (4), the symmetry of Al [001] (5), the probe (6), χ (7) and
+//  Role: truth independent of abTEM: the far field of one atom against the analytic Lobato
+//        projected potential (3a–3c), vacuum (4), the symmetry of Al [001] (5), the probe (6), χ (7) and
 //        the thickness series (8). Truth 1 is in BeamAndScatteringTests, truth 2 in PotentialPinsTests.
 //
 
@@ -78,7 +78,7 @@ struct TruthTests {
         }
     }
 
-    /// Refuter finding: a grid equal within rounding (an extent 1 ulp off) is accepted; a different grid is refused.
+    /// A grid equal within rounding (an extent 1 ulp off) is accepted; a different grid is refused.
     @Test func gridsEqualWithinRoundingAreAccepted() throws {
         let s = try AtomicStructure(box: SIMD3(9.6, 12.8, 4), atoms: [.init(atomicNumber: 6, position: SIMD3(1, 2, 1))])
         let p = try ProjectedPotential(structure: s, nx: 96, ny: 128, sliceThickness: 2)
@@ -94,7 +94,7 @@ struct TruthTests {
 
     // MARK: 5, the symmetry of Al [001]
 
-    /// Truth 5 (amendment 2): slices of a/2 are C-centred, so the pattern lives on h + k even; one slice per cell has
+    /// Truth 5: slices of a/2 are C-centred, so the pattern lives on h + k even; one slice per cell has
     /// period a/2, so the pattern lives on h and k both even; 4mm symmetry either way. Units of 1/a = 4 pixels (4 cells).
     @Test func aluminiumPatternLivesOnTheSliceLatticeWith4mmSymmetry() throws {
         let beam = try Pins.beam("B1")
