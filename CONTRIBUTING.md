@@ -26,7 +26,7 @@ skip themselves with a stated reason when no Metal device is present.
 
 - Keep a change focused, with tests that fail before and pass after.
 - Update the README, `docs/parity.md` and `CHANGELOG.md` when behaviour or the public API changes.
-- The library is GPL-3.0-or-later; by contributing you agree your work is released under it.
+- The library is GPL-3.0-only; by contributing you agree your work is released under it.
 
 ## Reporting issues
 
