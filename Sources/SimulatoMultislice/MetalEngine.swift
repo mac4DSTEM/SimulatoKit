@@ -1,12 +1,12 @@
 //
 //  MetalEngine.swift
-//  Role: the Metal path on the GPU end to end (registration-performance.md section 1): one compiled MPSGraph executable
-//        per step and shape, encoded once per slice into one command buffer and committed once (or at each requested
-//        exit plane); the projected potential built in the step from host-merged bilinear deltas and per-element kernels
-//        (for a `Potential`), or the transmission built from an uploaded float32 V (for a `ProjectedPotential`); the
-//        wave kept on the device in two ping-pong buffers; probes and diffraction intensities for scans on the GPU.
-//        Float32 throughout on the device; every array the step multiplies by (kernels, aperture, propagators, the
-//        probe's spectrum and shift ramps) is computed on the host in float64 by the CPU path's code and cast once.
+//  Role: the Metal path on the GPU end to end: one compiled MPSGraph executable per step and shape, encoded once
+//        per slice into one command buffer and committed once (or at each requested exit plane); the projected
+//        potential built in the step from host-merged bilinear deltas and per-element kernels (for a `Potential`), or
+//        the transmission built from an uploaded float32 V (for a `ProjectedPotential`); the wave kept on the device in
+//        two ping-pong buffers; probes and diffraction intensities for scans on the GPU. Float32 throughout on the
+//        device; every array the step multiplies by (kernels, aperture, propagators, the probe's spectrum and shift
+//        ramps) is computed on the host in float64 by the CPU path's code and cast once.
 //
 
 import Foundation
@@ -52,10 +52,9 @@ final class MetalEngine: @unchecked Sendable {
     /// One Metal run at a time (the executables and the queue are shared); recursive, so a test can hold it around a run.
     let runLock = NSRecursiveLock()
     /// The compiled executables, least recently used first; at most the caller's `metalExecutableCacheLimit` (each holds
-    /// device memory: about 240 MB at 1024² for a batch of 21; an unbounded cache grew to 2.9 GB over twelve batch sizes,
-    /// refuter 2026-10-15).
+    /// device memory: about 240 MB at 1024² for a batch of 21; an unbounded cache grew to 2.9 GB over twelve batch sizes).
     private let cache = Mutex<[(key: String, step: MetalStep)]>([])
-    /// The largest `currentAllocatedSize` seen at a commit since the last reset (registration-performance.md 1.8).
+    /// The largest `currentAllocatedSize` seen at a commit since the last reset.
     let peak = Mutex<Int>(0)
 
     func notePeak() {
@@ -87,7 +86,7 @@ final class MetalEngine: @unchecked Sendable {
             guard let i = c.firstIndex(where: { $0.key == key }) else { return nil }
             let entry = c.remove(at: i)
             c.append(entry)
-            // The limit holds on a hit too (Gate B of the generality pass: seven stayed cached under limit 1).
+            // The limit holds on a hit too (seven once stayed cached under limit 1).
             if c.count > limit { c.removeFirst(c.count - limit) }
             return entry.step
         }
@@ -155,7 +154,7 @@ struct MetalStep: @unchecked Sendable {
     }
 }
 
-/// The graph pieces (registration-performance.md 1.3–1.6).
+/// The graph pieces.
 enum MetalGraphs {
     static func shape(_ a: [Int]) -> [NSNumber] { a.map { NSNumber(value: $0) } }
 
@@ -183,7 +182,7 @@ enum MetalGraphs {
 
     /// y · √((E_Y / E_X) (E_x / E_y)): the round trip's Σ|·|² made to follow Parseval as the device measured it before
     /// and after the forward transform (1 where E_X or E_y is 0). Ratios, not products: E_Y E_x overflowed float32 for a
-    /// wave of amplitude 1e8 (refuter, 2026-10-15).
+    /// wave of amplitude 1e8.
     static func renormalized(_ g: MPSGraph, _ y: MPSGraphTensor, ex: MPSGraphTensor, eX: MPSGraphTensor, eY: MPSGraphTensor,
                              axes: [NSNumber]) -> MPSGraphTensor {
         let ey = energy(g, y, axes: axes)
@@ -253,7 +252,7 @@ struct MetalPreparedPotential: @unchecked Sendable {
 
 extension MetalMultislice {
     /// The contributions of slice j as unique (flat index e · N + ix · ny + iy, weight) pairs: the bilinear weights of
-    /// `SliceBuilder.superposeDeltas`, summed per pixel in float64 on the host (registration-performance.md 1.3).
+    /// `SliceBuilder.superposeDeltas`, summed per pixel in float64 on the host.
     static func contributions(_ potential: Potential, elements: [Int]) -> [[(Int, Double)]] {
         let grid = potential.grid
         let n = grid.count, nx = grid.nx, ny = grid.ny
@@ -394,7 +393,7 @@ extension MetalMultislice {
     static func propagate(_ p: MetalPreparedPotential, psi: MPSGraphTensorData, batch b: Int, planes: Set<Int>,
                           options: ExecutionOptions, engine: MetalEngine,
                           read: (Int, MPSGraphTensorData) throws -> Void) throws {
-        // No slice: the wave passes unchanged (the CPU path's answer; `0...last` trapped, refuter 2026-10-15).
+        // No slice: the wave passes unchanged (the CPU path's answer; `0...last` trapped).
         guard p.sliceCount > 0 else { return try read(-1, psi) }
         let step = stepExecutable(p, batch: b, options: options, engine: engine)
         var current = psi
@@ -433,7 +432,7 @@ extension MetalMultislice {
         }
     }
 
-    /// The batch size whose waves fit in 512 MB (registration-slice-2.md 3.6).
+    /// The batch size whose waves fit in 512 MB.
     static func batchSize(_ grid: Grid, bytes: Int = ExecutionOptions.standard.metalBatchBytes) -> Int {
         max(1, bytes / (grid.count * 8 * 3))
     }
@@ -502,8 +501,7 @@ extension MetalMultislice {
         return out
     }
 
-    /// Slice by slice, V of a `Potential` as the GPU builds it, widened to float64 (for the tests of
-    /// registration-performance.md section 3 and truth 1).
+    /// Slice by slice, V of a `Potential` as the GPU builds it, widened to float64 (for the tests).
     package static func gpuPotentialSlices(_ potential: Potential) throws -> [[Double]] {
         let engine = try MetalEngine.require()
         engine.runLock.lock()
@@ -556,7 +554,7 @@ extension MetalMultislice {
         }
     }
 
-    /// The probes at the given ramps as the GPU builds them, widened to float64 (registration-performance.md 3).
+    /// The probes at the given ramps as the GPU builds them, widened to float64.
     package static func gpuProbes(spectrum: ComplexField, ramps: [(x: ComplexField, y: ComplexField)],
                                   grid: Grid) throws -> [ComplexField] {
         let engine = try MetalEngine.require()
@@ -582,7 +580,7 @@ extension MetalMultislice {
         return fields(psi, batch: b, grid: grid)
     }
 
-    /// Scans (registration-performance.md 1.6): for each position the probe IFFT(Ψ₀ · r_x ⊗ r_y) built on the GPU,
+    /// Scans: for each position the probe IFFT(Ψ₀ · r_x ⊗ r_y) built on the GPU,
     /// propagated, and its diffraction intensity |FFT(ψ)|² · scale read back widened to float64, `deliver(position, values)`.
     static func scanIntensities(spectrum: ComplexField, positions count: Int,
                                 ramps: (Int) throws -> (x: ComplexField, y: ComplexField),
@@ -653,7 +651,7 @@ extension MetalMultislice {
 }
 
 extension Multislice {
-    /// A scan on Metal (registration-performance.md 1.6), for the STEM driver: the probe Ψ₀ (`spectrum`, normalised,
+    /// A scan on Metal, for the STEM driver: the probe Ψ₀ (`spectrum`, normalised,
     /// unshifted) shifted by `ramps(q)` and built on the GPU, propagated through `potential`, and the diffraction
     /// intensity |FFT(ψ)|² of each position delivered in position order, widened to float64.
     package static func metalScanIntensities(spectrum: ComplexField, positions: Int,

@@ -1,7 +1,7 @@
 //
 //  Grid.swift
 //  Role: the lateral simulation grid (gpts, extent, sampling), its spatial frequencies (NumPy's fftfreq, bit for bit)
-//        and the FFT lengths both backends accept (registration section 3.9).
+//        and the FFT lengths both backends accept.
 //
 
 /// A lateral grid of nx × ny points over an extent in Å; x is the first index and arrays are row-major `[ix * ny + iy]`.
@@ -48,7 +48,7 @@ public struct Grid: Sendable, Hashable {
 
     /// Reciprocal-space sampling [1/Å]: 1 / (n · (extent / n)), as abTEM computes it (`core/grid.py`
     /// `reciprocal_space_sampling`); on some grids this differs from 1 / extent by one ulp, enough to move a pixel across a
-    /// detector limit placed at a whole number of pixels (slice-2 refuter, finding B1).
+    /// detector limit placed at a whole number of pixels. Taking 1 / extent moved a pixel across such a limit.
     public var reciprocalSamplingX: Double { 1 / (Double(nx) * samplingX) }
     public var reciprocalSamplingY: Double { 1 / (Double(ny) * samplingY) }
 
@@ -66,7 +66,7 @@ public struct Grid: Sendable, Hashable {
     }
 
     /// The same grid within rounding: equal point counts and extents within 1e−12 relative (exact `==` refuses a grid
-    /// whose extent was computed along another path, e.g. 9.600000000000001 against 9.6; refuter finding, 2026-10-15).
+    /// whose extent was computed along another path, e.g. 9.600000000000001 against 9.6).
     /// `relativeTolerance` defaults to 1e−12; a negative or NaN tolerance counts as 0 (equal extents only), an infinite one
     /// matches any grid with the same point counts.
     public func matches(_ other: Grid, relativeTolerance: Double = 1e-12) -> Bool {

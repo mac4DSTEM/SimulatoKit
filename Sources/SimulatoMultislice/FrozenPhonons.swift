@@ -1,9 +1,9 @@
 //
 //  FrozenPhonons.swift
-//  Role: slice 2's thermal ensemble (registration-slice-2.md sections 3.1, 3.2): configurations of one structure, each
-//        atom displaced by a Gaussian of standard deviation σ_Z along the chosen axes. Displacements are either given
-//        (e.g. abTEM's, from the pins) or drawn by the kit's own seeded generator (SplitMix64 → xoshiro256**, Box–Muller),
-//        registered by its statistics, not by abTEM's bits. The displaced structure is wrapped by the potential (3.4).
+//  Role: the thermal ensemble (abTEM `FrozenPhonons`): configurations of one structure, each atom displaced by a
+//        Gaussian of standard deviation σ_Z along the chosen axes. Displacements are either given (e.g. abTEM's, from
+//        the pins) or drawn by the kit's own seeded generator (SplitMix64 → xoshiro256**, Box–Muller), tested by its
+//        statistics, not by abTEM's bits. The displaced structure is wrapped by the potential.
 //
 
 import Foundation
@@ -118,7 +118,7 @@ public struct FrozenPhonons: Sendable, Hashable {
 
     /// The generator seed of configuration c: the SplitMix64 finaliser of the finalised seed plus c, so the
     /// configurations of consecutive seeds do not coincide (seed + c made configuration c of seed s equal configuration
-    /// c − 1 of seed s + 1; slice-2 refuter).
+    /// c − 1 of seed s + 1).
     public static func configurationSeed(_ seed: UInt64, _ c: Int) -> UInt64 {
         func mix(_ v: UInt64) -> UInt64 {
             var z = v &+ 0x9E37_79B9_7F4A_7C15

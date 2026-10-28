@@ -1,6 +1,6 @@
 //
 //  Aberrations.swift
-//  Role: abTEM's polar aberration coefficients and the phase χ(α, φ) (registration section 3.8; `transfer.py`
+//  Role: abTEM's polar aberration coefficients and the phase χ(α, φ) (`transfer.py`
 //        `Aberrations._evaluate_from_angular_grid`): orders 1 to 5, coefficients in Å, angles in rad, defocus = −C10.
 //
 

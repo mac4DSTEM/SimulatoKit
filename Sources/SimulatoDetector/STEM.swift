@@ -1,9 +1,8 @@
 //
 //  STEM.swift
-//  Role: the STEM driver (registration-slice-2.md sections 3.5, 3.6): every configuration, every scan position, the
-//        probe there through that configuration's potential, each detector on the exit wave, the mean over
-//        configurations (abTEM's `ensemble_mean`). Positions run as one batch per configuration (.cpu one by one,
-//        .metal batched on the GPU).
+//  Role: the STEM driver: every configuration, every scan position, the probe there through that configuration's
+//        potential, each detector on the exit wave, the mean over configurations (abTEM's `ensemble_mean`). Positions
+//        run as one batch per configuration (.cpu one by one, .metal batched on the GPU).
 //
 
 import SimulatoCore
@@ -46,7 +45,7 @@ public struct ScanMeasurement: Sendable {
 public enum STEM {
     /// Scans `probe` over `scan` through every potential (one per frozen-phonon configuration; one for a static
     /// structure) and returns each detector's measurement averaged over the potentials. On `.metal` the probes, the
-    /// transmissions and the diffraction intensities are computed on the GPU (registration-performance.md 1.6).
+    /// transmissions and the diffraction intensities are computed on the GPU.
     public static func scan(probe: Probe, potentials: [ProjectedPotential], scan: some ScanPattern, detectors: [any Detector],
                             backend: Backend = .cpu, options: ExecutionOptions = .standard) throws -> [ScanMeasurement] {
         guard !potentials.isEmpty else { throw SimulatoError.invalidScan("no potential") }
@@ -99,8 +98,8 @@ public enum STEM {
         let shapes = try detectors.map { try $0.shape(for: probe.grid, beam: probe.beam) }
         let counts = shapes.map { $0.reduce(1, *) }
         var sums = counts.map { [Double](repeating: 0, count: $0 * positions.count) }
-        // Positions in chunks of `options.scanChunkBytes`, so the waves of one chunk only are held (slice-2 refuter: 13 MB
-        // per position at 480²).
+        // Positions in chunks of `options.scanChunkBytes`, so the waves of one chunk only are held (13 MB per
+        // position at 480²).
         let chunk = max(1, options.scanChunkBytes / (probe.grid.count * 16 * 2))
         for first in stride(from: 0, to: positions.count, by: chunk) {
             let range = first..<min(first + chunk, positions.count)

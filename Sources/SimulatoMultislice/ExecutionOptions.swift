@@ -1,8 +1,8 @@
 //
 //  ExecutionOptions.swift
-//  Role: the execution choices of both backends as parameters (registration-generality.md section 1): every default is
-//        the value the kit was validated with, so `.standard` reproduces every registered number bit for bit; and the
-//        registered agreement of `.metal` with `.cpu` as a public value (`MetalAccuracy.registered`).
+//  Role: the execution choices of both backends as parameters: every default is the value the kit was validated
+//        with, so `.standard` reproduces every tested number bit for bit; and the tested agreement of `.metal` with
+//        `.cpu` as a public value (`MetalAccuracy.registered`).
 //
 
 /// How a remainder batch is shaped on Metal.
@@ -17,7 +17,7 @@ public enum MetalBatchShapes: Sendable, Hashable {
 /// How `Multislice.run`, `Multislice.runBatch` and `STEM.scan` execute. Every count is at least 1 (a smaller value, set in
 /// the initialiser or later, is raised to 1). None of these choices changes a `.cpu` number;
 /// on `.metal`, batch sizes and shapes change rounding only (within `MetalAccuracy.registered`), the renormalisation
-/// changes the agreement (`docs/registration-performance.md`, amendment 1).
+/// changes the agreement (see `metalRenormalizes`).
 public struct ExecutionOptions: Sendable, Hashable {
     /// At most this many threads for a CPU batch or scan (default 8); each thread runs whole positions, bit for bit as a
     /// sequential run.
@@ -48,11 +48,10 @@ public struct ExecutionOptions: Sendable, Hashable {
     public static let standard = ExecutionOptions()
 }
 
-/// The agreement of `.metal` (float32) with `.cpu` (float64) the kit registers and tests, relative to the array's
-/// largest magnitude (`docs/registration-slice-1.md` section 4, amendment 2; `docs/registration-slice-2.md` section 4;
-/// `docs/registration-performance.md`). Detector values are bounded relative to the larger of the image's maximum and
+/// The agreement of `.metal` (float32) with `.cpu` (float64) the kit tests, relative to the array's largest magnitude
+/// (`docs/parity.md`, Backends). Detector values are bounded relative to the larger of the image's maximum and
 /// `detectorFloor` × the incident intensity: signals far below 1e−5 of the incident intensity sit at float32's floor
-/// (performance amendment 3, item 6, accepted 2026-10-15; `detectorBound(imageMaximum:incidentIntensity:)`).
+/// (`detectorBound(imageMaximum:incidentIntensity:)`).
 public struct MetalAccuracy: Sendable, Hashable {
     /// Exit waves, ×max |ψ|.
     public var wave: Double

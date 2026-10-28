@@ -1,7 +1,7 @@
 //
 //  Waves.swift
 //  Role: a wave function on a grid with its beam: the plane wave, the intensity |ψ|² and the diffraction pattern at the
-//        antialias cutoff (registration sections 3.7 and 3.10; abTEM `waves.py`).
+//        antialias cutoff (abTEM `waves.py`).
 //
 
 /// A wave function in real space, with the grid, the beam and abTEM's normalisation convention.

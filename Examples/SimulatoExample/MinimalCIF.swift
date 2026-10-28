@@ -1,9 +1,9 @@
 //
 //  MinimalCIF.swift
-//  Role: the example's CIF reader: cell, symmetry operations and atom sites of an orthogonal cell, expanded into the
-//        cell's atoms. MARKED FOR REPLACEMENT by DiffractoKit's `CIFImport` at DiffractoKit's first tag; it is not part of
-//        the library and makes no claim beyond the example (no uncertainty handling beyond stripping "(n)", no
-//        written-precision merging, non-orthogonal cells refused).
+//  Role: the example's CIF reader: cell, symmetry operations and atom sites of an orthogonal cell, expanded into
+//        the cell's atoms. It is not part of the library (the kit stays standalone,
+//        docs/adr/0001-standalone-structure-types.md) and makes no claim beyond the example (no uncertainty handling
+//        beyond stripping "(n)", no written-precision merging, non-orthogonal cells refused).
 //
 
 import Foundation
@@ -60,7 +60,7 @@ enum MinimalCIF {
         }
         let a = try number("_cell_length_a"), b = try number("_cell_length_b"), c = try number("_cell_length_c")
         for tag in ["_cell_angle_alpha", "_cell_angle_beta", "_cell_angle_gamma"] where abs(try number(tag) - 90) > 1e-6 {
-            throw Failure(description: "\(tag) is not 90°: the example (and slice 1) simulates orthogonal cells only")
+            throw Failure(description: "\(tag) is not 90°: the example simulates orthogonal cells only")
         }
         let opTags = ["_symmetry_equiv_pos_as_xyz", "_space_group_symop_operation_xyz"]
         let ops = loops.compactMap { loop in opTags.compactMap { loop[$0] }.first }.first ?? ["x,y,z"]

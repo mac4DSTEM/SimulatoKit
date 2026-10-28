@@ -1,8 +1,8 @@
 //
 //  Antialias.swift
 //  Role: abTEM's antialias aperture (`antialias.py`, configuration cutoff 0.6666666, taper 0.01): a cosine-tapered disk
-//        at two thirds of the Nyquist frequency of the coarser axis (registration section 3.6), and the size of the
-//        diffraction pattern cropped to it (section 3.10, amendment 1).
+//        at two thirds of the Nyquist frequency of the coarser axis, and the size of the diffraction pattern cropped to
+//        it.
 //
 
 import Foundation
