@@ -1,7 +1,7 @@
-"""SimulatoKit slice 3: the pin generator (docs/registration-slice-3.md, sections 2-5).
+"""SimulatoKit CTF and HRTEM images: the pin generator.
 
 abTEM 1.0.10 (float64, numpy FFT, eager): CTF kernels, HRTEM images (apply_ctf then intensity) of a SrTiO3 exit wave, and
-the closed forms. Every quantity is re-derived from the registration's text in NumPy and asserted equal to abTEM's.
+the closed forms. Every quantity is re-derived from the published formulas in NumPy and asserted equal to abTEM's.
 Writes Tests/SimulatoProbeTests/Fixtures/slice-3-pins.json and slice-3-arrays.bin.
 
 Run:  ../References/python/abtem/bin/python -I -B tools/slice-3/pins.py
@@ -54,7 +54,7 @@ SYM = ["C10", "C12", "phi12", "C21", "phi21", "C23", "phi23", "C30", "C32", "phi
        "C43", "phi43", "C45", "phi45", "C50", "C52", "phi52", "C54", "phi54", "C56", "phi56"]
 
 
-def text_chi(alpha, phi, c, lam):  # slice 1's 3.8, all orders
+def text_chi(alpha, phi, c, lam):  # the aberration phase χ, all orders
     g = lambda k: c.get(k, 0.0)  # noqa: E731
     cs = np.cos
     x = (0.5 * alpha ** 2 * (g("C10") + g("C12") * cs(2 * (phi - g("phi12"))))

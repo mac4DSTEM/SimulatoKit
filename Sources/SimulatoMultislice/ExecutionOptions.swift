@@ -17,7 +17,7 @@ public enum MetalBatchShapes: Sendable, Hashable {
 /// How `Multislice.run`, `Multislice.runBatch` and `STEM.scan` execute. Every count is at least 1 (a smaller value, set in
 /// the initialiser or later, is raised to 1). None of these choices changes a `.cpu` number;
 /// on `.metal`, batch sizes and shapes change rounding only (within `MetalAccuracy.registered`), the renormalisation
-/// changes the agreement (see `metalRenormalizes`).
+/// changes the agreement (see `metalRenormalization`).
 public struct ExecutionOptions: Sendable, Hashable {
     /// At most this many threads for a CPU batch or scan (default 8); each thread runs whole positions, bit for bit as a
     /// sequential run.

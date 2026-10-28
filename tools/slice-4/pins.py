@@ -1,4 +1,4 @@
-"""SimulatoKit slice 4: any grid size, Potential(sampling=), beam tilt (abTEM 1.0.10, float64, numpy).
+"""SimulatoKit any grid size, Potential(sampling=), beam tilt (abTEM 1.0.10, float64, numpy).
 
 Writes Tests/SimulatoMultisliceTests/Fixtures/slice-4-pins.json and slice-4-arrays.bin: the grid abTEM derives from a
 target sampling, and the exit waves of a plane wave and a probe through Al on grids no vDSP length matches (90 x 75),

@@ -1,15 +1,15 @@
-"""SimulatoKit slice 1: the pin generator (docs/registration-slice-1.md, sections 2-5).
+"""SimulatoKit potential and multislice pins: the pin generator.
 
-Runs abTEM 1.0.10 in float64 (fft numpy, eager) on the registered cases, re-derives every quantity from the
-registration's text in plain NumPy (the functions named `text_*` below are written from section 3, not from abTEM's code
-paths) and asserts the two agree; then writes
+Runs abTEM 1.0.10 in float64 (fft numpy, eager) on the cases below, re-derives every quantity from the
+published formulas in plain NumPy (the functions named `text_*` below are written from the formulas, not from abTEM's
+code paths) and asserts the two agree; then writes
 
   Tests/SimulatoMultisliceTests/Fixtures/slice-1-pins.json   (scalars, shapes, the array index, versions)
   Tests/SimulatoMultisliceTests/Fixtures/slice-1-arrays.bin  (float64 little-endian; complex as interleaved re, im)
   Sources/SimulatoMultislice/LobatoTable.swift               (abTEM's lobato.json, verbatim numbers, with its sha256)
 
 Run from any directory:  ../References/python/abtem/bin/python -I -B tools/slice-1/pins.py
-A failed assertion stops the generator: the text of section 3 is then incomplete or wrong, and that is an amendment.
+A failed assertion stops the generator: a `text_*` function then disagrees with abTEM, and the fixtures are not written.
 """
 
 from __future__ import annotations
@@ -46,7 +46,7 @@ PI2_32 = float(np.float32(np.pi ** 2))
 SYMBOLS = ase.data.chemical_symbols
 
 # --------------------------------------------------------------------------------------------------------------------
-# Section 3, written from the registration's text.
+# The formulas, written independently of abTEM's code.
 # --------------------------------------------------------------------------------------------------------------------
 
 H, ME, C, E = 6.62607004e-34, 9.10938356e-31, 299792458.0, 1.6021766208e-19
@@ -185,7 +185,7 @@ def text_multislice(psi, potentials, thicknesses, energy, gpts, sampling, exit_a
     return out
 
 
-def cutoff_gpts_odd(gpts, sampling):  # 3.10 (parity "odd", the diffraction default; amendment 1)
+def cutoff_gpts_odd(gpts, sampling):  # parity "odd", the diffraction default
     kcut = 2.0 / 3.0 / max(sampling)
     out = []
     for n, d in zip(gpts, sampling):
@@ -250,7 +250,7 @@ def check(label, value, bound):
 
 
 # --------------------------------------------------------------------------------------------------------------------
-# The cases (section 4)
+# The cases
 # --------------------------------------------------------------------------------------------------------------------
 
 
@@ -420,7 +420,7 @@ def main():
                            store=[0])
     pins["cases"] = cases
 
-    # Truth 3 (amendment 2): the analytic projected potential of one Al atom (SciPy kn) against the FFT method, on a
+    # Truth 3: the analytic projected potential of one Al atom (SciPy kn) against the FFT method, on a
     # grid point at the centre of a 25.6 A box, 512^2 (0.05 A) and 1024^2 (0.025 A), r = 0.25 ... 4 A along x.
     a_, b_ = text_scaled("Al")
     ff = {"box": [25.6, 25.6, 2.0], "position": [12.8, 12.8, 1.0], "grids": {}}

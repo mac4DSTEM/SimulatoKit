@@ -1,4 +1,4 @@
-// Gate D (registration amendment 2): is MPSGraph's float32 FFT round trip non-unitary by a systematic amount?
+// Diagnostic: is MPSGraph's float32 FFT round trip non-unitary by a systematic amount?
 // Measures Σ|ψ|² after k round trips (forward .none, inverse .size) of a random complex field, for several sizes, and the
 // same with forward .unitary / inverse .unitary, and with a unit-modulus multiply in between.
 import Foundation

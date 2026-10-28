@@ -1,4 +1,4 @@
-"""SimulatoKit slice 4, scan side: GridScan(sampling=), centre of mass, Gaussian source size (abTEM 1.0.10, float64).
+"""SimulatoKit scan pins: GridScan(sampling=), centre of mass, Gaussian source size (abTEM 1.0.10, float64).
 
 Writes Tests/SimulatoDetectorTests/Fixtures/slice-4-scan-pins.json and slice-4-scan-arrays.bin. abTEM's centre of mass
 is complex64 (its own float32 accumulation), so the test bound there is 1e-5 of the largest value; the Gaussian filter
