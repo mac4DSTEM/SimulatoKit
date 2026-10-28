@@ -176,7 +176,7 @@ func checkMultislice(_ r: inout Report) {
         let chi = -Double.pi * 2 * lambda200 * k2
         r.check("propagator at (1, 0) = exp(−iπλΔz k²) (inside the aperture)",
                 abs(p.real[1 * 32] - cos(chi)) < 1e-14 && abs(p.imaginary[1 * 32] - sin(chi)) < 1e-14)
-        // a real atom: the CPU path conserves the intensity to the band limit, and a batch equals single runs (exact today; D12 allows a tolerance)
+        // a real atom: the CPU path conserves the intensity to the band limit, and a batch equals single runs (exact today)
         let atom = try ProjectedPotential(structure: singleAtomStructure(), nx: 32, ny: 32, sliceThickness: 2)
         let one = try Multislice.run(Waves.planeWave(beam: beam, grid: atom.grid), through: atom)[0]
         r.check("an Al atom: the exit wave has total intensity ≤ the incident one (band limit) and ≥ 0.9 of it",
