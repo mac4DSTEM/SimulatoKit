@@ -1,6 +1,6 @@
 //
 //  BeamAndScatteringTests.swift
-//  Role: registration sections 3.1–3.3 against the pins (λ, σ, κ, the float32 π, f(k²) under both π choices) and
+//  Role: the beam and the scattering factor against the pins (λ, σ, κ, the float32 π, f(k²) under both π choices) and
 //        truth 1 (Kirkland's tabulated λ and σ).
 //
 

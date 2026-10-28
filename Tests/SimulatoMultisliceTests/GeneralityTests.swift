@@ -1,7 +1,6 @@
 //
 //  GeneralityTests.swift
-//  Role: registration-generality.md section 3: every policy that became a parameter, off its default. The defaults
-//        themselves are every other test (and the bit digests of section 2).
+//  Role: every policy that became a parameter, off its default. The defaults themselves are every other test.
 //
 
 import Testing
@@ -10,7 +9,7 @@ import SimulatoMultislice
 import SimulatoProbe
 import SimulatoKitTestSupport
 
-@Suite("Policies as parameters (registration-generality.md)")
+@Suite("Policies as parameters")
 struct GeneralityTests {
     static func batch(_ n: Int) throws -> (Potential, [Waves]) {
         let lazy = try Potential(structure: aluminiumStructure(cells: (2, 2, 3)), nx: 64, ny: 64, sliceThickness: 2.025)
@@ -59,7 +58,7 @@ struct GeneralityTests {
     func metalBatchingAndShapesChangeRoundingOnly() throws {
         let (lazy, incidents) = try Self.batch(11)
         let reference = try Multislice.runBatch(incidents, through: lazy, backend: .metal)
-        // The default run itself (11 waves in a padded batch of 16) returns every wave, in order (generality mutant G14).
+        // The default run itself (11 waves in a padded batch of 16) returns every wave, in order.
         #expect(reference.count == incidents.count)
         let cpu = try Multislice.runBatch(incidents, through: lazy)
         for (x, y) in zip(reference, cpu) { #expect(relMax(x.field, y.field) <= MetalAccuracy.registered.wave) }
@@ -117,7 +116,7 @@ struct GeneralityTests {
         #expect(throws: SimulatoError.invalidSliceThickness(1)) { try Slicing.thicknesses(depth: 5, requested: 1, maximumCount: 4) }
     }
 
-    /// Gate B of the generality pass: counts set through the public vars are clamped too, and the engine survives them;
+    /// Counts set through the public vars are clamped too, and the engine survives them;
     /// the cache limit holds on hits; a huge ceiling does not trap; odd grid tolerances keep a grid matching itself.
     @Test func edgeValuesAreSafe() throws {
         var o = ExecutionOptions.standard

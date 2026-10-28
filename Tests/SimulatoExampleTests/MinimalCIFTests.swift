@@ -1,6 +1,6 @@
 //
 //  MinimalCIFTests.swift
-//  Role: the example's CIF reader (tier 2): the shipped Al CIF expands to the four fcc atoms, operations with
+//  Role: the example's CIF reader: the shipped Al CIF expands to the four fcc atoms, operations with
 //        fractions and signs parse, a non-orthogonal cell and a truncated loop are refused.
 //
 

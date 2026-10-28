@@ -1,6 +1,6 @@
 //
 //  STEMPinsTests.swift
-//  Role: registration-slice-2.md section 4: the STEM driver and every detector against abTEM (S1 with three frozen-phonon
+//  Role: the STEM driver and every detector against abTEM (S1 with three frozen-phonon
 //        configurations, S2 static, S3 vacuum, S4 single atoms), CPU path; and the Metal path against the CPU path.
 //
 
@@ -76,7 +76,7 @@ struct STEMPinsTests {
         return try AnnularDetector(inner: 70, outer: 130).detect(DiffractionIntensity(exit))[0]
     }
 
-    /// The parallel CPU batch equals one sequential run per position (`==` today; D12 allows a tolerance), and its time is printed.
+    /// The parallel CPU batch equals one sequential run per position (`==` today; a tolerance would be allowed), and its time is printed.
     @Test func parallelCPUBatchEqualsSequentialRuns() throws {
         let potentials = try Pins2.potentials("S1", pi: .exact)
         let probe = try Pins2.probe("S1", grid: potentials[0].grid)
@@ -109,7 +109,7 @@ struct STEMPinsTests {
         }
     }
 
-    /// registration-performance.md 1.6 and truth 3: the scan through unbuilt potentials (each slice built on the GPU,
+    /// Truth 3: the scan through unbuilt potentials (each slice built on the GPU,
     /// probes and intensities on the GPU) against the CPU scan, and two runs bit-equal.
     @Test(.enabled(if: Multislice.metalIsAvailable, "no Metal device: the GPU-built scan is not tested here"),
           arguments: ["S1", "S3"])
@@ -136,7 +136,7 @@ struct STEMPinsTests {
         }
     }
 
-    /// registration-generality.md: a CPU scan in chunks of one position equals the default (asserted exactly today; D12).
+    /// A CPU scan in chunks of one position equals the default (asserted exactly today).
     @Test func theScanChunkIsAParameter() throws {
         let potentials = try Pins2.potentials("S1", pi: .exact)
         let probe = try Pins2.probe("S1", grid: potentials[0].grid)
@@ -148,7 +148,7 @@ struct STEMPinsTests {
         #expect(zip(a, b).allSatisfy { $0.values == $1.values })
     }
 
-    /// Performance amendment 3, item 6, accepted 2026-10-15 (amendment 4): the Gate B refuter's weak signal, one H atom
+    /// The floored detector bound (`MetalAccuracy.detectorFloor`) on a weak signal: one H atom
     /// seen by an 85–100 mrad annulus, whose image maximum is 9.5e−7 of the probe's intensity; Metal against CPU is about
     /// 2.4e−10 absolute, beyond 2e−4 × the image maximum (1.9e−10) and within the floored bound (2e−9).
     @Test(.enabled(if: Multislice.metalIsAvailable, "no Metal device: the floored detector bound is not tested here"))

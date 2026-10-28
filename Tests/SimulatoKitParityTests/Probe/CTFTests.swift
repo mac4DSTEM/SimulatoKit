@@ -1,7 +1,7 @@
 //
 //  CTFTests.swift
-//  Role: registration-slice-3.md: the CTF kernels, the HRTEM images of a SrTiO₃ exit wave and the closed forms against
-//        abTEM (section 4), and the truth of section 5 (the identity CTF, the envelopes' closed forms, a flat vacuum image,
+//  Role: the CTF kernels, the HRTEM images of a SrTiO₃ exit wave and the closed forms against
+//        abTEM, and their truth (the identity CTF, the envelopes' closed forms, a flat vacuum image,
 //        weak-phase contrast at Scherzer, the textbook values).
 //
 
@@ -154,7 +154,7 @@ struct CTFTruthTests {
         #expect(a.dChiDPhi(alpha: alpha, phi: 0.7, wavelength: lambda) == 0, "round aberrations: no azimuthal term")
         let et = ContrastTransferFunction.temporalEnvelope(alpha: alpha, wavelength: lambda, focalSpread: delta)
         #expect(abs(et - exp(-pow(Double.pi * delta * alpha * alpha / (2 * lambda), 2))) <= 1e-14, "E_t at \(alpha)")
-        #expect(et >= 0 && et <= 1 && es >= 0 && es <= 1, "in [0, 1] (amendment 2: the envelope underflows to 0 at large α)")
+        #expect(et >= 0 && et <= 1 && es >= 0 && es <= 1, "in [0, 1] (the envelope underflows to 0 at large α)")
         let edge = (2 * lambda / (Double.pi * delta)).squareRoot()  // π Δ α² / (2λ) = 1
         #expect(abs(ContrastTransferFunction.temporalEnvelope(alpha: edge, wavelength: lambda, focalSpread: delta) - exp(-1))
                 <= 1e-14)
@@ -255,7 +255,7 @@ struct CTFTruthTests {
     }
 }
 
-@Suite("CTF conventions as parameters (registration-generality.md)")
+@Suite("CTF conventions as parameters")
 struct CTFConventionTests {
     @Test func theClosedFormsTakeTheirConstants() throws {
         let lambda = try ElectronBeam(energy: 300e3).wavelength
