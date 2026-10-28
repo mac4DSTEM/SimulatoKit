@@ -14,7 +14,7 @@ jobs:
   test:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Select the newest Xcode
         run: |
           newest=$(ls -d /Applications/Xcode*.app | sort -V | tail -n 1)
@@ -34,7 +34,7 @@ jobs:
     needs: test
     if: startsWith(github.ref, 'refs/tags/')
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Compare
         run: |
           top=$(grep -m1 -E '^## [0-9]+\.[0-9]+\.[0-9]+' CHANGELOG.md | sed -E 's/^## ([0-9]+\.[0-9]+\.[0-9]+).*/\1/')
@@ -45,7 +45,7 @@ jobs:
     name: Lint (shared SwiftLint and SwiftFormat config)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: SwiftLint
         run: docker run --rm -v "$PWD:/work" -w /work --entrypoint swiftlint ghcr.io/realm/swiftlint:0.65.1 lint --strict --quiet
       - name: SwiftFormat
@@ -55,7 +55,7 @@ jobs:
     name: No private references
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Scan tracked files
         run: |
           if git grep -n -I -E '_archive|CLAUDE\.md|memcap|macEM-suite|setup-python-refs' -- ':!.gitignore' ':!.github/workflows/ci.yml'; then
