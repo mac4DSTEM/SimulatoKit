@@ -3,7 +3,7 @@
 //  Role: the per-function table of docs/benchmarks.md (tools/benchmarks/run.sh). One warm-up, then five timed runs per
 //        entry; prints `BENCH|function|size|backend|median|min|max` in seconds. Reported, never gated. Enabled only by
 //        SIMULATO_BENCH_TABLE=<comma list of grid sizes> (for example 128,256); a size above 512 is meant for the nightly
-//        review. Run under ../macEM-suite/tools/memcap.sh by run.sh.
+//        review. Run under a memory cap by run.sh.
 //
 
 import Foundation
