@@ -1,6 +1,6 @@
 //
 //  Probe.swift
-//  Role: the convergent probe (registration section 3.8; abTEM `Probe._calculate_array`, `soft_aperture`,
+//  Role: the convergent probe (abTEM `Probe._calculate_array`, `soft_aperture`,
 //        `fft_shift_kernel`, `_WavesNormalization`): Ψ(k) = shift · aperture · exp(−iχ), normalised so Σ_k |Ψ(k)|² = 1,
 //        then ψ = IFFT(Ψ).
 //
@@ -108,7 +108,7 @@ public struct Probe: Sendable, Hashable {
         return Waves(field: psi, grid: grid, beam: beam, normalization: .reciprocalSpace, tilt: tilt)
     }
 
-    /// Ψ₀ = aperture · exp(−iχ) / ‖·‖ in reciprocal space, unshifted (registration-performance.md 1.6): `build(at:)`
+    /// Ψ₀ = aperture · exp(−iχ) / ‖·‖ in reciprocal space, unshifted: `build(at:)`
     /// without the shift ramp, whose modulus is 1, so its norm does not depend on the position.
     package func centredSpectrum() -> ComplexField {
         let lambda = beam.wavelength

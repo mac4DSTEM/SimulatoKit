@@ -1,9 +1,8 @@
 //
 //  Potential.swift
-//  Role: abTEM's lazy `Potential` (`potentials/iam.py`; registration-performance.md 1.1): a structure cut into slices on
-//        a grid, the wrapped atoms with their slice and the parameterisation, without the arrays. `build()` gives the
-//        `ProjectedPotential` (abTEM's `PotentialArray`) on the CPU; on `.metal` the multislice builds each slice on the
-//        GPU instead.
+//  Role: abTEM's lazy `Potential` (`potentials/iam.py`): a structure cut into slices on a grid, the wrapped atoms
+//        with their slice and the parameterisation, without the arrays. `build()` gives the `ProjectedPotential`
+//        (abTEM's `PotentialArray`) on the CPU; on `.metal` the multislice builds each slice on the GPU instead.
 //
 
 import SimulatoCore
@@ -15,7 +14,7 @@ public struct Potential: Sendable, Hashable {
     /// The thickness of every slice [Å].
     public let sliceThicknesses: [Double]
     public let parameterization: LobatoParameterization
-    /// The atoms wrapped into the box (registration-slice-1.md 3.4), in the structure's atom order.
+    /// The atoms wrapped into the box, in the structure's atom order.
     public let atoms: [AtomicStructure.Atom]
     /// The slice of each atom, in the same order.
     public let sliceOfAtom: [Int]
@@ -74,7 +73,7 @@ public struct Potential: Sendable, Hashable {
         atoms.indices.filter { sliceOfAtom[$0] == j }.map { atoms[$0] }
     }
 
-    /// The projected potential of every slice, on the CPU in float64 (registration-slice-1.md 3.5).
+    /// The projected potential of every slice, on the CPU in float64.
     public func build() throws -> ProjectedPotential {
         let builder = try SliceBuilder(grid: grid, parameterization: parameterization)
         var slices: [PotentialSlice] = []

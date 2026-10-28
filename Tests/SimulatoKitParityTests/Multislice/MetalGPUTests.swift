@@ -1,6 +1,6 @@
 //
 //  MetalGPUTests.swift
-//  Role: registration-performance.md sections 3 and 4: the Metal path on the GPU end to end (the potential built on the
+//  Role: the Metal path on the GPU end to end (the potential built on the
 //        device for a `Potential`, the transmissions built on the device for both forms, the probes on the device)
 //        against the CPU path, and its truth. `Potential.build()` against `ProjectedPotential` runs without a device.
 //
@@ -26,7 +26,7 @@ enum GPUCases {
         var wave = 0.0, intensity = 0.0, pattern = 0.0, total = 0.0, totalPerSlice = 0.0
     }
 
-    /// Slice 1's bounds (section 4) on every plane, the total-intensity bound of amendment 2.
+    /// The `MetalAccuracy.registered` bounds on every plane, with the total-intensity bound per slice.
     static func compare(_ gpu: [Waves], _ cpu: [Waves], planes: [Int], label: String) throws -> Worst {
         var worst = Worst()
         #expect(gpu.count == cpu.count, "\(label): plane count")
@@ -50,7 +50,7 @@ enum GPUCases {
     }
 }
 
-@Suite("Potential: the lazy potential (registration-performance.md 1.1)")
+@Suite("Potential: the lazy potential")
 struct PotentialTests {
     @Test(arguments: ["A1", "A2", "B1", "D1"])
     func buildEqualsTheEagerPotentialBitForBit(id: String) throws {
@@ -63,11 +63,11 @@ struct PotentialTests {
     }
 }
 
-@Suite("Metal on the GPU end to end against the CPU path (registration-performance.md)",
+@Suite("Metal on the GPU end to end against the CPU path",
        .enabled(if: Multislice.metalIsAvailable,
                 "no Metal device (MTLCreateSystemDefaultDevice() returned nil): the Metal path is not tested here"))
 struct MetalGPUTests {
-    /// Section 3, the GPU's V against the CPU's (1e−5 × max V), and truth 1 (Σ V ΔxΔy = Σ f(0), 1e−5 relative).
+    /// The GPU's V against the CPU's (1e−5 × max V), and truth 1 (Σ V ΔxΔy = Σ f(0), 1e−5 relative).
     @Test(arguments: ["A1", "A2", "B1", "D1"])
     func gpuPotentialMatchesTheCPUPotential(id: String) throws {
         let lazy = try GPUCases.potential(id)
@@ -161,7 +161,7 @@ struct MetalGPUTests {
         #expect(relMax(gpu.field, cpu.field) <= 1e-4, "a column of eight gold atoms in one slice (the merge)")
     }
 
-    /// Amendment 1: the per-step renormalisation's effect on Σ|ψ|², both potential forms, 512² × 100 slices.
+    /// The per-step renormalisation's effect on Σ|ψ|², both potential forms, 512² × 100 slices.
     @Test func renormalizationTightensTheTotalIntensity() throws {
         let lazy = try Potential(structure: GPUCases.aluminium(cells: (8, 8, 50)), nx: 512, ny: 512, sliceThickness: 2.025)
         let eager = try lazy.build()
@@ -187,7 +187,7 @@ struct MetalGPUTests {
                                                                      renormalize: renormalize),
                                              cpu, planes: indices, label: "\(label) values r=\(renormalize)")
                 if renormalize {
-                    // Amendment 1: the measured drift with the renormalisation, guarded at 3e−7 per slice (worst
+                    // The measured drift with the renormalisation, guarded at 3e−7 per slice (worst
                     // measured 1.4e−7; without it 9.3e−7, inside the accepted 1.5e−6).
                     #expect(a.totalPerSlice <= 3e-7 && b.totalPerSlice <= 3e-7, "\(label): renormalised drift")
                 }
@@ -213,7 +213,7 @@ struct MetalGPUTests {
         print("uneven slices: wave \(a.wave) / \(b.wave), pattern \(a.pattern) / \(b.pattern)")
     }
 
-    /// Gate B finding 4: a potential with no slice returns the incident wave on `.metal`, as on `.cpu` (it trapped).
+    /// A potential with no slice returns the incident wave on `.metal`, as on `.cpu` (it trapped).
     @Test func noSliceReturnsTheIncidentWave() throws {
         let grid = try Grid(nx: 64, ny: 64, extentX: 8, extentY: 8)
         let empty = ProjectedPotential(grid: grid, slices: [])
@@ -225,7 +225,7 @@ struct MetalGPUTests {
         #expect(batch.count == 2 && batch.allSatisfy { $0.field == wave.field })
     }
 
-    /// Gate B finding 5: a wave of amplitude 1e8 stays finite and within the bounds (the renormalisation's products
+    /// A wave of amplitude 1e8 stays finite and within the bounds (the renormalisation's products
     /// overflowed float32 and gave NaN).
     @Test func largeAmplitudesStayFinite() throws {
         let lazy = try GPUCases.potential("B1")
@@ -240,7 +240,7 @@ struct MetalGPUTests {
         #expect(relMax(gpu.field, cpu.field) <= 1e-4, "amplitude 1e8: \(relMax(gpu.field, cpu.field))")
     }
 
-    /// Gate B finding 6: the compiled executables are bounded (each held device memory; twelve batch sizes held 2.9 GB),
+    /// The compiled executables are bounded (each held device memory; twelve batch sizes held 2.9 GB),
     /// and a remainder batch reuses a power-of-two shape; results do not depend on the batch a wave ran in.
     @Test func compiledExecutablesAreBounded() throws {
         let lazy = try Potential(structure: GPUCases.aluminium(cells: (2, 2, 2)), nx: 64, ny: 64, sliceThickness: 2.025)

@@ -1,6 +1,6 @@
 //
 //  PotentialPinsTests.swift
-//  Role: registration sections 3.4–3.6 against the pins: the slicing (thicknesses, the slice of every atom), the
+//  Role: the potential against the pins: the slicing (thicknesses, the slice of every atom), the
 //        projected potential of every slice (stored arrays and per-slice sums and maxima), the bandlimited transmission
 //        function, truth 2 (the k = 0 identity) on every slice of every case, and the planted slicing rules.
 //
@@ -76,7 +76,7 @@ struct PotentialPinsTests {
         }
     }
 
-    /// Section 3.4, the top-face rule: an atom within 1e−10 Å of the top face is put at z = 0 (slice 0), so its potential
+    /// The top-face rule: an atom within 1e−10 Å of the top face is put at z = 0 (slice 0), so its potential
     /// equals that of the same atom at z = 0.
     @Test func topFaceAtomGoesToTheFirstSlice() throws {
         let top = try AtomicStructure(box: SIMD3(8, 8, 4), atoms: [.init(atomicNumber: 29, position: SIMD3(2.3, 5.1, 4 - 1e-11))])
@@ -117,7 +117,7 @@ struct PotentialPinsTests {
         #expect(throws: (any Error).self) { try ProjectedPotential(structure: ok, nx: 64, ny: 64, sliceThicknesses: [1, 0.5]) }
         #expect(throws: (any Error).self) { try ProjectedPotential(structure: ok, nx: 1, ny: 64, sliceThickness: 1) }
         #expect(throws: (any Error).self) { try AtomicStructure(box: SIMD3(0, 10, 2), atoms: []) }
-        // Refuter finding: a thickness so small that ⌈Lz / s⌉ overflows is a named refusal, not a trap.
+        // A thickness so small that ⌈Lz / s⌉ overflows is a named refusal, not a trap.
         #expect(throws: SimulatoError.invalidSliceThickness(1e-320)) {
             try ProjectedPotential(structure: ok, nx: 64, ny: 64, sliceThickness: 1e-320)
         }

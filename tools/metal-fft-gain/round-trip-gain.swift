@@ -1,4 +1,4 @@
-// Gate D step 2: is the round-trip loss a scalar gain (ψ_out = s ψ_in + small residual) and is s the same for different
+// Diagnostic, step 2: is the round-trip loss a scalar gain (ψ_out = s ψ_in + small residual) and is s the same for different
 // inputs (random, a probe-like smooth field, a single delta)? s fitted as Σ conj(in) out / Σ |in|².
 import Foundation
 import Metal

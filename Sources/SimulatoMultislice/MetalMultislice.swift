@@ -1,8 +1,8 @@
 //
 //  MetalMultislice.swift
-//  Role: the backends' entry points (registration section 4, second table; registration-performance.md): `.metal`
-//        runs on the GPU through `MetalEngine.swift` (float32, the potential and transmissions on the device); `.cpu`
-//        batches run positions on at most 8 threads, bit for bit equal to sequential runs.
+//  Role: the backends' entry points: `.metal` runs on the GPU through `MetalEngine.swift` (float32, the potential
+//        and transmissions on the device); `.cpu` batches run positions on at most 8 threads, bit for bit equal to
+//        sequential runs.
 //
 
 import Foundation
@@ -48,7 +48,7 @@ extension Multislice {
 
     /// The exit waves (after the last slice) of a batch of incident waves through one potential: on `.cpu` on at most
     /// `options.maximumCPUThreads` threads from the shared transmission functions, on `.metal` in batches whose waves fit
-    /// in `options.metalBatchBytes` (registration-slice-2.md 3.6), the transmissions built on the GPU.
+    /// in `options.metalBatchBytes`, the transmissions built on the GPU.
     public static func runBatch(_ incidents: [Waves], through potential: ProjectedPotential,
                                 backend: Backend = .cpu, options: ExecutionOptions = .standard) throws -> [Waves] {
         guard let first = incidents.first else { return [] }
@@ -101,7 +101,7 @@ extension Multislice {
 }
 
 extension Multislice {
-    /// For the tests of registration-performance.md: V of every slice of `potential` as the GPU builds it.
+    /// For the tests: V of every slice of `potential` as the GPU builds it.
     package static func gpuPotentialSlices(_ potential: Potential) throws -> [[Double]] {
         try MetalMultislice.gpuPotentialSlices(potential)
     }
@@ -112,7 +112,7 @@ extension Multislice {
         try MetalMultislice.gpuProbes(spectrum: spectrum, ramps: ramps, grid: grid)
     }
 
-    /// For the tests: `.metal` with the per-step renormalisation on or off (registration-performance.md, amendment 1).
+    /// For the tests: `.metal` with the per-step renormalisation on or off.
     package static func runMetal(_ incident: Waves, through potential: Potential, exitPlanes: ExitPlanes = .last,
                                  renormalize: Bool) throws -> [Waves] {
         let engine = try MetalEngine.require()
@@ -133,8 +133,8 @@ extension Multislice {
 }
 
 extension Multislice {
-    /// The Metal device's largest allocated size [bytes] seen at a commit since the last reset (for the memory report of
-    /// registration-performance.md 1.8); `reset` starts a new measurement at the current size.
+    /// The Metal device's largest allocated size [bytes] seen at a commit since the last reset (for the memory report);
+    /// `reset` starts a new measurement at the current size.
     package static func metalPeakAllocatedBytes(reset: Bool = false) -> Int {
         guard let engine = MetalEngine.shared else { return 0 }
         if reset { engine.peak.withLock { $0 = engine.device.currentAllocatedSize } }
@@ -143,8 +143,8 @@ extension Multislice {
 }
 
 extension Multislice {
-    /// For the tests: how many compiled Metal executables the process holds (bounded, registration-performance.md
-    /// amendment 3).
+    /// For the tests: how many compiled Metal executables the process holds (bounded by
+    /// `metalExecutableCacheLimit`).
     package static var metalCachedExecutables: Int { MetalEngine.shared?.cachedExecutables ?? 0 }
 
     /// For the tests: `body` with no other Metal run in between (so a count read in it is the body's own).

@@ -5,13 +5,13 @@
 [![CI](https://github.com/mac4DSTEM/SimulatoKit/actions/workflows/ci.yml/badge.svg)](https://github.com/mac4DSTEM/SimulatoKit/actions/workflows/ci.yml)
 [![Docs](https://github.com/mac4DSTEM/SimulatoKit/actions/workflows/docs.yml/badge.svg)](https://mac4dstem.github.io/SimulatoKit/documentation/)
 [![Release](https://img.shields.io/github/v/tag/mac4DSTEM/SimulatoKit?label=release&sort=semver)](https://github.com/mac4DSTEM/SimulatoKit/tags)
-[![Licence: GPL-3.0-or-later](https://img.shields.io/badge/licence-GPL--3.0--or--later-blue)](LICENSE)
+[![Licence: GPL-3.0-only](https://img.shields.io/badge/licence-GPL--3.0--only-blue)](LICENSE)
 
 A Swift package for simulating electron scattering on Apple platforms: projected potentials, multislice propagation,
 frozen phonons, probes with aberrations, STEM scans with detectors, and the contrast transfer function for HRTEM images.
 It is a port of [abTEM](https://github.com/abtem/abtem) 1.0.10, checked against abTEM in float64 (Python reference, pinned
 inputs). The algorithms and the Lobato–Van Dyck (2014) parameters are abTEM's; credit
-for the method belongs to the abTEM authors. Licence: GPL-3.0-or-later (`LICENSE`, `NOTICE`); software built on
+for the method belongs to the abTEM authors. Licence: GPL-3.0-only (`LICENSE`, `NOTICE`); software built on
 SimulatoKit must be GPL-compatible. It is a library of numbers, not an application, and has no UI. It stands alone: it
 depends on no other package, and no other package depends on it yet.
 
@@ -213,4 +213,4 @@ the fixtures. `swift test -c release --skip SimulatoKitParityTests` runs only th
 ## Contributing and licence
 
 Issues and pull requests are welcome; see `CONTRIBUTING.md`. A change that moves a number needs a test that fails when
-the code is broken and a comparison against abTEM; say which. GPL-3.0-or-later; see `LICENSE` and `NOTICE`.
+the code is broken and a comparison against abTEM; say which. GPL-3.0-only; see `LICENSE` and `NOTICE`.

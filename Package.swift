@@ -1,15 +1,15 @@
 // swift-tools-version: 6.2
-// SimulatoKit — an electron-scattering simulation library: projected potentials and multislice
-// propagation and frozen phonons (SimulatoMultislice), probes, aberrations and scans (SimulatoProbe), detectors and the
-// STEM driver (SimulatoDetector) on a
-// shared core of beams, grids, structures and waves (SimulatoCore). A Swift port of abTEM (GPL-3.0-or-later), checked
-// against abTEM 1.0.10 (164e644) in float64; docs/registration-slice-1.md holds the first design and validation notes.
+// SPDX-License-Identifier: GPL-3.0-only
+// SimulatoKit — an electron-scattering simulation library: projected potentials, multislice propagation and frozen
+// phonons (SimulatoMultislice), probes, aberrations and scans (SimulatoProbe), detectors and the STEM driver
+// (SimulatoDetector) on a shared core of beams, grids, structures and waves (SimulatoCore). A Swift port of abTEM
+// (GPL-3.0-or-later), checked against abTEM 1.0.10 (164e644) in float64 (docs/parity.md).
 //
-// Every accelerated path keeps a CPU reference path with a registered tolerance: the CPU path is float64 on Accelerate
+// Every accelerated path keeps a CPU reference path with a tested tolerance: the CPU path is float64 on Accelerate
 // (vDSP), the Metal path float32 on MPSGraph, one API with the backend as a parameter.
 //
-// Swift 6 language mode, nonisolated by default, three upcoming features, no unsafe flags
-// (a versioned dependency cannot carry them): tools/test.sh runs the tests with `-c release`. One product per module.
+// Swift 6 language mode, nonisolated by default, three upcoming features, no unsafe flags (a versioned dependency
+// cannot carry them). Run the tests with `swift test -c release`. One product per module.
 import PackageDescription
 
 let settings: [SwiftSetting] = [
@@ -28,17 +28,17 @@ let package = Package(
         .library(name: "SimulatoDetector", targets: ["SimulatoDetector"]),
     ],
     targets: [
-        // Constants, the electron beam, structures (a minimal local type until DiffractoKit's first tag), grids, complex
+        // Constants, the electron beam, structures (a minimal local type, docs/adr/0001), grids, complex
         // fields, waves with their intensity and diffraction pattern, the antialias aperture, the float64 CPU FFT.
         .target(name: "SimulatoCore", swiftSettings: settings),
-        // Slice 1: the Lobato parameterisation, slicing, the projected potential (infinite projection), transmission,
+        // The Lobato parameterisation, slicing, the projected potential (infinite projection), transmission,
         // Fresnel propagation and the multislice loop on two backends (CPU float64, Metal float32).
         .target(name: "SimulatoMultislice", dependencies: ["SimulatoCore"], swiftSettings: settings),
-        // Slice 1: the soft aperture, the polar aberrations C10 ... C56 and the probe at a position; slice 2: scan
-        // grids; slice 3: the CTF with its envelopes and the closed forms, applied to waves for HRTEM images.
+        // The soft aperture, the polar aberrations C10 ... C56 and the probe at a position, grid and line scans, the CTF
+        // with its envelopes and the closed forms, applied to waves for HRTEM images.
         .target(name: "SimulatoProbe", dependencies: ["SimulatoCore"], swiftSettings: settings),
-        // Slice 2: annular (BF, ADF, HAADF), pixelated and segmented detectors and the STEM driver, averaged over
-        // frozen-phonon configurations (design and validation notes: docs/registration-slice-2.md).
+        // Annular (BF, ADF, HAADF), pixelated, segmented, centre-of-mass and waves detectors and the STEM driver, averaged
+        // over frozen-phonon configurations; line profiles and integrated centre of mass.
         .target(name: "SimulatoDetector", dependencies: ["SimulatoCore", "SimulatoMultislice", "SimulatoProbe"],
                 swiftSettings: settings),
         // The first ten minutes: a CIF in, an HRTEM image and a STEM HAADF scan out (not a product).
@@ -55,7 +55,7 @@ let package = Package(
         .testTarget(name: "SimulatoProbeTests", dependencies: ["SimulatoProbe", "SimulatoMultislice", "SimulatoCore"],
                     swiftSettings: settings),
         // The pinned comparisons against abTEM 1.0.10 (fixtures, truth, Metal against CPU, benchmarks): the slow half,
-        // skipped by the per-session gate with `--skip SimulatoKitParityTests`, run by the plain `swift test`.
+        // skipped with `--skip SimulatoKitParityTests` for a quick run, run by the plain `swift test`.
         .testTarget(name: "SimulatoKitParityTests",
                     dependencies: ["SimulatoCore", "SimulatoMultislice", "SimulatoProbe", "SimulatoDetector",
                                    "SimulatoKitTestSupport"],

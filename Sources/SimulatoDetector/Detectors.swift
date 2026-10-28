@@ -1,7 +1,7 @@
 //
 //  Detectors.swift
-//  Role: the detectors of registration-slice-2.md section 3.4, applied to the full unshifted pattern P(k) = |FFT₂(ψ)|²
-//        of one exit wave (a probe: no 1/N; a plane wave: ψ / N first, as slice 1's pattern). Angles in mrad on the
+//  Role: the detectors (abTEM `detectors.py`), applied to the full unshifted pattern P(k) = |FFT₂(ψ)|² of one exit
+//        wave (a probe: no 1/N; a plane wave: ψ / N first, as `Waves.diffractionPattern`). Angles in mrad on the
 //        `fftfreq` grid with Δα = λ / L · 10³.
 //
 
@@ -206,7 +206,7 @@ public struct CenterOfMassDetector: Detector, Hashable {
 }
 
 /// The segmented detector (abTEM's `SegmentedDetector`, `polar_binning`): n_r × n_φ bins between inner and outer, the
-/// azimuth measured from `rotation`; summed in float64 (abTEM sums in float32: amendment 1).
+/// azimuth measured from `rotation`; summed in float64 (abTEM sums in float32, so the kit's sums are the closer to exact).
 public struct SegmentedDetector: Detector, Hashable {
     public let radialBins: Int
     public let azimuthalBins: Int
@@ -251,7 +251,7 @@ public struct SegmentedDetector: Detector, Hashable {
                 if phi < 0 { phi += twoPi }
                 let r = Int((Double(radialBins) * (alpha - inner) / (outer - inner)).rounded(.down))
                 // α just below outer can round to r = n_r; abTEM's bin label then exceeds n_r n_φ − 1 and the pixel is
-                // dropped (`label_to_index`); so is it here (slice-2 refuter, finding A: it used to index past the end).
+                // dropped (`label_to_index`); so is it here (it used to index past the end).
                 guard r < radialBins else { continue }
                 let f = (Double(azimuthalBins) * (phi / twoPi)).rounded(.down)
                 let az = Int(min(max(f, 0), Double(azimuthalBins - 1)))

@@ -1,8 +1,8 @@
 name: CI
 
-# The package declares macOS 15 and iOS 18; the runner must provide an Xcode with Swift 6.2 or later (tools-version 6.2).
-# macos-latest is used; the step below selects the newest Xcode installed on the image. If the image has none that builds
-# the package, this job fails at `swift build` and says so (no silent skip).
+# The package declares macOS 15 and iOS 18 and needs Swift 6.2 or later (tools-version 6.2). The macos-26 image with
+# Xcode 26.6 is pinned below, like the apps; bump it on purpose. The test job runs the tests on every pull request; post-merge runs
+# the consumer check (a separate package on the public API, and the README's quick start) and an iOS Simulator build.
 on:
   push:
     branches: [main]
@@ -11,27 +11,46 @@ on:
     branches: [main]
   workflow_dispatch:
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Pinned like the apps: the macos-26 image's Xcode 26.6 (Swift 6.3, macOS 26 SDK). Bump on purpose.
+  DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+
 jobs:
   test:
-    runs-on: macos-latest
+    runs-on: macos-26
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v7
-      - name: Select the newest Xcode
+      - name: Toolchain on record
         run: |
-          newest=$(ls -d /Applications/Xcode*.app | sort -V | tail -n 1)
-          echo "Selecting $newest"
-          sudo xcode-select -s "$newest/Contents/Developer"
-      - name: Swift version
-        run: swift --version
+          xcode-select -p
+          swift --version
       # Metal suites skip themselves with a named reason when MTLCreateSystemDefaultDevice() is nil (hosted runners
       # may have no GPU); the CPU float64 reference tests always run.
       - name: Test
         run: swift test -c release
+
+  post-merge:
+    name: Consumer checks and iOS build (after merge)
+    # Not on pull requests: the free plan's macOS runners are scarce, so the extra builds run on main, tags and by hand.
+    if: github.event_name != 'pull_request'
+    runs-on: macos-26
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v7
+      - name: Consumer check (a separate package, the public API only; then the README's quick start)
+        run: tools/consumer-check/run.sh
       - name: Build the libraries for iOS
         run: xcodebuild -scheme SimulatoDetector -destination 'generic/platform=iOS Simulator' -quiet build
+
   version:
     name: CHANGELOG version matches the tag
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     needs: test
     if: startsWith(github.ref, 'refs/tags/')
     steps:

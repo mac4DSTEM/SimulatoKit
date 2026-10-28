@@ -1,6 +1,6 @@
 //
 //  DetectorTruthTests.swift
-//  Role: registration-slice-2.md section 5, items 3–8: Parseval, BF + DF, a flat vacuum scan, HAADF rising with Z, DPC
+//  Role: the detectors' truths independent of abTEM: Parseval, BF + DF, a flat vacuum scan, HAADF rising with Z, DPC
 //        symmetry, the pixelated pattern's sum; and the detectors' refusals.
 //
 
@@ -83,7 +83,7 @@ struct DetectorTruthTests {
                 #expect(spread <= 1e-12 * max(column.map(abs).max()!, 1e-300), "detector \(k) value \(v) is flat")
             }
         }
-        // Amendment 2: the quadrants are equal once the origin pixel is excluded (inner > 0); with inner = 0 the zero
+        // The quadrants are equal once the origin pixel is excluded (inner > 0); with inner = 0 the zero
         // frequency (φ = atan2(0, 0) = 0) belongs to the first segment alone, in abTEM's rule as in the port.
         let quadrants = m[2][0, 0]
         #expect(quadrants.max()! - quadrants.min()! <= 1e-12 * quadrants.max()!, "DPC quadrants equal (inner > 0)")
@@ -99,8 +99,8 @@ struct DetectorTruthTests {
         #expect(zip(values, values.dropFirst()).allSatisfy { $0 < $1 }, "\(values)")
     }
 
-    /// Slice-2 refuter's findings, each pinned by a number abTEM gave.
-    @Test func refuterFindingsStayFixed() throws {
+    /// Past review findings, each pinned by a number abTEM gave.
+    @Test func reviewFindingsStayFixed() throws {
         let beam = try ElectronBeam(energy: 200e3)
         let grid = try Grid(nx: 96, ny: 96, extentX: 7.81, extentY: 7.81)
         // B1: abTEM's angular sampling on this grid, to the last bit.

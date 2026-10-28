@@ -1,6 +1,6 @@
 //
 //  LobatoParameterization.swift
-//  Role: the Lobato & Van Dyck (2014) parameterisation, abTEM's default (registration section 3.3): the scaled
+//  Role: the Lobato & Van Dyck (2014) parameterisation, abTEM's default: the scaled
 //        parameters A = π² a / b^{3/2} / κ, B = 2π / √b, and the projected scattering factor of an infinite
 //        projection, f(k²) = 8π Σ [A/B/(q + B²) + A B/(q + B²)²], q = 4π² k², summed in abTEM's order.
 //
@@ -11,7 +11,7 @@ import SimulatoCore
 /// The Lobato & Van Dyck electron scattering parameterisation (Acta Cryst. A 70, 636–649, 2014), Z = 1 ... 103.
 public struct LobatoParameterization: Sendable, Hashable {
     /// The π in f(k²). abTEM 1.0.10 evaluates it as a float32 constant, also in float64 mode, which moves f by about
-    /// 5e−8 relative; `.exact` is the default, `.abTEMFloat32` reproduces abTEM's numbers (registration 3.3).
+    /// 5e−8 relative; `.exact` is the default, `.abTEMFloat32` reproduces abTEM's numbers.
     public enum PiConstant: Sendable, Hashable {
         case exact
         case abTEMFloat32

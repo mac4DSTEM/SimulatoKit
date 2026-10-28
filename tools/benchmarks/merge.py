@@ -49,8 +49,8 @@ py = subprocess.run([os.path.join(ROOT, "..", "refs", "abtem", "bin", "python"),
                    capture_output=True, text=True).stdout.split()
 out.append(f"- Python {py[0]} (NumPy {py[1]}, SciPy {py[2]}), abTEM 1.0.10, NumPy/SciPy from `References/python/abtem` (CPU, NumPy's FFT; no GPU)")
 out.append("- Kit CPU is float64 on Accelerate (one thread per call); Metal is float32 on MPSGraph; abTEM is shown in float64 and float32")
-out.append("- Run while other sessions used the machine (load average 6 to 11): the spread columns show it; treat ratios within 20% as equal")
-out.append("- Sizes: 64² to 256² small and typical; **1024² and above: nightly** (not run in the session that wrote this table)\n")
+out.append("- Run while other jobs used the machine (load average 6 to 11): the spread columns show it; treat ratios within 20% as equal")
+out.append("- Sizes: 64² to 256² small and typical; **1024² and above: not in this table**\n")
 
 for f in functions:
     out.append(f"## {f}\n")
@@ -67,7 +67,7 @@ for f in functions:
     out.append("\n(ratios are abTEM time / kit time: above 1 the kit is faster)\n")
 
 # backend decision
-out.append("## Backend decision per function (D16)\n")
+out.append("## Backend decision per function\n")
 out.append("The smallest measured size at which Metal beats the CPU path. The break-even is bracketed by the sizes measured, not interpolated.\n")
 out.append("| function | decision | measured |")
 out.append("|---|---|---|")

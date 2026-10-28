@@ -1,8 +1,8 @@
 //
 //  FrozenPhononsTests.swift
-//  Role: registration-slice-2.md: frozen phonons against abTEM with its displacements given (F1: SrTiO₃, four
+//  Role: frozen phonons against abTEM with its displacements given (F1: SrTiO₃, four
 //        configurations, the averaged plane-wave pattern), and truth 1 (the kit's generator by its statistics) and
-//        truth 2 (σ = 0 is slice 1).
+//        truth 2 (σ = 0 is the static structure).
 //
 
 import SimulatoKitTestSupport
@@ -53,7 +53,7 @@ struct FrozenPhononsTests {
         let sc = (0..<16).map { _ in c.nextNormal() }
         #expect(sa == sb, "the same seed, the same stream")
         #expect(sa != sc, "another seed, another stream")
-        // Consecutive seeds share no configuration (the refuter found seed + c did).
+        // Consecutive seeds share no configuration (seed + c once did).
         let one = try AtomicStructure(box: SIMD3(5, 5, 5), atoms: [.init(atomicNumber: 6, position: SIMD3(1, 1, 1))])
         let e1 = try FrozenPhonons(structure: one, sigmas: [6: 0.1], configurations: 3, seed: 10)
         let e2 = try FrozenPhonons(structure: one, sigmas: [6: 0.1], configurations: 3, seed: 11)
@@ -84,8 +84,8 @@ struct FrozenPhononsTests {
                 "the streams do not depend on the directions")
     }
 
-    /// Truth 2: σ = 0 is slice 1, to the last bit; the mean of identical configurations is the single result.
-    @Test func zeroSigmaIsSliceOne() throws {
+    /// Truth 2: σ = 0 is the static structure, to the last bit; the mean of identical configurations is the single result.
+    @Test func zeroSigmaIsTheStaticStructure() throws {
         let s = try Pins2.structure("S2")
         let fp = try FrozenPhonons(structure: s, sigmas: [13: 0], configurations: 3, seed: 9)
         let a = try fp.potentials(nx: 128, ny: 128, sliceThickness: 2.025)

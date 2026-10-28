@@ -1,6 +1,6 @@
 //
 //  MultislicePinsTests.swift
-//  Role: registration sections 3.7, 3.8 and 3.10 against the pins, CPU path: the incident probe, the exit waves, the
+//  Role: multislice against the pins, CPU path: the incident probe, the exit waves, the
 //        diffraction patterns and the per-plane scalars of every case and beam, with abTEM's π (bounds 1e−10, the probe
 //        1e−12) and with the exact π (1e−6).
 //

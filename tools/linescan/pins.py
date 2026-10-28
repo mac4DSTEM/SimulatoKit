@@ -1,4 +1,4 @@
-"""SimulatoKit line scans and line profiles (suite task 23, part 1): abTEM 1.0.10, float64.
+"""SimulatoKit line scans and line profiles (pins): abTEM 1.0.10, float64.
 
 Pins `LineScan` (points, sampling, endpoint, `add_margin`, `at_position`, fractional coordinates), a `STEM.scan` over a
 LineScan with an annular detector, the `RealSpaceLineProfiles` width and interpolate (on the scan's profile and on planted
@@ -8,7 +8,7 @@ fractional, orders), and the same on a `DiffractionPatterns` (reciprocal-space p
 abTEM states no tolerance for these paths. The tests use `assert_allclose`'s float64 defaults (rtol 1e-7, with atol 1e-12 of the
 maximum where a value is zero in one arithmetic); abTEM stores `interpolate` and `width` results as float32, which is
 itself inside rtol 1e-7 of the float64 value to 6e-8. The scan runs through the kit's potential with abTEM's float32 pi
-(`LobatoParameterization.PiConstant.abTEMFloat32`), as the other slices do.
+(`LobatoParameterization.PiConstant.abTEMFloat32`), as the other pins do.
 
 Writes Tests/SimulatoKitParityTests/Fixtures/linescan-pins.json and linescan-arrays.bin (floats as repr in the JSON, arrays
 as little-endian float64 in the sidecar, with its sha256).
