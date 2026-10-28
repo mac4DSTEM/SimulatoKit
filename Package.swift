@@ -1,4 +1,5 @@
 // swift-tools-version: 6.2
+// SPDX-License-Identifier: GPL-3.0-only
 // SimulatoKit — an electron-scattering simulation library: projected potentials, multislice propagation and frozen
 // phonons (SimulatoMultislice), probes, aberrations and scans (SimulatoProbe), detectors and the STEM driver
 // (SimulatoDetector) on a shared core of beams, grids, structures and waves (SimulatoCore). A Swift port of abTEM
