@@ -6,7 +6,7 @@ A Swift package for simulating electron scattering on Apple platforms: projected
 frozen phonons, probes with aberrations, STEM scans with detectors, and the contrast transfer function for HRTEM images.
 It is a port of [abTEM](https://github.com/abtem/abtem) 1.0.10, checked against abTEM in float64 (Python reference, pinned
 inputs). The algorithms and the Lobato–Van Dyck (2014) parameters are abTEM's; credit
-for the method belongs to the abTEM authors. Licence: GPL-3.0-or-later (`LICENSE`, `NOTICE`); software built on
+for the method belongs to the abTEM authors. Licence: GPL-3.0-only (`LICENSE`, `NOTICE`); software built on
 SimulatoKit must be GPL-compatible. It is a library of numbers, not an application, and has no UI.
 
 ## Modules
@@ -200,4 +200,4 @@ abTEM reference (a Python virtual environment) is not in the repository; `tools/
 ## Contributing and licence
 
 Issues and pull requests are welcome; see `CONTRIBUTING.md`. A change that moves a number needs a test that fails when
-the code is broken and a comparison against abTEM; say which. GPL-3.0-or-later; see `LICENSE` and `NOTICE`.
+the code is broken and a comparison against abTEM; say which. GPL-3.0-only; see `LICENSE` and `NOTICE`.

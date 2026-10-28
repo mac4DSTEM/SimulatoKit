@@ -56,10 +56,11 @@ func checkCore(_ r: inout Report) {
             .invalidPosition(index: 3), .invalidSliceThickness(0), .sliceThicknessesDoNotSumToBox(sum: 1, depth: 2),
             .invalidExitPlanes("x"), .gridMismatch, .invalidAperture(0), .invalidAberration("x"), .metalUnavailable("x"),
             .metalFailure("x"), .invalidFrozenPhonons("x"), .invalidScan("x"), .invalidDetector("x"),
+            .gridTooLarge(rows: 1, columns: 1, required: 2, limit: 1),
         ]
-        r.equal("SimulatoError: 19 cases built", all.count, 19)
+        r.equal("SimulatoError: 20 cases built", all.count, 20)
         r.check("SimulatoError: every description is non-empty and distinct",
-                Set(all.map(\.description)).count == 19 && all.allSatisfy { !$0.description.isEmpty })
+                Set(all.map(\.description)).count == 20 && all.allSatisfy { !$0.description.isEmpty })
         r.equal("SimulatoError.invalidEnergy description", SimulatoError.invalidEnergy(-1).description,
                 "electron energy must be finite and positive, got -1.0 eV")
         r.check("SimulatoError is Equatable", SimulatoError.invalidPosition(index: 3) == .invalidPosition(index: 3)

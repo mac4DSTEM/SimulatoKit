@@ -1,7 +1,7 @@
 //
 //  DetectorChecks.swift
-//  Role: SimulatoDetector from outside: DiffractionIntensity, the three detectors, the public `Detector` protocol
-//        adopted by a detector defined here, and the STEM driver with frozen-phonon averaging.
+//  Role: SimulatoDetector from outside: DiffractionIntensity, the detectors (centre of mass included), the public `Detector`
+//        protocol adopted by a detector defined here, the STEM driver with frozen-phonon averaging, line scans and exit waves.
 //
 
 import Foundation
@@ -191,5 +191,64 @@ func checkDetector(_ r: inout Report) {
             try STEM.scan(probe: probe, potentials: [vacuum], scan: scan, detectors: [AnnularDetector(inner: 0, outer: 1000)])
         }
         r.check("SimulatoDetector.plannedScope names the detectors", SimulatoDetector.plannedScope.contains("annular"))
+    }
+
+    r.section("Detector: line scan, centre of mass, exit waves") { r in
+        let beam = try ElectronBeam(energy: 200_000)
+        let empty = try AtomicStructure(box: SIMD3(8, 8, 4), atoms: [])
+        let vacuum = try ProjectedPotential(structure: empty, nx: 32, ny: 32, sliceThickness: 2)
+        let probe = try Probe(beam: beam, grid: vacuum.grid, aperture: Aperture(semiangleCutoff: 20))
+
+        // LineScan: 5 points from (1, 1) to (5, 1) with the endpoint, so the sampling is 4 / 4 = 1 Å along the first axis.
+        let line = try LineScan(start: SIMD2(1, 1), end: SIMD2(5, 1), gpts: 5)
+        r.check("LineScan: shape [5], 5 positions, extent 4 Å, sampling 1 Å, angle 0", line.shape == [5] && line.positions.count == 5
+                && abs(line.extent - 4) < 1e-12 && abs(line.sampling - 1) < 1e-12 && abs(line.angle) < 1e-12)
+        let last = try unwrap(line.positions.last)
+        r.check("LineScan: the first position at start, the last at end", line.positions[0] == SIMD2(1, 1)
+                && abs(last.x - 5) < 1e-12 && abs(last.y - 1) < 1e-12)
+        r.check("LineScan.addingMargin(1) adds 1 Å at both ends", abs(try line.addingMargin(1).extent - 6) < 1e-12)
+        r.refusesCase("LineScan with neither gpts nor sampling", "invalidScan") { try LineScan(end: SIMD2(1, 1)) }
+        let ms = try STEM.scan(probe: probe, potentials: [vacuum], scan: line, detectors: [AnnularDetector()])
+        r.check("STEM.scan over a LineScan: scan shape [5], vacuum reads 1", ms[0].scanShape == [5]
+                && ms[0].values.allSatisfy { abs($0 - 1) < 1e-9 })
+        let profiles = try ms[0].lineProfiles(for: line)
+        r.check("lineProfiles(for:): 5 values, the scan's sampling", profiles.count == 5 && profiles.values.count == 5
+                && abs(profiles.sampling - 1) < 1e-12)
+        r.refusesCase("lineProfiles for a line of another length", "invalidScan") {
+            try ms[0].lineProfiles(for: LineScan(end: SIMD2(4, 4), gpts: 3))
+        }
+
+        // CenterOfMassDetector: a centred aperture disk has its centre of mass at zero angle, whatever the probe position.
+        let com = CenterOfMassDetector()
+        r.equal("CenterOfMassDetector: shape [2]", try com.shape(for: vacuum.grid, beam: beam), [2])
+        let centre = try com.detect(DiffractionIntensity(probe.build(at: SIMD2(3, 5))))
+        r.check("CenterOfMassDetector: a probe's centre of mass is (0, 0)", centre.count == 2 && abs(centre[0]) < 1e-9 && abs(centre[1]) < 1e-9,
+                "got \(centre)")
+        r.check("CenterOfMassDetector is a Detector and Hashable; units are stored", isDetector(com)
+                && com != CenterOfMassDetector(units: .milliradians) && com.units == .inverseAngstroms)
+
+        // WavesDetector: the complex exit wave at every position of a grid scan.
+        let grid = try GridScan(start: SIMD2(1, 1), end: SIMD2(5, 5), nx: 2, ny: 2)
+        let waves = try STEM.scan(probe: probe, potentials: [vacuum], scan: grid, detector: WavesDetector())
+        r.check("STEM.scan with a WavesDetector: scan shape [2, 2], 4 waves of 32 × 32", waves.scanShape == [2, 2]
+                && waves.positionCount == 4 && waves.rows == 32 && waves.columns == 32 && waves.real.count == 4 * 1024)
+        r.check("ScanWaves.subscript(ix, iy) is the wave on the simulation grid", waves[1, 1].grid == vacuum.grid)
+        let resampled = try WavesDetector(rows: 16, columns: 16)
+        r.check("WavesDetector(rows:columns:) stores its size", resampled.rows == 16 && resampled.columns == 16 && WavesDetector().rows == nil)
+        r.refusesCase("WavesDetector with 1 row", "unsupportedGridLength") { try WavesDetector(rows: 1, columns: 16) }
+        do {
+            _ = try STEM.scan(probe: probe, potentials: [vacuum, vacuum], scan: grid, detector: WavesDetector())
+            r.check("a WavesDetector scan refuses frozen phonons", false, "no error thrown")
+        } catch {
+            r.check("a WavesDetector scan refuses frozen phonons", (error as? WavesDetectorError) == .severalPotentials(2), "threw \(error)")
+        }
+        do {
+            _ = try STEM.scan(probe: probe, potentials: [vacuum], scan: grid, detector: WavesDetector(), memoryLimit: 1)
+            r.check("a WavesDetector scan refuses above its memory limit", false, "no error thrown")
+        } catch {
+            var tooLarge = false
+            if case .tooLarge? = error as? WavesDetectorError { tooLarge = true }
+            r.check("a WavesDetector scan refuses above its memory limit", tooLarge, "threw \(error)")
+        }
     }
 }

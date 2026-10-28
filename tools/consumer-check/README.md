@@ -1,6 +1,6 @@
 # SimulatoKit consumer check
 
-A separate SwiftPM package (`tools 6.2`, macOS 27, Swift 6) that depends on SimulatoKit by path (`../..`) and uses, from
+A separate SwiftPM package (`tools 6.2`, macOS 15, Swift 6) that depends on SimulatoKit by path (`../..`) and uses, from
 outside the package, the public API of all four modules: SimulatoCore, SimulatoMultislice, SimulatoProbe and
 SimulatoDetector. `package` access does not cross a package boundary, so the executable compiles only while every symbol it
 names is `public`: a `public` reverted to `package` by mistake turns the build red here, which the kit's own tests (inside
@@ -8,16 +8,16 @@ the package, where `package` is visible) never notice.
 
 ## What it covers
 
-326 checks (the count printed by `run.sh`), about 0.1 s to run, under 20 s to build in release.
+About 350 checks (`run.sh` prints the count), about 0.1 s to run, under 20 s to build in release.
 
 - **SimulatoCore**: `ElectronBeam` (λ at 200 keV = 0.025079340317328468 Å as the kit computes it, against 12.2643/√(V(1+0.97848e-6 V));
-  σ against Kirkland's closed form; the mass factor), `PhysicalConstants`, all 17 `SimulatoError` cases, `Grid` (`fftfreq` by hand,
+  σ against Kirkland's closed form; the mass factor), `PhysicalConstants`, all 20 `SimulatoError` cases, `Grid` (`fftfreq` by hand,
   `isSupportedLength`, `matches`, the refusals), `Antialias` (the aperture counted pixel by pixel, `cutoffPatternSize` 21 → 22 → 23),
   `ComplexField`, `RealField`, `Waves` (plane wave stays 1, both `Normalization`s and `MaxAngle`s), `AtomicStructure` (ASE order of
   `repeated`).
 - **SimulatoMultislice**: `LobatoParameterization` (f(0) = 16π Σ A/B³, both `PiConstant`s), `Slicing`, `ProjectedPotential` (Σ V = f(0)/ΔxΔy,
   periodic wrap, every init), `ExitPlanes` (`every(m)` plane indices), `Multislice` (`run`, `runBatch`, `transmissionFunctions`,
-  `propagator`, `maximumCPUThreads`, a vacuum plane wave stays 1, batch = single runs, exact today; D12 allows a tolerance), `Backend.metal` only if
+  `propagator`, `maximumCPUThreads`, a vacuum plane wave stays 1, batch = single runs, exact today), `Backend.metal` only if
   `Multislice.metalIsAvailable` (otherwise a SKIP line with the reason, and the `metalUnavailable` refusal is checked),
   `FrozenPhonons` (σ = 0 equals the static potential, directions, seeds, statistics, every refusal), `GaussianGenerator`.
 - **SimulatoProbe**: `Aperture`, `Aberrations` (`chi` closed forms, `dChiDAlpha` and `dChiDPhi` against central differences),
@@ -25,7 +25,9 @@ the package, where `package` is visible) never notice.
   defocus, point resolution, Nyquist sampling, both envelopes, the kernel, `Waves.applying`).
 - **SimulatoDetector**: `DiffractionIntensity`, `AnnularDetector` (over all angles equals the total; BF + ADF = total),
   `PixelatedDetector` (all three `MaxAngle`s), `SegmentedDetector`, the public `Detector` protocol adopted by two detectors defined
-  in the consumer, `STEM.scan` with frozen-phonon averaging (σ = 0 equals the static scan), `ScanMeasurement` (`subscript`, `image`).
+  in the consumer, `STEM.scan` with frozen-phonon averaging (σ = 0 equals the static scan), `ScanMeasurement` (`subscript`, `image`), a `LineScan`
+  (SimulatoProbe) through `STEM.scan` and `lineProfiles(for:)`, `CenterOfMassDetector` (a centred probe at zero angle), and
+  `WavesDetector` with `ScanWaves` and both `WavesDetectorError` refusals.
 
 Each check prints `PASS` or `FAIL`; a refusal is checked for the case it throws. The process exits non-zero on any failure.
 
