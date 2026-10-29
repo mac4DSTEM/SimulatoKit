@@ -2,7 +2,7 @@
 //  WavesDetectorTests.swift
 //  Role: WavesDetector over a scan against abTEM 1.0.10 (tools/waves/pins.py): the exit waves of a 3 x 2 scan with and
 //        without `gpts`, at assert_allclose's float64 defaults (rtol 1e-7, atol 1e-12 of the wave maximum); `.metal`
-//        against `.cpu` at MetalAccuracy.registered.wave; the typed refusals.
+//        against `.cpu` at MetalAccuracy.registered.wave. The typed refusals are in SimulatoDetectorTests.
 //
 
 import SimulatoKitTestSupport
@@ -115,42 +115,6 @@ struct WavesDetectorTests {
         #expect(a.real == b.real && a.imaginary == b.imaginary)
         let w = a[2, 1]
         #expect(w.grid.nx == 33 && w.grid.ny == 40)
-    }
-
-    @Test func memoryRefusalIsTyped() throws {
-        let (probe, potential) = try WavesPins.setup()
-        let scan = try WavesPins.scan()
-        // 6 positions x 48 x 48 x 16 bytes = 221 184 bytes.
-        let need = WavesDetector.requiredBytes(positions: 6, rows: 48, columns: 48)
-        #expect(need == 221_184)
-        #expect(throws: WavesDetectorError.tooLarge(positions: 6, rows: 48, columns: 48, required: need, limit: need - 1)) {
-            try STEM.scan(probe: probe, potentials: [potential], scan: scan, detector: WavesDetector(), memoryLimit: need - 1)
-        }
-        // The resampled size counts, not the simulation grid.
-        let small = try WavesDetector(rows: 10, columns: 11)
-        let ok = try STEM.scan(probe: probe, potentials: [potential], scan: scan, detector: small, memoryLimit: 6 * 10 * 11 * 16)
-        #expect(ok.rows == 10 && ok.columns == 11)
-        #expect(throws: WavesDetectorError.self) {
-            try STEM.scan(probe: probe, potentials: [potential.build()], scan: scan, detector: small, memoryLimit: 6 * 10 * 11 * 16 - 1)
-        }
-        // Default: half of the physical memory; a huge scan is refused before any work.
-        let huge = try GridScan(start: SIMD2(0, 0), end: SIMD2(4, 4), nx: 100_000, ny: 100_000)
-        #expect(throws: WavesDetectorError.self) {
-            try STEM.scan(probe: probe, potentials: [potential], scan: huge, detector: WavesDetector())
-        }
-        #expect(WavesDetector.requiredBytes(positions: .max, rows: 2, columns: 2) == .max)
-        #expect("\(WavesDetectorError.tooLarge(positions: 1, rows: 2, columns: 3, required: 96, limit: 5))".contains("96 bytes"))
-    }
-
-    @Test func frozenPhononsAreRefused() throws {
-        let (probe, potential) = try WavesPins.setup()
-        #expect(throws: WavesDetectorError.severalPotentials(2)) {
-            try STEM.scan(probe: probe, potentials: [potential, potential], scan: WavesPins.scan(), detector: WavesDetector())
-        }
-        #expect(throws: WavesDetectorError.severalPotentials(0)) {
-            try STEM.scan(probe: probe, potentials: [Potential](), scan: WavesPins.scan(), detector: WavesDetector())
-        }
-        #expect(throws: (any Error).self) { try WavesDetector(rows: 1, columns: 8) }
     }
 
     @Test(.enabled(if: Multislice.metalIsAvailable, "no Metal device: the Metal path is not tested here"),

@@ -13,7 +13,6 @@ coverage: `docs/parity.md`.
 
 ## Work items
 
-- **Fast test target for SimulatoDetector**: the detector, line-scan and iCOM tests run only in `SimulatoKitParityTests` (#8).
 - **Detector and noise follow-ups from 0.4.0**: `WavesDetector` with frozen phonons, line profiles for segmented and
   pixelated line scans, the azimuthal average, `LineScan` defaults, `integrate_disc(interpolate:)`, the DPC measurement of a
   `SegmentedDetector`, Poisson noise with `samples > 1`, tilt distributions (#9).

@@ -52,7 +52,10 @@ let package = Package(
         .testTarget(name: "SimulatoMultisliceTests",
                     dependencies: ["SimulatoMultislice", "SimulatoProbe", "SimulatoCore", "SimulatoKitTestSupport"],
                     swiftSettings: settings),
-        .testTarget(name: "SimulatoProbeTests", dependencies: ["SimulatoProbe", "SimulatoMultislice", "SimulatoCore"],
+        .testTarget(name: "SimulatoProbeTests", dependencies: ["SimulatoProbe", "SimulatoCore"], swiftSettings: settings),
+        // The detectors, line scans and iCOM by truths and refusals that need no fixture: the fast half of the detector tests.
+        .testTarget(name: "SimulatoDetectorTests",
+                    dependencies: ["SimulatoDetector", "SimulatoProbe", "SimulatoMultislice", "SimulatoCore", "SimulatoKitTestSupport"],
                     swiftSettings: settings),
         // The pinned comparisons against abTEM 1.0.10 (fixtures, truth, Metal against CPU, benchmarks): the slow half,
         // skipped with `--skip SimulatoKitParityTests` for a quick run, run by the plain `swift test`.

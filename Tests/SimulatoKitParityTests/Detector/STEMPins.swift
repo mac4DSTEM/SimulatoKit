@@ -1,6 +1,6 @@
 //
-//  Slice2Support.swift
-//  Role: the slice-2 pins (tools/slice-2/pins.py): the JSON and its sidecar (checked
+//  STEMPins.swift
+//  Role: the STEM pins (tools/slice-2/pins.py): the JSON and its sidecar (checked
 //        against the recorded sha256), the cases' structures, displacements, probes and detectors.
 //
 

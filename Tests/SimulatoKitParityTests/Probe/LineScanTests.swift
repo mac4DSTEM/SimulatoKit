@@ -3,6 +3,7 @@
 //  Role: LineScan (points, sampling, endpoint, add_margin, at_position, fractional) and STEM.scan over a LineScan with an
 //        annular detector against abTEM 1.0.10 (tools/linescan/pins.py). The positions are NumPy's linspace of the same
 //        float64 arithmetic; the scan values hold the other slices' bound (the kit's pi = abTEM's float32 pi: 1e-10).
+//        The refusals are in SimulatoDetectorTests.
 //
 
 import Foundation
@@ -56,19 +57,6 @@ struct LineScanTests {
             #expect(scan.shape == [scan.gpts])
         }
         print("LineScan positions: worst max|Δ|/max|p| = \(worst)")
-    }
-
-    @Test func refusals() throws {
-        #expect(throws: SimulatoError.self) { try LineScan(end: SIMD2(1, 1)) }
-        #expect(throws: SimulatoError.self) { try LineScan(end: SIMD2(1, 1), gpts: 0) }
-        #expect(throws: SimulatoError.self) { try LineScan(end: SIMD2(1, 1), sampling: -1) }
-        #expect(throws: SimulatoError.self) { try LineScan(end: SIMD2(.nan, 1), gpts: 3) }
-        #expect(throws: SimulatoError.self) { try LineScan(end: SIMD2(1, 1), gpts: 3, fractional: true) }
-        #expect(throws: SimulatoError.self) { try LineScan(start: SIMD2(1, 1), end: SIMD2(1, 1), sampling: 0.5) }
-        let point = try LineScan(start: SIMD2(1, 1), end: SIMD2(1, 1), gpts: 2)
-        #expect(throws: SimulatoError.self) { try point.addingMargin(0.1) }
-        let line = try LineScan(end: SIMD2(1, 0), gpts: 5)
-        #expect(throws: SimulatoError.self) { try line.addingMargin(-0.5) }  // both ends meet: no positions
     }
 
     /// The scan the pins ran: Al, 64², annular detector 50 to 150 mrad.
