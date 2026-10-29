@@ -11,7 +11,7 @@ Writes Tests/SimulatoKitParityTests/Fixtures/icom-pins.json and icom-arrays.bin:
 abTEM states no tolerance for these functions; the tests use assert_allclose's defaults for float64 (rtol 1e-7) with
 atol 1e-12 of the maximum where a value is zero in one arithmetic.
 
-Run:  References/python/abtem/bin/python -I -B SimulatoKit/tools/icom/pins.py
+Run from the repo root:  .venv/bin/python -I -B tools/pins/icom/pins.py
 """
 
 from __future__ import annotations
@@ -28,7 +28,7 @@ from ase.build import bulk
 assert abtem.__version__ == "1.0.10", abtem.__version__
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-OUT = os.path.join(HERE, "..", "..", "Tests", "SimulatoKitParityTests", "Fixtures")
+OUT = os.path.join(HERE, "..", "..", "..", "Tests", "SimulatoKitParityTests", "Fixtures")
 BLOB = bytearray()
 INDEX: dict = {}
 

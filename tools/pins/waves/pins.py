@@ -5,7 +5,7 @@ probe through a small Al cell, as detected by WavesDetector() and by WavesDetect
 pad on both axes and a crop on one axis with a pad on the other (odd and even targets). abTEM states no tolerance for
 `fft_interpolate`; the tests use assert_allclose's defaults for float64 (rtol 1e-7) with atol 1e-12 of the wave maximum.
 
-Run:  References/python/abtem/bin/python -I -B SimulatoKit/tools/waves/pins.py
+Run from the repo root:  .venv/bin/python -I -B tools/pins/waves/pins.py
 """
 
 from __future__ import annotations
@@ -19,7 +19,7 @@ import abtem
 from ase.build import bulk
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-OUT = os.path.join(HERE, "..", "..", "Tests", "SimulatoKitParityTests", "Fixtures")
+OUT = os.path.join(HERE, "..", "..", "..", "Tests", "SimulatoKitParityTests", "Fixtures")
 BLOB = bytearray()
 INDEX: dict = {}
 

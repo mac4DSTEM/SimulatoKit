@@ -3,12 +3,12 @@
 Runs abTEM 1.0.10 in float64 (numpy FFT, eager) on these cases: frozen phonons (seeds, displacements, the
 potential of each configuration), GridScan positions, and the annular, pixelated and segmented detectors averaged over
 configurations. Every quantity is re-derived from the published formulas in NumPy (the `text_*` functions here and in
-tools/slice-1/pins.py) and asserted equal to abTEM's; a failure stops the generator. Writes
+tools/pins/potential-multislice/pins.py) and asserted equal to abTEM's; a failure stops the generator. Writes
 
-  Tests/SimulatoDetectorTests/Fixtures/slice-2-pins.json
-  Tests/SimulatoDetectorTests/Fixtures/slice-2-arrays.bin   (float64 little-endian; complex interleaved)
+  Tests/SimulatoKitParityTests/Fixtures/slice-2-pins.json
+  Tests/SimulatoKitParityTests/Fixtures/slice-2-arrays.bin   (float64 little-endian; complex interleaved)
 
-Run:  ../References/python/abtem/bin/python -I -B tools/slice-2/pins.py
+Run from the repo root:  .venv/bin/python -I -B tools/pins/stem-detectors/pins.py
 """
 
 from __future__ import annotations
@@ -22,10 +22,10 @@ import sys
 import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
-FIXTURES = os.path.join(ROOT, "Tests", "SimulatoDetectorTests", "Fixtures")
+ROOT = os.path.abspath(os.path.join(HERE, "..", "..", ".."))
+FIXTURES = os.path.join(ROOT, "Tests", "SimulatoKitParityTests", "Fixtures")
 
-spec = importlib.util.spec_from_file_location("s1", os.path.join(ROOT, "tools", "slice-1", "pins.py"))
+spec = importlib.util.spec_from_file_location("s1", os.path.join(ROOT, "tools", "pins", "potential-multislice", "pins.py"))
 s1 = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(s1)  # sets abTEM's configuration (float64, numpy FFT, eager)
 

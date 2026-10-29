@@ -25,7 +25,7 @@ aberrations, position kernel, normalisation), the diffraction-pattern crop and
 the CODATA 2014 constants and evaluation order of the wavelength and the
 interaction parameter are ported from abTEM 1.0.10 (tag v1.0.10, commit
 164e644ff411167db23ec4ef26aeb4fe8f384b26), and checked against it by
-tools/slice-1/pins.py. The Lobato table in
+tools/pins/potential-multislice/pins.py. The Lobato table in
 Sources/SimulatoMultislice/LobatoTable.swift is generated from abTEM's
 abtem/parametrizations/data/lobato.json.
 

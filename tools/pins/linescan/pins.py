@@ -13,7 +13,7 @@ itself inside rtol 1e-7 of the float64 value to 6e-8. The scan runs through the 
 Writes Tests/SimulatoKitParityTests/Fixtures/linescan-pins.json and linescan-arrays.bin (floats as repr in the JSON, arrays
 as little-endian float64 in the sidecar, with its sha256).
 
-Run:  References/python/abtem/bin/python -I -B SimulatoKit/tools/linescan/pins.py
+Run from the repo root:  .venv/bin/python -I -B tools/pins/linescan/pins.py
 """
 
 from __future__ import annotations
@@ -33,7 +33,7 @@ assert np.__version__ == "2.5.4", np.__version__
 assert scipy.__version__ == "1.18.1", scipy.__version__
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-OUT = os.path.join(HERE, "..", "..", "Tests", "SimulatoKitParityTests", "Fixtures")
+OUT = os.path.join(HERE, "..", "..", "..", "Tests", "SimulatoKitParityTests", "Fixtures")
 BLOB = bytearray()
 INDEX: dict = {}
 

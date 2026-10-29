@@ -1,8 +1,8 @@
 """The Python side of docs/benchmarks.md: abTEM 1.0.10 (float64 and float32, CPU, numpy/scipy FFT) on the same inputs as
-Tests/SimulatoDetectorTests/BenchmarkTableTests.swift. One warm-up, then five timed runs; prints
+Tests/SimulatoKitParityTests/Detector/BenchmarkTableTests.swift. One warm-up, then five timed runs; prints
 `BENCH|function|size|backend|median|min|max` in seconds.
 
-Run:  ../refs/abtem/bin/python -I -B tools/benchmarks/abtem_bench.py 128,256
+Run (tools/benchmarks/run.sh does):  .venv/bin/python -I -B tools/benchmarks/abtem_bench.py 128,256
 """
 
 from __future__ import annotations

@@ -1,10 +1,10 @@
 """SimulatoKit scan pins: GridScan(sampling=), centre of mass, Gaussian source size (abTEM 1.0.10, float64).
 
-Writes Tests/SimulatoDetectorTests/Fixtures/slice-4-scan-pins.json and slice-4-scan-arrays.bin. abTEM's centre of mass
+Writes Tests/SimulatoKitParityTests/Fixtures/slice-4-scan-pins.json and slice-4-scan-arrays.bin. abTEM's centre of mass
 is complex64 (its own float32 accumulation), so the test bound there is 1e-5 of the largest value; the Gaussian filter
 is scipy's in float64 (assert_allclose default, rtol 1e-7).
 
-Run:  References/python/abtem/bin/python -I -B SimulatoKit/tools/slice-4/scan_pins.py
+Run from the repo root:  .venv/bin/python -I -B tools/pins/scan-patterns/pins.py
 """
 
 from __future__ import annotations
@@ -18,7 +18,7 @@ import abtem
 from ase.build import bulk
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-OUT = os.path.join(HERE, "..", "..", "Tests", "SimulatoDetectorTests", "Fixtures")
+OUT = os.path.join(HERE, "..", "..", "..", "Tests", "SimulatoKitParityTests", "Fixtures")
 BLOB = bytearray()
 INDEX: dict = {}
 

@@ -2,9 +2,9 @@
 
 abTEM 1.0.10 (float64, numpy FFT, eager): CTF kernels, HRTEM images (apply_ctf then intensity) of a SrTiO3 exit wave, and
 the closed forms. Every quantity is re-derived from the published formulas in NumPy and asserted equal to abTEM's.
-Writes Tests/SimulatoProbeTests/Fixtures/slice-3-pins.json and slice-3-arrays.bin.
+Writes Tests/SimulatoKitParityTests/Fixtures/slice-3-pins.json and slice-3-arrays.bin.
 
-Run:  ../References/python/abtem/bin/python -I -B tools/slice-3/pins.py
+Run from the repo root:  .venv/bin/python -I -B tools/pins/ctf/pins.py
 """
 
 from __future__ import annotations
@@ -17,9 +17,9 @@ import os
 import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
-FIXTURES = os.path.join(ROOT, "Tests", "SimulatoProbeTests", "Fixtures")
-spec = importlib.util.spec_from_file_location("s1", os.path.join(ROOT, "tools", "slice-1", "pins.py"))
+ROOT = os.path.abspath(os.path.join(HERE, "..", "..", ".."))
+FIXTURES = os.path.join(ROOT, "Tests", "SimulatoKitParityTests", "Fixtures")
+spec = importlib.util.spec_from_file_location("s1", os.path.join(ROOT, "tools", "pins", "potential-multislice", "pins.py"))
 s1 = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(s1)
 
