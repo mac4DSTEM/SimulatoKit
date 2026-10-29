@@ -5,10 +5,18 @@ Per-function timings of SimulatoKit against abTEM 1.0.10 on the same inputs (Al 
 each cell is the median in milliseconds with (min-max). Written by `tools/benchmarks/run.sh` and `merge.py`.
 
 - Machine: Apple M5 Pro, macOS 27.0.1, Apple Swift version 6.4 (swiftlang-6.4.0.34.1 clang-2100.3.34.1)
-- Python 3.12.14 (NumPy 2.5.4, SciPy 1.18.1), abTEM 1.0.10, NumPy/SciPy from `References/python/abtem` (CPU, NumPy's FFT; no GPU)
+- Python 3.12.14 (NumPy 2.5.4, SciPy 1.18.1), abTEM 1.0.10 (CPU, NumPy's FFT; no GPU)
 - Kit CPU is float64 on Accelerate (one thread per call); Metal is float32 on MPSGraph; abTEM is shown in float64 and float32
 - Run while other jobs used the machine (load average 6 to 11): the spread columns show it; treat ratios within 20% as equal
-- Sizes: 64² to 256² small and typical; **1024² and above: not in this table**
+- Sizes: 64² to 256² small and typical; **1024² and above: not measured yet**
+
+Re-run from a fresh clone of the kit, on a quiet Mac (`MEMORY_CAP` may name a memory-cap command prefix instead of `none`):
+
+```sh
+python3.12 -m venv .venv-bench && .venv-bench/bin/pip install abtem==1.0.10
+MEMORY_CAP=none ABTEM_PYTHON=.venv-bench/bin/python tools/benchmarks/run.sh 64,128,192,256,512
+.venv-bench/bin/python tools/benchmarks/merge.py   # writes this file
+```
 
 ## fft2+ifft2
 

@@ -1,6 +1,6 @@
 """Writes docs/benchmarks.md from tools/benchmarks/out/kit.txt and abtem.txt (run tools/benchmarks/run.sh first).
 
-Run:  python3 tools/benchmarks/merge.py
+Run with the Python that has abTEM (its NumPy and SciPy versions go into the header):  .venv-bench/bin/python tools/benchmarks/merge.py
 """
 
 from __future__ import annotations
@@ -8,6 +8,7 @@ from __future__ import annotations
 import os
 import platform
 import subprocess
+import sys
 from collections import defaultdict
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -44,13 +45,19 @@ out.append("20 mrad probe, 10 slices of 2.025 Å, about 0.1 Å per pixel, infini
 out.append("each cell is the median in milliseconds with (min-max). Written by `tools/benchmarks/run.sh` and `merge.py`.\n")
 out.append(f"- Machine: {sh('sysctl', '-n', 'machdep.cpu.brand_string')}, macOS {sh('sw_vers', '-productVersion')}, "
            f"{sh('swift', '--version')}")
-py = subprocess.run([os.path.join(ROOT, "..", "refs", "abtem", "bin", "python"), "-I", "-c",
+py = subprocess.run([os.environ.get("ABTEM_PYTHON", sys.executable), "-I", "-c",
                     "import sys, numpy, scipy; print(sys.version.split()[0], numpy.__version__, scipy.__version__)"],
                    capture_output=True, text=True).stdout.split()
-out.append(f"- Python {py[0]} (NumPy {py[1]}, SciPy {py[2]}), abTEM 1.0.10, NumPy/SciPy from `References/python/abtem` (CPU, NumPy's FFT; no GPU)")
+out.append(f"- Python {py[0]} (NumPy {py[1]}, SciPy {py[2]}), abTEM 1.0.10 (CPU, NumPy's FFT; no GPU)")
 out.append("- Kit CPU is float64 on Accelerate (one thread per call); Metal is float32 on MPSGraph; abTEM is shown in float64 and float32")
 out.append("- Run while other jobs used the machine (load average 6 to 11): the spread columns show it; treat ratios within 20% as equal")
-out.append("- Sizes: 64² to 256² small and typical; **1024² and above: not in this table**\n")
+out.append("- Sizes: 64² to 256² small and typical; **1024² and above: not measured yet**\n")
+out.append("Re-run from a fresh clone of the kit, on a quiet Mac (`MEMORY_CAP` may name a memory-cap command prefix instead of `none`):\n")
+out.append("```sh")
+out.append("python3.12 -m venv .venv-bench && .venv-bench/bin/pip install abtem==1.0.10")
+out.append("MEMORY_CAP=none ABTEM_PYTHON=.venv-bench/bin/python tools/benchmarks/run.sh 64,128,192,256,512")
+out.append(".venv-bench/bin/python tools/benchmarks/merge.py   # writes this file")
+out.append("```\n")
 
 for f in functions:
     out.append(f"## {f}\n")
