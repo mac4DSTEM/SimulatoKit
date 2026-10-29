@@ -3,7 +3,7 @@
 //  Role: `RealField.integratingGradient`, the integrated centre of mass of a scan, `integrateDisc` and `tiled` against abTEM
 //        1.0.10 (tools/icom/pins.py). abTEM states no tolerance: assert_allclose's float64 default (rtol 1e-7) with atol
 //        1e-12 of the largest value. The scan's own centre of mass is held at the 1e-5 the centre-of-mass detector is
-//        registered at (Slice4ScanTests), carried through the integration.
+//        registered at (ScanPatternsAndNoiseTests), carried through the integration.
 //
 
 import CryptoKit

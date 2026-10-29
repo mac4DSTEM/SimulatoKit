@@ -1,8 +1,8 @@
 //
 //  LineInterpolationTests.swift
 //  Role: interpolate_line and interpolate_line_at_position on an image and on a centred diffraction pattern against
-//        abTEM 1.0.10 (tools/linescan/pins.py), at assert_allclose's float64 defaults (rtol 1e-7, atol 1e-12 of the maximum),
-//        and the truths that need no reference.
+//        abTEM 1.0.10 (tools/linescan/pins.py), at assert_allclose's float64 defaults (rtol 1e-7, atol 1e-12 of the maximum).
+//        The truths that need no reference and the refusals are in SimulatoDetectorTests.
 //
 
 import Foundation
@@ -80,28 +80,5 @@ struct LineInterpolationTests {
             Self.note("interpolate_line \(label)", c)
             #expect(c.passes, "\(label)")
         }
-    }
-}
-
-@Suite("interpolate_line: truths and refusals")
-struct LineInterpolationTruthTests {
-    @Test func aLinearImageIsInterpolatedExactly() throws {
-        // a plane 2 i + 3 j: linear interpolation is exact between pixels (inside, clear of the periodic seam)
-        let image = RealField(nx: 20, ny: 16, values: (0..<20).flatMap { i in (0..<16).map { j in 2.0 * Double(i) + 3.0 * Double(j) } },
-                              samplingX: 0.5, samplingY: 0.5)
-        let r = try image.interpolateLine(start: SIMD2(2, 1), end: SIMD2(5, 3.5), gpts: 7, order: 1, endpoint: true)
-        for (k, v) in r.values.enumerated() {
-            let t = Double(k) / 6
-            let x = (2 + 3 * t) / 0.5, y = (1 + 2.5 * t) / 0.5
-            #expect(abs(v - (2 * x + 3 * y)) < 1e-12)
-        }
-        #expect(r.start == SIMD2(2, 1) && r.end == SIMD2(5, 3.5) && r.lineWidth == nil)
-    }
-
-    @Test func refusals() throws {
-        let image = RealField(nx: 4, ny: 4, values: [Double](repeating: 1, count: 16), samplingX: 1, samplingY: 1)
-        #expect(throws: SimulatoError.self) { try image.interpolateLine(end: SIMD2(1, 1), gpts: 3, order: 7) }
-        #expect(throws: SimulatoError.self) { try image.interpolateLine(end: SIMD2(1, 1), gpts: 3, width: -1) }
-        #expect(throws: SimulatoError.self) { try image.interpolateLine(start: SIMD2(1, 1), end: SIMD2(1, 1), gpts: 3, width: 1) }
     }
 }
