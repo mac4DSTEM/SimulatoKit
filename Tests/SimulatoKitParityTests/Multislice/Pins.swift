@@ -1,6 +1,6 @@
 //
 //  Pins.swift
-//  Role: the pins written by tools/slice-1/pins.py: the JSON and its float64 sidecar (checked
+//  Role: the pins written by tools/pins/potential-multislice/pins.py: the JSON and its float64 sidecar (checked
 //        against the sha256 the generator recorded), the cases' structures and beams, and the comparison helpers.
 //
 

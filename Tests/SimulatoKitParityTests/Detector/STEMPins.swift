@@ -1,6 +1,6 @@
 //
 //  STEMPins.swift
-//  Role: the STEM pins (tools/slice-2/pins.py): the JSON and its sidecar (checked
+//  Role: the STEM pins (tools/pins/stem-detectors/pins.py): the JSON and its sidecar (checked
 //        against the recorded sha256), the cases' structures, displacements, probes and detectors.
 //
 

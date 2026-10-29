@@ -1,6 +1,6 @@
 //
 //  WavesDetectorTests.swift
-//  Role: WavesDetector over a scan against abTEM 1.0.10 (tools/waves/pins.py): the exit waves of a 3 x 2 scan with and
+//  Role: WavesDetector over a scan against abTEM 1.0.10 (tools/pins/waves/pins.py): the exit waves of a 3 x 2 scan with and
 //        without `gpts`, at assert_allclose's float64 defaults (rtol 1e-7, atol 1e-12 of the wave maximum); `.metal`
 //        against `.cpu` at MetalAccuracy.registered.wave. The typed refusals are in SimulatoDetectorTests.
 //

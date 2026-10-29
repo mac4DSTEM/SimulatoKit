@@ -1,7 +1,7 @@
 //
 //  LineProfileTests.swift
 //  Role: RealSpaceLineProfiles / ReciprocalSpaceLineProfiles (width, interpolate) and interpolate_line /
-//        interpolate_line_at_position against abTEM 1.0.10 (tools/linescan/pins.py), at assert_allclose's float64 defaults
+//        interpolate_line_at_position against abTEM 1.0.10 (tools/pins/linescan/pins.py), at assert_allclose's float64 defaults
 //        (rtol 1e-7, atol 1e-12 of the maximum). abTEM stores width and interpolate results as float32, so those
 //        agree to float32 rounding (6e-8), inside the same bound.
 //

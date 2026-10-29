@@ -1,7 +1,7 @@
 //
 //  ScanPatternsAndNoiseTests.swift
 //  Role: GridScan(sampling:), the centre-of-mass detector, the Gaussian source size and Poisson noise against abTEM 1.0.10
-//        (tools/slice-4/scan_pins.py). The centre of mass is abTEM's complex64, so its bound is 1e-5 of the largest value;
+//        (tools/pins/scan-patterns/pins.py). The centre of mass is abTEM's complex64, so its bound is 1e-5 of the largest value;
 //        the Gaussian filter is float64 (assert_allclose's default, rtol 1e-7). Poisson noise is statistical.
 //
 

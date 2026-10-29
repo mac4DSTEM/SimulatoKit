@@ -1,0 +1,6 @@
+# The pinned Python reference for SimulatoKit's fixture generators (tools/pins/*/pins.py) and benchmarks.
+# abTEM 1.0.10 is the reference; NumPy, SciPy and ASE are the versions the committed fixtures were generated with.
+abtem==1.0.10
+numpy==2.5.4
+scipy==1.18.1
+ase==3.29.0

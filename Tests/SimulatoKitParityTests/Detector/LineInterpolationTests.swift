@@ -1,7 +1,7 @@
 //
 //  LineInterpolationTests.swift
 //  Role: interpolate_line and interpolate_line_at_position on an image and on a centred diffraction pattern against
-//        abTEM 1.0.10 (tools/linescan/pins.py), at assert_allclose's float64 defaults (rtol 1e-7, atol 1e-12 of the maximum).
+//        abTEM 1.0.10 (tools/pins/linescan/pins.py), at assert_allclose's float64 defaults (rtol 1e-7, atol 1e-12 of the maximum).
 //        The truths that need no reference and the refusals are in SimulatoDetectorTests.
 //
 
