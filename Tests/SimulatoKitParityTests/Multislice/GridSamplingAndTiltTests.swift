@@ -1,5 +1,5 @@
 //
-//  Slice4Tests.swift
+//  GridSamplingAndTiltTests.swift
 //  Role: any grid size, `Potential(sampling:)` and beam tilt against abTEM 1.0.10 (tools/slice-4/pins.py). abTEM states
 //        no tolerance for these paths, so the bound is assert_allclose's float64 default, rtol 1e-7 of the wave's
 //        maximum; the Metal checks use the kit's registered float32 bound.
@@ -65,8 +65,8 @@ enum Slice4Pins {
     }
 }
 
-@Suite("Slice 4: any grid size, sampling, tilt (abTEM 1.0.10)")
-struct Slice4Tests {
+@Suite("Any grid size, sampling, tilt (abTEM 1.0.10)")
+struct GridSamplingAndTiltTests {
     static let rtol = 1e-7  // numpy.testing.assert_allclose's default for float64
 
     @Test func samplingGivesAbTEMsGrid() throws {

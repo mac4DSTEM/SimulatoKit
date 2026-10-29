@@ -1,5 +1,5 @@
 //
-//  Slice4ScanTests.swift
+//  ScanPatternsAndNoiseTests.swift
 //  Role: GridScan(sampling:), the centre-of-mass detector, the Gaussian source size and Poisson noise against abTEM 1.0.10
 //        (tools/slice-4/scan_pins.py). The centre of mass is abTEM's complex64, so its bound is 1e-5 of the largest value;
 //        the Gaussian filter is float64 (assert_allclose's default, rtol 1e-7). Poisson noise is statistical.
@@ -83,8 +83,8 @@ enum Slice4ScanPins {
     }
 }
 
-@Suite("Slice 4: scan sampling, centre of mass, source size, noise (abTEM 1.0.10)")
-struct Slice4ScanTests {
+@Suite("Scan sampling, centre of mass, source size, noise (abTEM 1.0.10)")
+struct ScanPatternsAndNoiseTests {
     @Test func gridScanSamplingGivesAbTEMsPoints() throws {
         for case let s as [String: Any] in Slice4ScanPins.json["scans"] as! [Any] {
             let a = Slice4ScanPins.vec(s["start"]!), b = Slice4ScanPins.vec(s["end"]!)
