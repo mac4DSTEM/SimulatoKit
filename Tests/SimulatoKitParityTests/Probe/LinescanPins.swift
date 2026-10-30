@@ -1,6 +1,6 @@
 //
 //  LinescanPins.swift
-//  Role: the pins written by tools/linescan/pins.py (abTEM 1.0.10, float64): the JSON and its float64 sidecar (checked
+//  Role: the pins written by tools/pins/linescan/pins.py (abTEM 1.0.10, float64): the JSON and its float64 sidecar (checked
 //        against the sha256 the generator recorded), and the comparison abTEM's own tests use, `assert_allclose`.
 //
 

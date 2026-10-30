@@ -13,9 +13,9 @@ each cell is the median in milliseconds with (min-max). Written by `tools/benchm
 Re-run from a fresh clone of the kit, on a quiet Mac (`MEMORY_CAP` may name a memory-cap command prefix instead of `none`):
 
 ```sh
-python3.12 -m venv .venv-bench && .venv-bench/bin/pip install abtem==1.0.10
-MEMORY_CAP=none ABTEM_PYTHON=.venv-bench/bin/python tools/benchmarks/run.sh 64,128,192,256,512
-.venv-bench/bin/python tools/benchmarks/merge.py   # writes this file
+python3.12 -m venv .venv && .venv/bin/pip install -r tools/requirements.txt
+MEMORY_CAP=none tools/benchmarks/run.sh 64,128,192,256,512
+.venv/bin/python tools/benchmarks/merge.py   # writes this file
 ```
 
 ## fft2+ifft2

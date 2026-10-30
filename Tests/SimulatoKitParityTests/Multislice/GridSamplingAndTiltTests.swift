@@ -1,6 +1,6 @@
 //
 //  GridSamplingAndTiltTests.swift
-//  Role: any grid size, `Potential(sampling:)` and beam tilt against abTEM 1.0.10 (tools/slice-4/pins.py). abTEM states
+//  Role: any grid size, `Potential(sampling:)` and beam tilt against abTEM 1.0.10 (tools/pins/sampling-tilt/pins.py). abTEM states
 //        no tolerance for these paths, so the bound is assert_allclose's float64 default, rtol 1e-7 of the wave's
 //        maximum; the Metal checks use the kit's registered float32 bound.
 //

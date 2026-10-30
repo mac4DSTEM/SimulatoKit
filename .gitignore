@@ -9,3 +9,8 @@
 # Local session rules, kept on disk only
 CLAUDE.md
 .claude/
+
+# Python environment for tools/ (tools/README.md) and benchmark output
+/.venv*
+/tools/benchmarks/out/
+__pycache__/

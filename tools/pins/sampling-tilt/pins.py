@@ -1,11 +1,11 @@
 """SimulatoKit any grid size, Potential(sampling=), beam tilt (abTEM 1.0.10, float64, numpy).
 
-Writes Tests/SimulatoMultisliceTests/Fixtures/slice-4-pins.json and slice-4-arrays.bin: the grid abTEM derives from a
+Writes Tests/SimulatoKitParityTests/Fixtures/slice-4-pins.json and slice-4-arrays.bin: the grid abTEM derives from a
 target sampling, and the exit waves of a plane wave and a probe through Al on grids no vDSP length matches (90 x 75),
 untilted and tilted. abTEM states no tolerance for these paths; the tests use assert_allclose's defaults for float64
 (rtol 1e-7) with atol 1e-12 of the wave's maximum.
 
-Run:  References/python/abtem/bin/python -I -B SimulatoKit/tools/slice-4/pins.py
+Run from the repo root:  .venv/bin/python -I -B tools/pins/sampling-tilt/pins.py
 """
 
 from __future__ import annotations
@@ -19,7 +19,7 @@ import abtem
 from ase.build import bulk
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-OUT = os.path.join(HERE, "..", "..", "Tests", "SimulatoMultisliceTests", "Fixtures")
+OUT = os.path.join(HERE, "..", "..", "..", "Tests", "SimulatoKitParityTests", "Fixtures")
 BLOB = bytearray()
 INDEX: dict = {}
 

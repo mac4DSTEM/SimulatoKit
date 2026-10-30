@@ -14,7 +14,7 @@ skip themselves with a stated reason when no Metal device is present.
 ## How numbers are checked
 
 - The CPU path is float64 and is compared with [abTEM](https://github.com/abtem/abtem) 1.0.10, using fixtures generated
-  by the scripts in `tools/slice-*/pins.py`. A test reads the fixture and states its tolerance.
+  by the scripts in `tools/pins/*/pins.py` (`tools/README.md` sets up their Python environment). A test reads the fixture and states its tolerance.
 - A test's tolerance is the one the Python package's own tests use for that function; a result outside it is a bug. A change
   that moves a fixture says why in the pull request and in the CHANGELOG. If you believe abTEM is wrong, open an issue
   with the evidence.

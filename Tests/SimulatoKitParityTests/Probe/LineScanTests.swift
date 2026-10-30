@@ -1,7 +1,7 @@
 //
 //  LineScanTests.swift
 //  Role: LineScan (points, sampling, endpoint, add_margin, at_position, fractional) and STEM.scan over a LineScan with an
-//        annular detector against abTEM 1.0.10 (tools/linescan/pins.py). The positions are NumPy's linspace of the same
+//        annular detector against abTEM 1.0.10 (tools/pins/linescan/pins.py). The positions are NumPy's linspace of the same
 //        float64 arithmetic; the scan values hold the other slices' bound (the kit's pi = abTEM's float32 pi: 1e-10).
 //        The refusals are in SimulatoDetectorTests.
 //

@@ -207,8 +207,8 @@ swift test -c release
 ```
 
 Use `swift test -c release` rather than `swift build --build-tests -c release`, which fails on the current toolchain. The
-abTEM reference (a Python virtual environment) is not in the repository; the `pins.py` scripts under `tools/` regenerate
-the fixtures. `swift test -c release --skip SimulatoKitParityTests` runs only the fast unit tests.
+abTEM reference (a Python virtual environment) is not in the repository; `tools/README.md` sets it up from
+`tools/requirements.txt`, and the `tools/pins/*/pins.py` scripts regenerate the fixtures in place. `swift test -c release --skip SimulatoKitParityTests` runs only the fast unit tests.
 
 ## Contributing and licence
 
