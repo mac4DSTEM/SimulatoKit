@@ -4,8 +4,8 @@ The coverage table of abTEM 1.0.10 (`References/python/abtem`, git `164e644`): i
 the source in `site-packages/abtem` against SimulatoKit. Rewritten for 0.3.0 (the growing phase's kit audit); every row
 has one state and one priority.
 
-**Totals (128 rows): 37 present, 36 partial, 55 missing.** By priority: **study** 27 rows (11 present, 5 partial, 11 missing);
-**useful** 79 (26, 31, 22); **not planned** 22 (all missing, each with its reason).
+**Totals (128 rows): 37 present, 37 partial, 54 missing.** By priority: **study** 27 rows (11 present, 5 partial, 11 missing);
+**useful** 79 (26, 32, 21); **not planned** 22 (all missing, each with its reason).
 
 States:
 
@@ -168,7 +168,7 @@ detector, the Gaussian source size and Poisson noise on a scan.
 |---|---|---|---|
 | `Images(array, sampling)` | `RealField` (`nx`, `ny`, `values`, `samplingX`, `samplingY`, `sum`, `max`), `ScanMeasurement.image(samplingX:samplingY:)` | **partial**: a two-dimensional array with its sampling; no ensemble axes, metadata or units | useful |
 | `DiffractionPatterns(array, sampling, fftshift)` | `RealField` from `Waves.diffractionPattern`, `DiffractionIntensity` (unshifted, with `angularSampling`) | **partial**: the pattern with its sampling in 1/Å; no angular sampling or units stored on the `RealField` | useful |
-| `PolarMeasurements` (`integrate`, `integrate_radial`, `differentials`, `to_diffraction_patterns`) | `ScanMeasurement` of a `SegmentedDetector` (values over radial × azimuthal bins) | **missing**: planned: SimulatoDetector (the operations; the bins exist as raw values) | useful |
+| `PolarMeasurements` (`integrate`, `integrate_radial`, `differentials`, `to_diffraction_patterns`) | `ScanMeasurement.integrate(detectorRegions:)`, `.integrate(detector:)`, `.integrateRadial(inner:outer:detector:)`, `.differentials(direction1:direction2:)` on a `SegmentedDetector` scan | **partial**: regions, radial limits (truncated to bins as abTEM) and the DPC differentials (second regions minus first, abTEM's order) against abTEM on a planted scan, float64 sums at rtol 1e-7, differentials at 1e-6 (abTEM complex64); the differentials come as two scans, not one complex image; `azimuthal_limits` not offered (abTEM divides them by the radial sampling), `to_diffraction_patterns` not offered; refused where abTEM is silent: no region (abTEM: zeros), a region or radial index below 0 (Python reads it from the end) | useful |
 | `RealSpaceLineProfiles`, `ReciprocalSpaceLineProfiles`, `_BaseMeasurement1D.width`, `.interpolate` | `RealSpaceLineProfiles`, `ReciprocalSpaceLineProfiles`, `LineProfiles.width(height:)`, `.interpolate(sampling:gpts:order:endpoint:)`, `ScanMeasurement.lineProfiles(for:)` | **present**: width to 4.5e-8 and interpolate to 5.5e-8 of the maximum against abTEM (abTEM stores both as float32; `assert_allclose` rtol 1e-7 holds at 0.6 of its bound), on the scan's profile and on planted profiles with ensemble axes, orders 0 to 5, both endpoints; `lineProfiles` only for detectors of one number or a vector (abTEM returns other measurement types for segmented and pixelated); `RealSpaceLineProfiles.tile`, `ReciprocalSpaceLineProfiles.angular_extent`, `show` and the lazy path not offered | useful |
 | `MeasurementsEnsemble`, `BaseMeasurements.to_measurement_ensemble`, `normalize_ensemble` | | **missing**: not planned: Swift arrays; a caller keeps the configurations apart | not planned |
 | `IndexedDiffractionPatterns`, `DiffractionPatterns.index_diffraction_spots` | | **missing**: planned: with DiffractoKit's indexing | useful |
