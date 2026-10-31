@@ -53,7 +53,8 @@ public struct Grid: Sendable, Hashable {
     public var reciprocalSamplingY: Double { 1 / (Double(ny) * samplingY) }
 
     /// The lengths the kit accepts: any n ≥ 2. The CPU transform runs vDSP's DFT where it has one
-    /// (`hasDirectTransform`) and Bluestein's algorithm otherwise.
+    /// (`hasDirectTransform`), a mixed-radix FFT for the other lengths whose prime factors are 2, 3, 5 and 7, and
+    /// Bluestein's algorithm otherwise.
     public static func isSupportedLength(_ n: Int) -> Bool { n >= 2 }
 
     /// The lengths vDSP's DFT takes directly: f · 2^m with f ∈ {1, 3, 5, 15} and m ≥ 3 (the rest go through Bluestein).
