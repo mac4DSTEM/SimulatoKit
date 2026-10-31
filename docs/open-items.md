@@ -14,8 +14,8 @@ coverage: `docs/parity.md`.
 ## Work items
 
 - **Detector and noise follow-ups from 0.4.0**: `WavesDetector` with frozen phonons, line profiles for segmented and
-  pixelated line scans, the azimuthal average, `LineScan` defaults, `integrate_disc(interpolate:)`, `PolarMeasurements.to_diffraction_patterns`,
-  Poisson noise with `samples > 1`, tilt distributions (#9).
+  pixelated line scans, the azimuthal average, `LineScan` defaults, `integrate_disc(interpolate:)`, the DPC measurement of a
+  `SegmentedDetector`, Poisson noise with `samples > 1`, tilt distributions (#9).
 - **Potential API**: the public `PotentialSlice` initialiser, `crystal_slice_thicknesses`, `PotentialArray.project`, tiled
   potentials (#7).
 - **Cells**: non-orthogonal and rotated cells, `periodic=False`, `orthogonalize_cell` in `AtomicStructure` (the kit keeps
@@ -23,6 +23,8 @@ coverage: `docs/parity.md`.
   parametrisations, Debye–Waller tables (`docs/parity.md`).
 - **Metal**: the bounds hold to 100 slices and grids to 1024²; re-measure past 300 slices with the renormalisation, and add
   a 1024² row to the benchmark table (#5).
+- **Polar measurements**: the DPC measurement of a `SegmentedDetector` is in (`integrate`, `integrateRadial`,
+  `differentials`); `PolarMeasurements.to_diffraction_patterns` and `azimuthal_limits` remain (#9).
 
 ## Notes
 
