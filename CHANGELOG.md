@@ -6,6 +6,26 @@ what a consumer must change under **Migration**. Every version below is a git ta
 release-please writes each entry from the merged pull requests' titles, and a breaking change's Migration is its
 `BREAKING CHANGE:` note.
 
+## [0.5.0](https://github.com/mac4DSTEM/SimulatoKit/compare/0.4.0...0.5.0) (2026-10-31)
+
+
+### Features
+
+* azimuthal average of a centred diffraction pattern ([#39](https://github.com/mac4DSTEM/SimulatoKit/issues/39)) ([82ec3d0](https://github.com/mac4DSTEM/SimulatoKit/commit/82ec3d0bf0bc8fcf358b15c2484e7a092576435f))
+* Fourier-space image interpolation and integrateDisc(interpolate:) ([#41](https://github.com/mac4DSTEM/SimulatoKit/issues/41)) ([f39aa4b](https://github.com/mac4DSTEM/SimulatoKit/commit/f39aa4b71ca2afbe0380732c11c537a77f4fe485))
+* LineScan matched to a probe: end=None and Nyquist sampling defaults ([#40](https://github.com/mac4DSTEM/SimulatoKit/issues/40)) ([17346f9](https://github.com/mac4DSTEM/SimulatoKit/commit/17346f9c0cdf4097c90f282d1e017a6265eeb89b))
+* Poisson noise samples and frozen-phonon exit waves ([#33](https://github.com/mac4DSTEM/SimulatoKit/issues/33)) ([a40af46](https://github.com/mac4DSTEM/SimulatoKit/commit/a40af46aad8652618f0919ad750a566e69d2ea16))
+* ProjectedPotential.project and tiled, Potential.project ([#38](https://github.com/mac4DSTEM/SimulatoKit/issues/38)) ([78a6cd2](https://github.com/mac4DSTEM/SimulatoKit/commit/78a6cd250a4124d82abf90d5e0eff6390fc8e0ce))
+* segmented-detector DPC: integrate, integrateRadial and differentials on a polar scan ([#34](https://github.com/mac4DSTEM/SimulatoKit/issues/34)) ([aca04b2](https://github.com/mac4DSTEM/SimulatoKit/commit/aca04b2b1c1b694819b2f85c7d599fd98691f0bb))
+* Slicing.crystalSliceThicknesses, slices that follow the crystal planes ([#37](https://github.com/mac4DSTEM/SimulatoKit/issues/37)) ([4447588](https://github.com/mac4DSTEM/SimulatoKit/commit/444758803f978f6f472cc87991aeb939568dbea6))
+
+
+### Performance Improvements
+
+* generic odd-radix FFT pass for lengths with prime factors above 7 ([#45](https://github.com/mac4DSTEM/SimulatoKit/issues/45)) ([1f626b6](https://github.com/mac4DSTEM/SimulatoKit/commit/1f626b6ccee898176b7672f77efcf9f0ad9c8f67))
+* mixed-radix FFT for 2, 3, 5, 7 lengths off vDSP (250² 2.2x, 500² 2.3x) ([0fbd053](https://github.com/mac4DSTEM/SimulatoKit/commit/0fbd053e73fde33ab4398cd3e0f735a4f8aa2c7b))
+* mixed-radix FFT for lengths off vDSP that factor into 2, 3, 5 and 7 ([#42](https://github.com/mac4DSTEM/SimulatoKit/issues/42)) ([0fbd053](https://github.com/mac4DSTEM/SimulatoKit/commit/0fbd053e73fde33ab4398cd3e0f735a4f8aa2c7b))
+
 ## [0.4.0](https://github.com/mac4DSTEM/SimulatoKit/compare/0.3.1...0.4.0) (2026-10-22)
 
 The study release: line scans and their profiles, integrated centre of mass, and exit waves per scan position. Pinned against abTEM 1.0.10 float64; `docs/parity.md` goes to 37 present, 36 partial, 55 missing of 128 rows (from 28, 36, 59 of 123).
