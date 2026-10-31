@@ -79,6 +79,43 @@ public struct LineScan: Sendable, Hashable, ScanPattern {
         adjustSampling()
     }
 
+    /// A line scan matched to a probe (abTEM `LineScan(end=None)` then `match_probe`, which abTEM `scan` runs; the kit's
+    /// `STEM.scan` does not, so build the scan with this initialiser). Fractional coordinates are not offered here; use
+    /// the plain initialiser with `fractional` and `extent` and an explicit `gpts` or `sampling`. A missing `end`
+    /// is (0, the probe grid's `extentY`), the probe's second-axis extent; without a `sampling`, the sampling is 0.99 × the
+    /// Nyquist sampling of the aperture, 1 / (4 α_c / λ × 10⁻³) [Å], and the number of positions follows from it. A given
+    /// `sampling` wins, as in the plain initialiser; `gpts` with an `end` keeps its count.
+    /// - Parameters:
+    ///   - start: the first point [Å] (default the origin, as abTEM).
+    ///   - end: the last point [Å]; `nil` for the probe-matched end.
+    ///   - gpts: the number of positions; needs `end` (see Throws).
+    ///   - sampling: the largest distance between positions [Å]; `nil` for the probe-matched sampling.
+    ///   - endpoint: true (abTEM's default) puts the last position at `end`.
+    ///   - probe: the probe the scan is matched to.
+    /// - Throws: `invalidScan` for `gpts` without `end` or `sampling` (abTEM silently replaces that count by the
+    ///   probe-matched one), for a probe-matched sampling of an aperture with no cutoff (no Nyquist sampling), and for
+    ///   everything the plain initialiser refuses.
+    public init(start: SIMD2<Double> = .zero, end: SIMD2<Double>? = nil, gpts: Int? = nil, sampling: Double? = nil,
+                endpoint: Bool = true, matching probe: Probe) throws {
+        if gpts != nil, end == nil, sampling == nil {
+            throw SimulatoError.invalidScan("gpts needs an end point: without end or sampling the probe sets the sampling, and abTEM then ignores gpts")
+        }
+        var s = sampling
+        if s == nil && gpts == nil {
+            let cutoff = probe.aperture.semiangleCutoff
+            guard cutoff.isFinite else {
+                throw SimulatoError.invalidScan("an aperture with no cutoff has no Nyquist sampling: give gpts or sampling")
+            }
+            s = 0.99 * Self.nyquistSampling(semiangleCutoff: cutoff, wavelength: probe.beam.wavelength)
+        }
+        try self.init(start: start, end: end ?? SIMD2(0, probe.grid.extentY), gpts: gpts, sampling: s, endpoint: endpoint)
+    }
+
+    /// The Nyquist sampling of an aperture [Å] (abTEM `nyquist_sampling`): 1 / (4 α_c / λ × 10⁻³), α_c in mrad, λ in Å.
+    public static func nyquistSampling(semiangleCutoff: Double, wavelength: Double) -> Double {
+        1 / (4 * semiangleCutoff / wavelength * 1e-3)
+    }
+
     /// The length of the line [Å] (abTEM `extent`).
     public var extent: Double {
         let d = end - start
