@@ -16,8 +16,7 @@ coverage: `docs/parity.md`.
 - **Detector and noise follow-ups from 0.4.0**: line profiles for segmented and
   pixelated line scans, the azimuthal average, `LineScan` defaults, `integrate_disc(interpolate:)`, the DPC measurement of a
   `SegmentedDetector`, tilt distributions (#9).
-- **Potential API**: the public `PotentialSlice` initialiser, `crystal_slice_thicknesses`, `PotentialArray.project`, tiled
-  potentials (#7).
+- **Potential API**: `CrystalPotential` (a unit potential repeated, frozen phonons per cell), its API undecided (#7).
 - **Cells**: non-orthogonal and rotated cells, `periodic=False`, `orthogonalize_cell` in `AtomicStructure` (the kit keeps
   its own structure type: `docs/adr/0001-standalone-structure-types.md`). Finite projection, the Kirkland, Peng and Ewald
   parametrisations, Debye–Waller tables (`docs/parity.md`).
