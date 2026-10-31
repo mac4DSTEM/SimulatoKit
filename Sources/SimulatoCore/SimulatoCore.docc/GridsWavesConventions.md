@@ -33,7 +33,7 @@ image[ix * grid.ny + iy] = 1          // abTEM's array[x, y]
 
 ``ComplexField`` and ``RealField`` offer `subscript(ix, iy)` that does this arithmetic. A ``ComplexField`` stores real and imaginary parts as two separate arrays.
 
-Lengths `nx` and `ny` are any integer of at least 2 (see ``Grid/isSupportedLength(_:)``): vDSP runs f · 2^m lengths directly, Bluestein the rest. Sampling is extent divided by point count: ``Grid/samplingX``.
+Lengths `nx` and `ny` are any integer of at least 2 (see ``Grid/isSupportedLength(_:)``): vDSP runs f · 2^m lengths directly, a mixed-radix FFT most others, Bluestein the lengths with a large prime factor. Sampling is extent divided by point count: ``Grid/samplingX``.
 
 ### Frequency order
 

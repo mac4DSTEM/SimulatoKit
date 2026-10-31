@@ -3,9 +3,9 @@
 //  Role: the CPU reference FFT: a complex 2-D DFT in float64 on Accelerate (vDSP_DFT_zop, double), NumPy's conventions:
 //        the forward transform unnormalised with e^{−2πi k·r}, the inverse with 1/(nx ny). Rows (along y, contiguous)
 //        then columns (along x, gathered). Any length: vDSP's DFT where it has one (f · 2^m, f in 1, 3, 5, 15, m ≥ 3),
-//        the mixed-radix FFT (`MixedRadixPlan`) for the other lengths whose prime factors are 2, 3, 5 and 7, Bluestein's
-//        chirp-z algorithm on a vDSP power-of-two convolution for the rest (own implementations, so the kit stays
-//        standalone; ImagoKit's FFT is not a dependency).
+//        the mixed-radix FFT (`MixedRadixPlan`) for the other lengths, Bluestein's chirp-z algorithm on a vDSP
+//        power-of-two convolution where a large prime factor makes it the cheaper (pocketfft's rule; own
+//        implementations, so the kit stays standalone; ImagoKit's FFT is not a dependency).
 //
 
 import Accelerate
@@ -34,8 +34,7 @@ private final class LineDFT {
         guard n >= 1 else { throw SimulatoError.unsupportedGridLength(n) }
         self.n = n
         let direct = Grid.hasDirectTransform(n)
-        var size = 16
-        if !direct { while size < 2 * n - 1 { size *= 2 } }
+        let size = Self.bluesteinLength(n)
         m = direct ? 0 : size
         let alloc = { (count: Int) -> UnsafeMutablePointer<Double> in
             let p = UnsafeMutablePointer<Double>.allocate(capacity: max(count, 1))
@@ -79,6 +78,13 @@ private final class LineDFT {
         vDSP_DFT_ExecuteD(mf, kernelRe, kernelIm, tmpRe, tmpIm)
         kernelRe.update(from: tmpRe, count: size)
         kernelIm.update(from: tmpIm, count: size)
+    }
+
+    /// The power-of-two length Bluestein pads `n` to: the smallest at least 2n − 1, and at least 16.
+    static func bluesteinLength(_ n: Int) -> Int {
+        var size = 16
+        while size < 2 * n - 1 { size *= 2 }
+        return size
     }
 
     deinit {
@@ -128,11 +134,13 @@ private final class LineDFT {
 private enum AxisPlan {
     /// vDSP's DFT directly, or Bluestein on a padded vDSP DFT.
     case line(LineDFT)
-    /// The mixed-radix (2, 3, 4, 5, 7) Stockham FFT, two lines per pass.
+    /// The mixed-radix Stockham FFT (radix 2, 3, 4, 5, 7 and generic odd passes), two lines per pass.
     case mixedRadix(MixedRadixPlan)
 
     init(n: Int) throws {
-        if !Grid.hasDirectTransform(n), let plan = MixedRadixPlan(length: n) {
+        if !Grid.hasDirectTransform(n),
+           !MixedRadixPlan.prefersBluestein(n, bluesteinLength: LineDFT.bluesteinLength(n)),
+           let plan = MixedRadixPlan(length: n) {
             self = .mixedRadix(plan)
         } else {
             self = .line(try LineDFT(n: n))
@@ -151,9 +159,9 @@ private enum AxisPlan {
 package enum FFTPath: Equatable {
     /// vDSP's DFT at the length itself (`Grid.hasDirectTransform`).
     case vDSP
-    /// The mixed-radix FFT: every other length whose prime factors are 2, 3, 5 and 7.
+    /// The mixed-radix FFT: every other length unless Bluestein is cheaper (`MixedRadixPlan.prefersBluestein`).
     case mixedRadix
-    /// Bluestein's chirp-z on a padded power-of-two vDSP DFT: every remaining length.
+    /// Bluestein's chirp-z on a padded power-of-two vDSP DFT: lengths with a large prime factor, primes among them.
     case bluestein
 }
 

@@ -1,16 +1,17 @@
 //
 //  MixedRadixPlan.swift
-//  Role: the float64 DFT of a length whose prime factors are 2, 3, 5 and 7, with no padding and no Bluestein: a Stockham
-//        autosort FFT in radix-2, 3, 4, 5 and 7 passes (the pass structure of pocketfft's `cfftp`, NumPy's engine), the
-//        twiddles of every pass precomputed in Double from exact integer phases. The same algorithm as ImagoKit's
-//        `MixedRadixPlanD` (own copy, so the kit stays standalone).
+//  Role: the float64 DFT of a length with no padding and no Bluestein: a Stockham autosort FFT in radix-2, 3, 4, 5 and 7
+//        passes and a generic pass for any other odd prime factor (the pass structure of pocketfft's `cfftp` with its
+//        `passg`, NumPy's engine), the twiddles of every pass precomputed in Double from exact integer phases. The 2, 3,
+//        4, 5, 7 passes are the same algorithm as ImagoKit's `MixedRadixPlanD` (own copy, so the kit stays standalone).
 //
 //        Two lines at a time: every pass works on `SIMD2<Double>`, lane 0 one line and lane 1 the next. A column pass of
 //        the row-major field reads the two lanes as two neighbouring columns straight from memory; a row pass interleaves
 //        two rows on the way in and out. An odd last line runs with a zero partner.
 //
-//        Used by `FFT2D` for the lengths vDSP's DFT does not take (`Grid.hasDirectTransform`) and that factor into 2, 3,
-//        5 and 7; Bluestein stays for every other length.
+//        Used by `FFT2D` for the lengths vDSP's DFT does not take (`Grid.hasDirectTransform`) unless Bluestein is the
+//        cheaper of the two by pocketfft's cost estimate, re-weighted for vDSP (`prefersBluestein`): a large prime
+//        factor, as in a prime length, makes the generic pass cost O(p) per point.
 //
 
 import Foundation
@@ -24,8 +25,11 @@ final class MixedRadixPlan {
     /// Per pass, the twiddles exp(+2πi · j · l1 · i / N) at (j − 1) · (ido − 1) + (i − 1).
     private let twiddleRe: [[Double]]
     private let twiddleIm: [[Double]]
+    /// Per pass with a radix other than 2, 3, 4, 5 and 7, cos(2π t/p) and sin(2π t/p) for t = 0 … p − 1; empty otherwise.
+    private let radixCos: [[Double]]
+    private let radixSin: [[Double]]
 
-    /// The pass radices of `n` (2 first, then 4s, then 3, 5, 7), or nil when `n` < 2 or has another prime factor.
+    /// The pass radices of `n`: 2 first, then 4s, then the odd primes ascending (pocketfft's order); nil when `n` < 2.
     static func factorization(_ n: Int) -> [Int]? {
         guard n > 1 else { return nil }
         var rest = n
@@ -34,15 +38,42 @@ final class MixedRadixPlan {
         var out: [Int] = []
         if rest % 2 == 0 { out.append(2); rest /= 2 }
         out += fours
-        for p in [3, 5, 7] { while rest % p == 0 { out.append(p); rest /= p } }
-        return rest == 1 ? out : nil
+        var p = 3
+        while p * p <= rest {
+            while rest % p == 0 { out.append(p); rest /= p }
+            p += 2
+        }
+        if rest > 1 { out.append(rest) }
+        return out
+    }
+
+    /// pocketfft's `cost_guess`: n times the sum of the prime factors, a factor above 5 weighted 1.1.
+    static func costGuess(_ n: Int) -> Double {
+        guard let factors = factorization(n) else { return 0 }
+        let sum = factors.reduce(0.0) { total, f in
+            if f == 4 { return total + 4 }                                   // two factors of 2
+            return total + (f <= 5 ? Double(f) : 1.1 * Double(f))
+        }
+        return sum * Double(n)
+    }
+
+    /// Whether Bluestein on a power-of-two vDSP DFT (`bluesteinLength` m, two DFTs per line) is cheaper than the passes
+    /// here. pocketfft's `make_cfft_plan` shape: lengths below 50 and lengths whose largest prime factor is at most √n
+    /// never take Bluestein. Otherwise Bluestein when 2.5 · m · log2(m) < `costGuess(n)`. pocketfft's own weight for
+    /// Bluestein is 6 · m · log2(m) (1.5 · 2 · cost(m)), but vDSP's power-of-two DFT is cheaper than pocketfft's own.
+    /// Measured with `FFTBenchmarkTests` (one thread): Bluestein at about 0.36 ns per m · log2(m) per line, the passes
+    /// at about 0.14 ns per unit of `costGuess`.
+    static func prefersBluestein(_ n: Int, bluesteinLength m: Int) -> Bool {
+        guard let factors = factorization(n), let largest = factors.max() else { return true }
+        if n < 50 || largest * largest <= n { return false }
+        return 2.5 * Double(m) * log2(Double(m)) < costGuess(n)
     }
 
     init?(length: Int) {
         guard let factors = Self.factorization(length) else { return nil }
         self.length = length
         self.factors = factors
-        var re: [[Double]] = [], im: [[Double]] = []
+        var re: [[Double]] = [], im: [[Double]] = [], rc: [[Double]] = [], rs: [[Double]] = []
         var l1 = 1
         for ip in factors {
             let ido = length / (l1 * ip)
@@ -56,10 +87,15 @@ final class MixedRadixPlan {
                 } }
             }
             re.append(wr); im.append(wi)
+            let generic = ![2, 3, 4, 5, 7].contains(ip)
+            rc.append(generic ? (0..<ip).map { cos(2 * Double.pi * Double($0) / Double(ip)) } : [])
+            rs.append(generic ? (0..<ip).map { sin(2 * Double.pi * Double($0) / Double(ip)) } : [])
             l1 *= ip
         }
         twiddleRe = re
         twiddleIm = im
+        radixCos = rc
+        radixSin = rs
     }
 
     /// Lanes the work area must hold: two buffers each for the real and the imaginary parts.
@@ -138,7 +174,11 @@ final class MixedRadixPlan {
                 case 3: pass3(ido, l1, fromRe, fromIm, toRe, toIm, w, forward)
                 case 4: pass4(ido, l1, fromRe, fromIm, toRe, toIm, w, forward)
                 case 5: pass5(ido, l1, fromRe, fromIm, toRe, toIm, w, forward)
-                default: pass7(ido, l1, fromRe, fromIm, toRe, toIm, w, forward)
+                case 7: pass7(ido, l1, fromRe, fromIm, toRe, toIm, w, forward)
+                default:
+                    radixCos[pass].withUnsafeBufferPointer { c in radixSin[pass].withUnsafeBufferPointer { s in
+                        passGeneric(ip, ido, l1, fromRe, fromIm, toRe, toIm, w, forward, cosT: c.baseAddress!, sinT: s.baseAddress!)
+                    } }
                 }
             } }
             swap(&fromRe, &toRe)
@@ -302,6 +342,89 @@ final class MixedRadixPlan {
                     (hr[p4], hi[p4]) = twiddled(u4r, u4i, w, 3 * d + j, sign)
                     (hr[p5], hi[p5]) = twiddled(u5r, u5i, w, 4 * d + j, sign)
                     (hr[p6], hi[p6]) = twiddled(u6r, u6i, w, 5 * d + j, sign)
+                }
+            }
+        }
+    }
+
+    /// Any odd radix p (pocketfft's `passg`, written out per output group): with P_m = t_m + t_{p−m} and
+    /// Q_m = t_m − t_{p−m} for m = 1 … h (h = (p − 1) / 2), A_j = t_0 + Σ cos(2π jm/p) P_m, B_j = σ Σ sin(2π jm/p) Q_m,
+    /// u_j = A_j + iB_j and u_{p−j} = A_j − iB_j; the cosines and sines come from the plan's table of p exact phases.
+    /// Four j at a time, so sixteen fused multiply-add chains run side by side.
+    private func passGeneric(_ ip: Int, _ ido: Int, _ l1: Int, _ cr: Ptr, _ ci: Ptr, _ hr: Ptr, _ hi: Ptr, _ w: Tw,
+                             _ forward: Bool, cosT: UnsafePointer<Double>, sinT: UnsafePointer<Double>) {
+        let sign: Double = forward ? -1 : 1
+        let h = (ip - 1) / 2
+        let d = ido - 1, step = ido * l1
+        withUnsafeTemporaryAllocation(of: Lane2.self, capacity: 4 * h) { scratch in
+            let pr = scratch.baseAddress!, pi = pr + h, qr = pi + h, qi = qr + h
+            for k in 0..<l1 {
+                for i in 0..<ido {
+                    let a = i + ido * ip * k
+                    let t0r = cr[a], t0i = ci[a]
+                    var sr = t0r, si = t0i
+                    for m in 1...h {
+                        let x = a + m * ido, y = a + (ip - m) * ido
+                        let ar = cr[x], ai = ci[x], br = cr[y], bi = ci[y]
+                        pr[m - 1] = ar + br; pi[m - 1] = ai + bi
+                        qr[m - 1] = ar - br; qi[m - 1] = ai - bi
+                        sr += ar + br; si += ai + bi
+                    }
+                    let o = i + ido * k
+                    hr[o] = sr; hi[o] = si
+                    /// Stores u_j and u_{p−j} from A_j and the unsigned Σ sin · Q_m.
+                    @inline(__always) func store(_ j: Int, _ ar: Lane2, _ ai: Lane2, _ br: Lane2, _ bi: Lane2) {
+                        let br = br * sign, bi = bi * sign
+                        let ujr = ar - bi, uji = ai + br, vjr = ar + bi, vji = ai - br
+                        let pj = o + j * step, pk = o + (ip - j) * step
+                        if i == 0 {
+                            hr[pj] = ujr; hi[pj] = uji; hr[pk] = vjr; hi[pk] = vji
+                        } else {
+                            (hr[pj], hi[pj]) = twiddled(ujr, uji, w, (j - 1) * d + i - 1, sign)
+                            (hr[pk], hi[pk]) = twiddled(vjr, vji, w, (ip - j - 1) * d + i - 1, sign)
+                        }
+                    }
+                    var j = 1
+                    while j + 3 <= h {
+                        var ar0 = t0r, ai0 = t0i, br0 = Lane2.zero, bi0 = Lane2.zero
+                        var ar1 = t0r, ai1 = t0i, br1 = Lane2.zero, bi1 = Lane2.zero
+                        var ar2 = t0r, ai2 = t0i, br2 = Lane2.zero, bi2 = Lane2.zero
+                        var ar3 = t0r, ai3 = t0i, br3 = Lane2.zero, bi3 = Lane2.zero
+                        var t0 = 0, t1 = 0, t2 = 0, t3 = 0
+                        for m in 0..<h {
+                            t0 += j; if t0 >= ip { t0 -= ip }
+                            t1 += j + 1; if t1 >= ip { t1 -= ip }
+                            t2 += j + 2; if t2 >= ip { t2 -= ip }
+                            t3 += j + 3; if t3 >= ip { t3 -= ip }
+                            let p_r = pr[m], p_i = pi[m], q_r = qr[m], q_i = qi[m]
+                            let c0 = Lane2(repeating: cosT[t0]), s0 = Lane2(repeating: sinT[t0])
+                            let c1 = Lane2(repeating: cosT[t1]), s1 = Lane2(repeating: sinT[t1])
+                            let c2 = Lane2(repeating: cosT[t2]), s2 = Lane2(repeating: sinT[t2])
+                            let c3 = Lane2(repeating: cosT[t3]), s3 = Lane2(repeating: sinT[t3])
+                            ar0.addProduct(c0, p_r); ai0.addProduct(c0, p_i); br0.addProduct(s0, q_r); bi0.addProduct(s0, q_i)
+                            ar1.addProduct(c1, p_r); ai1.addProduct(c1, p_i); br1.addProduct(s1, q_r); bi1.addProduct(s1, q_i)
+                            ar2.addProduct(c2, p_r); ai2.addProduct(c2, p_i); br2.addProduct(s2, q_r); bi2.addProduct(s2, q_i)
+                            ar3.addProduct(c3, p_r); ai3.addProduct(c3, p_i); br3.addProduct(s3, q_r); bi3.addProduct(s3, q_i)
+                        }
+                        store(j, ar0, ai0, br0, bi0)
+                        store(j + 1, ar1, ai1, br1, bi1)
+                        store(j + 2, ar2, ai2, br2, bi2)
+                        store(j + 3, ar3, ai3, br3, bi3)
+                        j += 4
+                    }
+                    while j <= h {
+                        var ar0 = t0r, ai0 = t0i, br0 = Lane2.zero, bi0 = Lane2.zero
+                        var t0 = 0
+                        for m in 0..<h {
+                            t0 += j
+                            if t0 >= ip { t0 -= ip }
+                            let c0 = Lane2(repeating: cosT[t0]), s0 = Lane2(repeating: sinT[t0])
+                            ar0.addProduct(c0, pr[m]); ai0.addProduct(c0, pi[m])
+                            br0.addProduct(s0, qr[m]); bi0.addProduct(s0, qi[m])
+                        }
+                        store(j, ar0, ai0, br0, bi0)
+                        j += 1
+                    }
                 }
             }
         }
