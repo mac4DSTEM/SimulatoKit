@@ -67,7 +67,7 @@ detector, the Gaussian source size and Poisson noise on a scan.
 | `PotentialArray.project()`, `.to_images()` | | **missing**: planned: SimulatoMultislice (the summed slices as a `RealField`) | study |
 | `PotentialArray.tile`, `CrystalPotential` (tiled potentials) | | **missing**: planned: SimulatoMultislice | study |
 | `PotentialArray.depth_profile`, `.show`, `.show_depth_profile` | | **missing**: not planned: plotting (the kits have no UI) | not planned |
-| `crystal_slice_thicknesses(atoms, tolerance)` | | **missing**: planned: SimulatoMultislice (`Slicing`) | study |
+| `crystal_slice_thicknesses(atoms, tolerance)` | `Slicing.crystalSliceThicknesses(_:tolerance:)` | **present**: bins of ⌊z / tolerance⌋ with 0 and the depth added, the differences of the bin centres; pinned at rtol 1e−7 on planted cells and aluminium (`tools/pins/crystal-slices/pins.py`, held inline); refuses where abTEM's assertion fails (the thicknesses must sum to the depth), and also an empty result, which abTEM returns for a box under 1e−8 Å; a structure with no atoms slices the empty box (abTEM fails on it) | study |
 | `ChargeDensityPotential`, `GPAWPotential` | | **missing**: not planned: needs DFT inputs; outside the common use of the kit | not planned |
 | `orthogonalize_cell`, `standardize_cell`, the helpers of `atoms.py` (`rotate_atoms`, `cut_cell`, `pad_atoms`, `shrink_cell`, ...) | | **missing**: planned: with DiffractoKit's cells | study |
 
