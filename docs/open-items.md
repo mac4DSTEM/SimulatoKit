@@ -5,17 +5,19 @@ coverage: `docs/parity.md`.
 
 ## Slower than Python at a typical size
 
-- **Any-length FFT off the vDSP lengths (Bluestein)**: 2x to 7x slower than NumPy at 250² and 506²; numbers are right
-  (rtol 1e−7), only speed is open. Fix candidate: a mixed-radix plan for lengths that factor into 2, 3, 5 and 7, Bluestein
-  for the rest (#4).
+- **Any-length FFT with a prime factor above 7 (Bluestein)**: lengths off vDSP that factor into 2, 3, 5 and 7 run a
+  mixed-radix FFT since #42 (250² 0.36 ms against NumPy 0.24 ms, 500² 1.58 ms against 1.52 ms); 506² (2 × 11 × 23) stays on
+  Bluestein, 1.6x slower than NumPy. Numbers are right (rtol 1e−7), only speed is open. Fix candidate: generic odd-radix
+  passes (#4).
 - **Rows measured on a loaded machine**: `fft2+ifft2` at 192² to 512², multislice and frozen phonons at 192², the probe build
   at 192² to 512² against abTEM float32. Re-measure in a quiet run before changing anything (#5).
 
 ## Work items
 
 - **Detector and noise follow-ups from 0.4.0**: line profiles for segmented and
-  pixelated line scans, the azimuthal average, `LineScan` defaults, `integrate_disc(interpolate:)`, the DPC measurement of a
-  `SegmentedDetector`, tilt distributions (#9).
+  pixelated line scans, the azimuthal average, `LineScan` defaults, the "spline" method of `Images.interpolate`, tilt
+  distributions (#9). `integrate_disc(interpolate:)` and `Images.interpolate` (method "fft") are in; the DPC measurement of a
+  `SegmentedDetector` is under Polar measurements.
 - **Potential API**: `CrystalPotential` (a unit potential repeated, frozen phonons per cell), its API undecided (#7).
 - **Cells**: non-orthogonal and rotated cells, `periodic=False`, `orthogonalize_cell` in `AtomicStructure` (the kit keeps
   its own structure type: `docs/adr/0001-standalone-structure-types.md`). Finite projection, the Kirkland, Peng and Ewald
