@@ -6,6 +6,15 @@ what a consumer must change under **Migration**. Every version below is a git ta
 release-please writes each entry from the merged pull requests' titles, and a breaking change's Migration is its
 `BREAKING CHANGE:` note.
 
+## [0.5.0](https://github.com/mac4DSTEM/SimulatoKit/compare/0.4.0...0.5.0) (2026-10-31)
+
+
+### Features
+
+* Poisson noise samples and frozen-phonon exit waves ([#33](https://github.com/mac4DSTEM/SimulatoKit/issues/33)) ([a40af46](https://github.com/mac4DSTEM/SimulatoKit/commit/a40af46aad8652618f0919ad750a566e69d2ea16))
+* segmented-detector DPC: integrate, integrateRadial and differentials on a polar scan ([#34](https://github.com/mac4DSTEM/SimulatoKit/issues/34)) ([aca04b2](https://github.com/mac4DSTEM/SimulatoKit/commit/aca04b2b1c1b694819b2f85c7d599fd98691f0bb))
+* Slicing.crystalSliceThicknesses, slices that follow the crystal planes ([#37](https://github.com/mac4DSTEM/SimulatoKit/issues/37)) ([4447588](https://github.com/mac4DSTEM/SimulatoKit/commit/444758803f978f6f472cc87991aeb939568dbea6))
+
 ## [0.4.0](https://github.com/mac4DSTEM/SimulatoKit/compare/0.3.1...0.4.0) (2026-10-22)
 
 The study release: line scans and their profiles, integrated centre of mass, and exit waves per scan position. Pinned against abTEM 1.0.10 float64; `docs/parity.md` goes to 37 present, 36 partial, 55 missing of 128 rows (from 28, 36, 59 of 123).
