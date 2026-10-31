@@ -51,6 +51,69 @@ struct SimulatoCoreTests {
         #expect(back <= 1e-7)
     }
 
+    /// Lengths off vDSP whose prime factors are 2, 3, 5 and 7 take the mixed-radix FFT, not Bluestein (issue 4: 250 =
+    /// 2 · 5³ ran three padded 512-point DFTs per line); 506 = 2 · 11 · 23 keeps Bluestein.
+    @Test func lengthsPickTheirFFTPath() throws {
+        func paths(_ n: Int) throws -> FFTPath {
+            let p = try FFT2D(nx: n, ny: 2).paths
+            #expect(try FFT2D(nx: 2, ny: n).paths.y == p.x)
+            return p.x
+        }
+        #expect(try paths(256) == .vDSP && paths(480) == .vDSP)
+        for n in [2, 3, 6, 7, 45, 49, 90, 100, 250, 500, 1000] { #expect(try paths(n) == .mixedRadix, "\(n)") }
+        for n in [11, 13, 97, 127, 506] { #expect(try paths(n) == .bluestein, "\(n)") }
+    }
+
+    /// Every element of the transform at the lengths of issue 4 (and odd, mixed and Bluestein neighbours) against a
+    /// separable direct DFT, at numpy.testing.assert_allclose's float64 rtol 1e-7 of the largest term, both ways.
+    @Test(arguments: [(250, 250), (250, 506), (500, 21), (49, 250), (75, 3), (506, 90), (256, 250), (250, 480)])
+    func fFTAtTheMixedRadixLengthsMatchesADirectDFTEverywhere(nx: Int, ny: Int) throws {
+        var f = ComplexField(nx: nx, ny: ny)
+        for i in 0..<(nx * ny) {
+            f.real[i] = sin(Double(i) * 0.37) + 0.1 * Double(i % 7)
+            f.imaginary[i] = cos(Double(i) * 0.11) - 0.05 * Double(i % 5)
+        }
+        let original = f
+        // Reference: a direct DFT along y for every row, then along x for every column (exact integer phases).
+        func directDFT(_ re: [Double], _ im: [Double]) -> ([Double], [Double]) {
+            let n = re.count
+            var outRe = [Double](repeating: 0, count: n), outIm = outRe
+            for k in 0..<n {
+                var sr = 0.0, si = 0.0
+                for j in 0..<n {
+                    let ph = -2 * Double.pi * Double((k * j) % n) / Double(n)
+                    let c = cos(ph), s = sin(ph)
+                    sr += re[j] * c - im[j] * s
+                    si += re[j] * s + im[j] * c
+                }
+                outRe[k] = sr
+                outIm[k] = si
+            }
+            return (outRe, outIm)
+        }
+        var refRe = original.real, refIm = original.imaginary
+        for ix in 0..<nx {
+            let (a, b) = directDFT(Array(refRe[(ix * ny)..<(ix * ny + ny)]), Array(refIm[(ix * ny)..<(ix * ny + ny)]))
+            for iy in 0..<ny { refRe[ix * ny + iy] = a[iy]; refIm[ix * ny + iy] = b[iy] }
+        }
+        for iy in 0..<ny {
+            let (a, b) = directDFT((0..<nx).map { refRe[$0 * ny + iy] }, (0..<nx).map { refIm[$0 * ny + iy] })
+            for ix in 0..<nx { refRe[ix * ny + iy] = a[ix]; refIm[ix * ny + iy] = b[ix] }
+        }
+        let fft = try FFT2D(nx: nx, ny: ny)
+        fft.forward(&f)
+        var worst = 0.0, scale = 0.0
+        for i in f.real.indices {
+            worst = max(worst, abs(f.real[i] - refRe[i]), abs(f.imaginary[i] - refIm[i]))
+            scale = max(scale, abs(refRe[i]), abs(refIm[i]))
+        }
+        #expect(worst <= 1e-7 * scale)
+        fft.inverse(&f)
+        var back = 0.0
+        for i in f.real.indices { back = max(back, abs(f.real[i] - original.real[i]), abs(f.imaginary[i] - original.imaginary[i])) }
+        #expect(back <= 1e-7)
+    }
+
     @Test func fFTFreqIsNumPys() {
         #expect(Grid.fftfreq(8, 0.5) == [0, 0.25, 0.5, 0.75, -1, -0.75, -0.5, -0.25])
         #expect(Grid.fftfreq(15, 1).prefix(9).map { $0 * 15 } == [0, 1, 2, 3, 4, 5, 6, 7, -7])
