@@ -84,7 +84,7 @@ let icom = try com.integratedCenterOfMass(samplingX: structure.box.x / 32, sampl
 
 ### Exit waves at every position
 
-`STEM.scan(probe:potentials:scan:detector:backend:options:memoryLimit:)` with a ``WavesDetector`` returns ``ScanWaves``: the complex exit wave at every position of a `GridScan`, `scanWaves[ix, iy]` as a `Waves`. It takes one potential (frozen phonons are refused with `WavesDetectorError.severalPotentials`; scan each configuration on its own) and refuses a result larger than half of the physical memory or the `memoryLimit` given (`WavesDetectorError.tooLarge`).
+`STEM.scan(probe:potentials:scan:detector:backend:options:memoryLimit:)` with a ``WavesDetector`` returns ``ScanWaves``: the complex exit wave at every position of a `GridScan`, `scanWaves[ix, iy]` as a `Waves`. It takes one potential (several are refused with `WavesDetectorError.severalPotentials`); `STEM.scanFrozenPhonons(probe:potentials:scan:detector:backend:options:memoryLimit:)` returns one `ScanWaves` per frozen-phonon configuration, never averaged. Both refuse a result larger than half of the physical memory or the `memoryLimit` given (`WavesDetectorError.tooLarge`), counted over all configurations for `scanFrozenPhonons`.
 
 ### Frozen-phonon averaging
 

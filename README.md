@@ -59,7 +59,7 @@ Names checked against the sources and `docs/parity.md` (which lists every abTEM 
 | `LineScan(start, end, gpts)`, `.add_margin`, `.at_position` | `LineScan(start:end:gpts:...)`, `.addingMargin`, `.atPosition` |
 | `measurement.interpolate_line(...)`, `RealSpaceLineProfiles.width` | `RealField.interpolateLine(...)`, `ScanMeasurement.lineProfiles(for:)`, `RealSpaceLineProfiles.width(height:)` |
 | `dp.center_of_mass().integrate_gradient()` (iCOM) | `ScanMeasurement.integratedCenterOfMass(samplingX:samplingY:)` |
-| `WavesDetector(gpts)` | `WavesDetector(rows:columns:)`, `STEM.scan(probe:potentials:scan:detector:...)` → `ScanWaves` |
+| `WavesDetector(gpts)` | `WavesDetector(rows:columns:)`, `STEM.scan(probe:potentials:scan:detector:...)` → `ScanWaves`; frozen phonons: `STEM.scanFrozenPhonons` → `[ScanWaves]` |
 | `dp.center_of_mass()`, `dp.gaussian_source_size(s)`, `.poisson_noise(...)` | `CenterOfMassDetector`, `ScanMeasurement.gaussianSourceSize(...)`, `.poissonNoise(...)` |
 | `probe.scan(potential, scan, detectors)` | `STEM.scan(probe:potentials:scan:detectors:backend:)` |
 | `AnnularDetector`, `PixelatedDetector`, `SegmentedDetector` | the same names, with labelled initialisers |

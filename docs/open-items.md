@@ -13,9 +13,9 @@ coverage: `docs/parity.md`.
 
 ## Work items
 
-- **Detector and noise follow-ups from 0.4.0**: `WavesDetector` with frozen phonons, line profiles for segmented and
+- **Detector and noise follow-ups from 0.4.0**: line profiles for segmented and
   pixelated line scans, the azimuthal average, `LineScan` defaults, `integrate_disc(interpolate:)`, the DPC measurement of a
-  `SegmentedDetector`, Poisson noise with `samples > 1`, tilt distributions (#9).
+  `SegmentedDetector`, tilt distributions (#9).
 - **Potential API**: the public `PotentialSlice` initialiser, `crystal_slice_thicknesses`, `PotentialArray.project`, tiled
   potentials (#7).
 - **Cells**: non-orthogonal and rotated cells, `periodic=False`, `orthogonalize_cell` in `AtomicStructure` (the kit keeps

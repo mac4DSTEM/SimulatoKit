@@ -2,7 +2,7 @@
 //  ScanOperations.swift
 //  Role: what abTEM does to a finished scan: the Gaussian source size (`gaussian_source_size`: scipy's `gaussian_filter`
 //        over the two scan axes, mode "wrap") and Poisson noise (`poisson_noise`: values times the dose, clipped at 0,
-//        one Poisson draw per value).
+//        one Poisson draw per value; `samples` draws as an array).
 //
 
 import Foundation
@@ -91,6 +91,39 @@ extension ScanMeasurement {
             throw SimulatoError.invalidScan("the scan sampling must be finite and positive, got (\(samplingX), \(samplingY)) Å")
         }
         return try poissonNoise(dose: samplingX * samplingY * dosePerArea, seed: seed)
+    }
+
+    /// `samples` independent Poisson draws of the scan for a total `dose` [electrons per pattern] (abTEM
+    /// `poisson_noise(total_dose=, samples=)`, whose sample axis is the array's index here): each sample is the scan
+    /// times the dose, clipped at 0, drawn as `poissonNoise(dose:seed:)`. The samples continue one generator stream, so
+    /// sample 0 is the single draw of the same seed.
+    /// - Throws: `invalidScan` for fewer than one sample or a negative or non-finite dose.
+    public func poissonNoise(dose: Double, samples: Int, seed: UInt64) throws -> [ScanMeasurement] {
+        guard samples >= 1 else { throw SimulatoError.invalidScan("samples must be at least 1, got \(samples)") }
+        // Refuse before any work when the samples would not fit in half of the physical memory (8 bytes a value).
+        let (count, o1) = samples.multipliedReportingOverflow(by: values.count)
+        let (bytes, o2) = count.multipliedReportingOverflow(by: 8)
+        guard !o1, !o2, bytes <= Int(ProcessInfo.processInfo.physicalMemory / 2) else {
+            throw SimulatoError.invalidScan("\(samples) samples of \(values.count) values exceed half of the physical memory")
+        }
+        guard dose.isFinite, dose >= 0 else {
+            throw SimulatoError.invalidScan("the dose must be finite and non-negative, got \(dose)")
+        }
+        var rng = GaussianGenerator(seed: seed)
+        let means = values.map { max($0 * dose, 0) }
+        return (0..<samples).map { _ in
+            ScanMeasurement(scanShape: scanShape, valueShape: valueShape,
+                            values: means.map { Double(PoissonSampler.draw(mean: $0, &rng)) })
+        }
+    }
+
+    /// The same for a dose per scan area [electrons per Å²] (abTEM `poisson_noise(dose_per_area=, samples=)`).
+    public func poissonNoise(dosePerArea: Double, samplingX: Double, samplingY: Double, samples: Int,
+                             seed: UInt64) throws -> [ScanMeasurement] {
+        guard samplingX.isFinite, samplingY.isFinite, samplingX > 0, samplingY > 0 else {
+            throw SimulatoError.invalidScan("the scan sampling must be finite and positive, got (\(samplingX), \(samplingY)) Å")
+        }
+        return try poissonNoise(dose: samplingX * samplingY * dosePerArea, samples: samples, seed: seed)
     }
 }
 
