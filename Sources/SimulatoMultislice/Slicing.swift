@@ -37,6 +37,35 @@ public enum Slicing {
         return list
     }
 
+    /// Slice thicknesses that follow the crystal planes of a structure (abTEM `crystal_slice_thicknesses`): the z of every
+    /// atom (as given, not wrapped), with 0 and the box depth added, are binned by ⌊z / tolerance⌋; the thicknesses are the
+    /// differences between the centres (b + ½) · tolerance of the occupied bins, in increasing z. Pass the result to
+    /// `Potential(structure:nx:ny:sliceThicknesses:)`.
+    ///
+    /// As in abTEM the thicknesses must sum to the depth (NumPy's `isclose`), which holds when the depth is close to a
+    /// multiple of the tolerance and every atom lies in the box; otherwise the structure is refused (abTEM's assertion).
+    /// A structure with no atoms slices the empty box (abTEM fails on it).
+    /// - Throws: `SimulatoError.invalidSliceThickness` for a tolerance that is not finite and positive, or when
+    ///   z / tolerance passes 2^53; `sliceThicknessesDoNotSumToBox` when the thicknesses do not sum to the depth, or when
+    ///   every z falls in one bin (no slices).
+    public static func crystalSliceThicknesses(_ structure: AtomicStructure, tolerance: Double = 0.2) throws -> [Double] {
+        guard tolerance.isFinite, tolerance > 0 else { throw SimulatoError.invalidSliceThickness(tolerance) }
+        let depth = structure.box.z
+        var bins = Set<Int>()
+        for z in structure.atoms.map(\.position.z) + [0, depth] {
+            let b = (z / tolerance).rounded(.down)
+            guard b.isFinite, abs(b) <= Double(1 << 53) else { throw SimulatoError.invalidSliceThickness(tolerance) }
+            bins.insert(Int(b))
+        }
+        let centres = bins.sorted().map { (Double($0) + 0.5) * tolerance }
+        let thicknesses = zip(centres.dropFirst(), centres).map { $0 - $1 }
+        let sum = thicknesses.reduce(0, +)
+        guard !thicknesses.isEmpty, abs(sum - depth) <= 1e-8 + 1e-5 * abs(depth) else {
+            throw SimulatoError.sliceThicknessesDoNotSumToBox(sum: sum, depth: depth)
+        }
+        return thicknesses
+    }
+
     /// The atoms wrapped into the box (fractional coordinate mod 1, as ASE's `wrap(eps=0)`), with z set to 0 for an atom
     /// within 1e−10 Å of the top face.
     public static func wrapped(_ structure: AtomicStructure) -> [AtomicStructure.Atom] {
