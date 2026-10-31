@@ -73,6 +73,12 @@ public struct Potential: Sendable, Hashable {
         atoms.indices.filter { sliceOfAtom[$0] == j }.map { atoms[$0] }
     }
 
+    /// The sum of the slices as an image [V·Å] (abTEM `Potential.project`, which builds the potential first): `build()`
+    /// then `ProjectedPotential.project()`.
+    public func project() throws -> RealField {
+        try build().project()
+    }
+
     /// The projected potential of every slice, on the CPU in float64.
     public func build() throws -> ProjectedPotential {
         let builder = try SliceBuilder(grid: grid, parameterization: parameterization)
