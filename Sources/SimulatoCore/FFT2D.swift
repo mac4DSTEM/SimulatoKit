@@ -3,8 +3,9 @@
 //  Role: the CPU reference FFT: a complex 2-D DFT in float64 on Accelerate (vDSP_DFT_zop, double), NumPy's conventions:
 //        the forward transform unnormalised with e^{−2πi k·r}, the inverse with 1/(nx ny). Rows (along y, contiguous)
 //        then columns (along x, gathered). Any length: vDSP's DFT where it has one (f · 2^m, f in 1, 3, 5, 15, m ≥ 3),
-//        Bluestein's chirp-z algorithm on a vDSP power-of-two convolution otherwise (own implementation, so the kit
-//        stays standalone; ImagoKit's FFT is not a dependency).
+//        the mixed-radix FFT (`MixedRadixPlan`) for the other lengths whose prime factors are 2, 3, 5 and 7, Bluestein's
+//        chirp-z algorithm on a vDSP power-of-two convolution for the rest (own implementations, so the kit stays
+//        standalone; ImagoKit's FFT is not a dependency).
 //
 
 import Accelerate
@@ -12,6 +13,7 @@ import Accelerate
 /// A 1-D complex DFT of one length in float64, unnormalised in both directions (the caller scales the inverse).
 private final class LineDFT {
     let n: Int
+    var isDirect: Bool { forward != nil }
     private let forward: vDSP_DFT_SetupD?
     private let inverse: vDSP_DFT_SetupD?
     // Bluestein: chirp w[j] = e^{−iπ j²/n}, the transform of conj(w) padded to m, and m-point work arrays (raw memory:
@@ -122,30 +124,72 @@ private final class LineDFT {
     }
 }
 
+/// How one axis is transformed.
+private enum AxisPlan {
+    /// vDSP's DFT directly, or Bluestein on a padded vDSP DFT.
+    case line(LineDFT)
+    /// The mixed-radix (2, 3, 4, 5, 7) Stockham FFT, two lines per pass.
+    case mixedRadix(MixedRadixPlan)
+
+    init(n: Int) throws {
+        if !Grid.hasDirectTransform(n), let plan = MixedRadixPlan(length: n) {
+            self = .mixedRadix(plan)
+        } else {
+            self = .line(try LineDFT(n: n))
+        }
+    }
+
+    var path: FFTPath {
+        switch self {
+        case .mixedRadix: .mixedRadix
+        case .line(let plan): plan.isDirect ? .vDSP : .bluestein
+        }
+    }
+}
+
+/// The path `FFT2D` takes along one axis.
+package enum FFTPath: Equatable {
+    /// vDSP's DFT at the length itself (`Grid.hasDirectTransform`).
+    case vDSP
+    /// The mixed-radix FFT: every other length whose prime factors are 2, 3, 5 and 7.
+    case mixedRadix
+    /// Bluestein's chirp-z on a padded power-of-two vDSP DFT: every remaining length.
+    case bluestein
+}
+
 /// A 2-D complex DFT plan for one grid size. Not shareable across threads; make one per task.
 package final class FFT2D {
     package let nx: Int
     package let ny: Int
-    private let planX: LineDFT
-    private let planY: LineDFT
+    private let planX: AxisPlan
+    private let planY: AxisPlan
     private var lineRe: [Double]
     private var lineIm: [Double]
     private var outRe: [Double]
     private var outIm: [Double]
+    /// The mixed-radix work area (4 · the longer mixed-radix axis lanes).
+    private let work: UnsafeMutablePointer<Lane2>
 
     package init(nx: Int, ny: Int) throws {
         guard Grid.isSupportedLength(nx) else { throw SimulatoError.unsupportedGridLength(nx) }
         guard Grid.isSupportedLength(ny) else { throw SimulatoError.unsupportedGridLength(ny) }
         self.nx = nx
         self.ny = ny
-        planX = try LineDFT(n: nx)
-        planY = nx == ny ? planX : try LineDFT(n: ny)
+        planX = try AxisPlan(n: nx)
+        planY = nx == ny ? planX : try AxisPlan(n: ny)
         let n = max(nx, ny)
         lineRe = [Double](repeating: 0, count: n)
         lineIm = [Double](repeating: 0, count: n)
         outRe = [Double](repeating: 0, count: n)
         outIm = [Double](repeating: 0, count: n)
+        work = .allocate(capacity: 4 * n)
+        work.initialize(repeating: .zero, count: 4 * n)
     }
+
+    deinit { work.deallocate() }
+
+    /// The path along x (columns, length nx) and along y (rows, length ny).
+    package var paths: (x: FFTPath, y: FFTPath) { (planX.path, planY.path) }
 
     /// In place, unnormalised, e^{−2πi k·r} (NumPy's `fft2`).
     package func forward(_ field: inout ComplexField) {
@@ -170,24 +214,37 @@ package final class FFT2D {
                 outRe.withUnsafeMutableBufferPointer { orr in
                     outIm.withUnsafeMutableBufferPointer { oi in
                         // Along y: each row ix is contiguous.
-                        for ix in 0..<nx {
-                            let base = ix * ny
-                            planY.execute(r.baseAddress! + base, m.baseAddress! + base, inverse: inverse,
-                                          scratchRe: orr.baseAddress!, scratchIm: oi.baseAddress!)
+                        switch planY {
+                        case .mixedRadix(let plan):
+                            plan.transformLines(count: nx, forward: !inverse, stride: ny, r.baseAddress!, m.baseAddress!,
+                                                work: work)
+                        case .line(let plan):
+                            for ix in 0..<nx {
+                                let base = ix * ny
+                                plan.execute(r.baseAddress! + base, m.baseAddress! + base, inverse: inverse,
+                                             scratchRe: orr.baseAddress!, scratchIm: oi.baseAddress!)
+                            }
                         }
-                        lineRe.withUnsafeMutableBufferPointer { lr in
-                            lineIm.withUnsafeMutableBufferPointer { li in
-                                // Along x: gather column iy.
-                                for iy in 0..<ny {
-                                    for ix in 0..<nx {
-                                        lr[ix] = r[ix * ny + iy]
-                                        li[ix] = m[ix * ny + iy]
-                                    }
-                                    planX.execute(lr.baseAddress!, li.baseAddress!, inverse: inverse,
-                                                  scratchRe: orr.baseAddress!, scratchIm: oi.baseAddress!)
-                                    for ix in 0..<nx {
-                                        r[ix * ny + iy] = lr[ix]
-                                        m[ix * ny + iy] = li[ix]
+                        // Along x: column iy has stride ny; the mixed-radix plan reads two neighbouring columns at once.
+                        switch planX {
+                        case .mixedRadix(let plan):
+                            plan.transformColumns(count: ny, forward: !inverse, stride: ny, r.baseAddress!, m.baseAddress!,
+                                                  work: work)
+                        case .line(let plan):
+                            lineRe.withUnsafeMutableBufferPointer { lr in
+                                lineIm.withUnsafeMutableBufferPointer { li in
+                                    // Gather column iy.
+                                    for iy in 0..<ny {
+                                        for ix in 0..<nx {
+                                            lr[ix] = r[ix * ny + iy]
+                                            li[ix] = m[ix * ny + iy]
+                                        }
+                                        plan.execute(lr.baseAddress!, li.baseAddress!, inverse: inverse,
+                                                     scratchRe: orr.baseAddress!, scratchIm: oi.baseAddress!)
+                                        for ix in 0..<nx {
+                                            r[ix * ny + iy] = lr[ix]
+                                            m[ix * ny + iy] = li[ix]
+                                        }
                                     }
                                 }
                             }

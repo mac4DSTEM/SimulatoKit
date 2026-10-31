@@ -61,6 +61,48 @@ public struct ProjectedPotential: Sendable, Hashable {
 
     /// The total thickness [Å].
     public var thickness: Double { slices.reduce(0) { $0 + $1.thickness } }
+
+    /// The sum of the slices as an image [V·Å] on the potential's grid (abTEM `PotentialArray.project`), added slice by
+    /// slice in order.
+    public func project() -> RealField {
+        var sum = [Double](repeating: 0, count: grid.count)
+        for slice in slices {
+            for i in sum.indices { sum[i] += slice.values[i] }
+        }
+        return RealField(nx: grid.nx, ny: grid.ny, values: sum, samplingX: grid.samplingX, samplingY: grid.samplingY)
+    }
+
+    /// The potential tiled `repetitionsX` × `repetitionsY` times in the plane and `repetitionsZ` times along the beam
+    /// (abTEM `PotentialArray.tile`): every slice tiled as an image, the extent multiplied and the sampling kept, then the
+    /// whole stack of slices repeated `repetitionsZ` times. The result carries no `sliceOfAtom`, as abTEM's array
+    /// carries no atoms.
+    /// - Throws: `ImageOperationError.invalidRepetitions` (which reports the x and y counts only) for a count below 1 on
+    ///   any axis, a tiled slice of more than 2^28 values, more than `Slicing.maximumSliceCount` slices or more than 2^31
+    ///   values in all; all checked before anything is allocated.
+    public func tiled(repetitionsX: Int, repetitionsY: Int, repetitionsZ: Int = 1) throws -> ProjectedPotential {
+        let refusal = ImageOperationError.invalidRepetitions(repetitionsX, repetitionsY)
+        guard repetitionsX >= 1, repetitionsY >= 1, repetitionsZ >= 1 else { throw refusal }
+        let (sliceCount, o1) = slices.count.multipliedReportingOverflow(by: repetitionsZ)
+        let (mx, o2) = grid.nx.multipliedReportingOverflow(by: repetitionsX)
+        let (my, o3) = grid.ny.multipliedReportingOverflow(by: repetitionsY)
+        let (perSlice, o4) = mx.multipliedReportingOverflow(by: my)
+        let (total, o5) = perSlice.multipliedReportingOverflow(by: sliceCount)
+        guard !o1, !o2, !o3, !o4, !o5, sliceCount <= Slicing.maximumSliceCount, perSlice <= 1 << 28, total <= 1 << 31 else {
+            throw refusal
+        }
+        var tiledSlices: [PotentialSlice] = []
+        tiledSlices.reserveCapacity(slices.count)
+        for slice in slices {
+            let image = RealField(nx: grid.nx, ny: grid.ny, values: slice.values,
+                                  samplingX: grid.samplingX, samplingY: grid.samplingY)
+            let tiledImage = try image.tiled(repetitionsX: repetitionsX, repetitionsY: repetitionsY)
+            tiledSlices.append(PotentialSlice(thickness: slice.thickness, values: tiledImage.values))
+        }
+        let tiledGrid = try Grid(nx: mx, ny: my,
+                                 extentX: grid.extentX * Double(repetitionsX), extentY: grid.extentY * Double(repetitionsY))
+        let stack = Array([[PotentialSlice]](repeating: tiledSlices, count: repetitionsZ).joined())
+        return ProjectedPotential(grid: tiledGrid, slices: stack, sliceOfAtom: [])
+    }
 }
 
 /// The per-grid work of the projection: f(k²) / S(k) per element (cached) and the FFT plan.

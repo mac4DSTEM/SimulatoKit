@@ -70,16 +70,24 @@ extension RealField {
     }
 
     /// The sum (or mean) of the image over a disc of `radius` [Å] centred at (`x`, `y`) [Å] from the image's origin
-    /// (abTEM `integrate_disc`, no `interpolate`): the pixels of the bounding box with a soft edge, weight
+    /// (abTEM `integrate_disc`): the pixels of the bounding box with a soft edge, weight
     /// 1 − clip((r − radius) / mean sampling, 0, 1). The distances are abTEM's, which place the box's pixels on
     /// linspace(0, m d, m) with the endpoint (spacing m d / (m − 1), not d); ported as they are.
     /// With `mean` and a disc whose pixels all have weight 0 the result is NaN, as abTEM's 0 / 0.
+    /// With `interpolate` [Å], the image is first resampled to that sampling along both axes (abTEM's `interpolate=`,
+    /// which calls `Images.interpolate` with its defaults: `interpolated(samplingX:samplingY:)`, method "fft", values kept)
+    /// and the disc is integrated on the finer pixels, so a sum grows with the pixel count.
     /// - Throws: `ImageOperationError.invalidDisc` for a non-finite position or a radius that is not finite and positive,
     ///   or a disc or position of more than 2^31 pixels across or 2^53 pixels from the origin,
-    ///   `discOutsideImage` for `.raise` at the border.
-    public func integrateDisc(x: Double, y: Double, radius: Double, mean: Bool = false, border: Border = .wrap) throws -> Double {
+    ///   `discOutsideImage` for `.raise` at the border; with `interpolate`, what `interpolated(samplingX:samplingY:)`
+    ///   throws.
+    public func integrateDisc(x: Double, y: Double, radius: Double, mean: Bool = false, border: Border = .wrap,
+                              interpolate: Double? = nil) throws -> Double {
         guard x.isFinite, y.isFinite else { throw ImageOperationError.invalidDisc("the position must be finite, got (\(x), \(y)) Å") }
         guard radius.isFinite, radius > 0 else { throw ImageOperationError.invalidDisc("the radius must be finite and positive, got \(radius) Å") }
+        if let d = interpolate {
+            return try interpolated(samplingX: d, samplingY: d).integrateDisc(x: x, y: y, radius: radius, mean: mean, border: border)
+        }
         guard samplingX.isFinite, samplingY.isFinite, samplingX > 0, samplingY > 0 else {
             throw SimulatoError.invalidSampling(samplingX, samplingY)
         }
