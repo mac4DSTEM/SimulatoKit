@@ -23,6 +23,8 @@ coverage: `docs/parity.md`.
   parametrisations, Debye–Waller tables (`docs/parity.md`).
 - **Metal**: the bounds hold to 100 slices and grids to 1024²; re-measure past 300 slices with the renormalisation, and add
   a 1024² row to the benchmark table (#5).
+- **Polar measurements**: the DPC measurement of a `SegmentedDetector` is in (`integrate`, `integrateRadial`,
+  `differentials`); `PolarMeasurements.to_diffraction_patterns` and `azimuthal_limits` remain (#9).
 
 ## Notes
 
