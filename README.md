@@ -39,7 +39,7 @@ Swift 6.2 tools, Swift 6 language mode. Platforms: macOS 15 and iOS/iPadOS 18 (f
 path included, builds for both (MPSGraph's FFT needs macOS 14 / iOS 17, `Synchronization.Mutex` macOS 15 / iOS 18); the
 tests and the consumer checks run on macOS, where the numbers are validated. Developed and tested on macOS 27.
 Build with `-c release`: the FFT and potential loops are many times slower unoptimised. Grid lengths are any integer of at least 2
-(Accelerate's DFT where it has the length, Bluestein's algorithm otherwise; both backends). Cells are orthogonal.
+(Accelerate's DFT where it has the length, a mixed-radix FFT or Bluestein's algorithm otherwise; both backends). Cells are orthogonal.
 
 ## From abTEM
 
