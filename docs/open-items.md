@@ -14,8 +14,8 @@ coverage: `docs/parity.md`.
 ## Work items
 
 - **Detector and noise follow-ups from 0.4.0**: line profiles for segmented and
-  pixelated line scans, the azimuthal average, `LineScan` defaults, `integrate_disc(interpolate:)`, the DPC measurement of a
-  `SegmentedDetector`, tilt distributions (#9).
+  pixelated line scans, `LineScan` defaults, `integrate_disc(interpolate:)`, tilt distributions; the azimuthal average of a
+  single pattern is in (`RealField.azimuthalAverage`), over a pixelated scan it is not (#9).
 - **Potential API**: the public `PotentialSlice` initialiser, `crystal_slice_thicknesses`, `PotentialArray.project`, tiled
   potentials (#7).
 - **Cells**: non-orthogonal and rotated cells, `periodic=False`, `orthogonalize_cell` in `AtomicStructure` (the kit keeps
