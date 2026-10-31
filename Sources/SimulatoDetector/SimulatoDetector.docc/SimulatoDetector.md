@@ -34,6 +34,7 @@ Detectors for scanned-probe simulations and the STEM driver that applies them ov
 - ``LineProfiles``
 - ``RealSpaceLineProfiles``
 - ``ReciprocalSpaceLineProfiles``
+- ``AzimuthalWeighting``
 
 ### Detector input
 

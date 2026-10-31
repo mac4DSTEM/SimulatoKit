@@ -15,9 +15,10 @@ coverage: `docs/parity.md`.
 ## Work items
 
 - **Detector and noise follow-ups from 0.4.0**: line profiles for segmented and
-  pixelated line scans, the azimuthal average, `LineScan` defaults, the "spline" method of `Images.interpolate`, tilt
-  distributions (#9). `integrate_disc(interpolate:)` and `Images.interpolate` (method "fft") are in; the DPC measurement of a
-  `SegmentedDetector` is under Polar measurements.
+  pixelated line scans, `LineScan` defaults, the "spline" method of `Images.interpolate`, tilt distributions (#9).
+  `integrate_disc(interpolate:)` and `Images.interpolate` (method "fft") are in; the DPC measurement of a `SegmentedDetector`
+  is under Polar measurements. The azimuthal average of a single pattern is in (`RealField.azimuthalAverage`), over a
+  pixelated scan it is not.
 - **Potential API**: `CrystalPotential` (a unit potential repeated, frozen phonons per cell), its API undecided (#7).
 - **Cells**: non-orthogonal and rotated cells, `periodic=False`, `orthogonalize_cell` in `AtomicStructure` (the kit keeps
   its own structure type: `docs/adr/0001-standalone-structure-types.md`). Finite projection, the Kirkland, Peng and Ewald
