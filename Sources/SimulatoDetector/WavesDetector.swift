@@ -1,7 +1,7 @@
 //
 //  WavesDetector.swift
 //  Role: abTEM's `WavesDetector(gpts)`: the complex exit wave at every scan position (ScanWaves), optionally resampled in
-//        Fourier space. One potential only (see `WavesDetectorError.severalPotentials`); a refusal before any work when the
+//        Fourier space. One potential per `scan`, every configuration with `scanFrozenPhonons`; a refusal before any work when the
 //        waves would not fit in half of the physical memory.
 //
 
@@ -21,9 +21,11 @@ public enum WavesDetectorError: Error, Sendable, Equatable, CustomStringConverti
     public var description: String {
         switch self {
         case .tooLarge(let p, let r, let c, let need, let limit):
-            return "\(p) exit waves of \(r) x \(c) points need \(need) bytes, more than the \(limit) bytes allowed (half of the physical memory); scan fewer positions or detect on a smaller `rows` x `columns`"
+            return "\(p) exit waves of \(r) x \(c) points need \(need) bytes, more than the \(limit) bytes allowed (half of the physical memory); scan fewer positions or configurations, or detect on a smaller `rows` x `columns`"
+        case .severalPotentials(0):
+            return "the waves detector takes one potential, got none"
         case .severalPotentials(let n):
-            return "the waves detector takes one potential, got \(n): averaging complex waves over configurations is not meaningful; scan each configuration on its own"
+            return "the waves detector takes one potential, got \(n): averaging complex waves over configurations is not meaningful; scan the configurations with STEM.scanFrozenPhonons"
         }
     }
 }
@@ -108,7 +110,7 @@ extension STEM {
     /// (abTEM's `probe.scan(potential, scan, WavesDetector(gpts))`). `.metal` runs float32 on the GPU and is held to `.cpu`
     /// at `MetalAccuracy.registered.wave`.
     /// - Parameter memoryLimit: refuse above this many bytes of waves (default half of the physical memory).
-    /// - Throws: `WavesDetectorError.severalPotentials` for frozen phonons (scan each configuration on its own),
+    /// - Throws: `WavesDetectorError.severalPotentials` for frozen phonons (use `scanFrozenPhonons`),
     ///   `WavesDetectorError.tooLarge`.
     public static func scan(probe: Probe, potentials: [ProjectedPotential], scan: GridScan, detector: WavesDetector,
                             backend: Backend = .cpu, options: ExecutionOptions = .standard,
@@ -135,9 +137,48 @@ extension STEM {
         }
     }
 
-    private static func checkMemory(probe: Probe, scan: GridScan, detector: WavesDetector, limit: Int) throws {
+    /// The exit waves of every frozen-phonon configuration (abTEM's `probe.scan(FrozenPhonons potential, scan,
+    /// WavesDetector(gpts))`, whose configuration axis is the array's index here): one `ScanWaves` per potential, each
+    /// the single-potential scan of that configuration. Complex waves are not averaged over configurations (abTEM keeps
+    /// the axis too); average intensities taken from them if an incoherent mean is wanted.
+    /// - Parameter memoryLimit: refuse above this many bytes of waves over all configurations.
+    /// - Throws: `SimulatoError.invalidScan` for no potential, `WavesDetectorError.tooLarge` (positions
+    ///   counted over all configurations).
+    public static func scanFrozenPhonons(probe: Probe, potentials: [ProjectedPotential], scan: GridScan,
+                                         detector: WavesDetector, backend: Backend = .cpu,
+                                         options: ExecutionOptions = .standard,
+                                         memoryLimit: Int = WavesDetector.defaultMemoryLimit) throws -> [ScanWaves] {
+        guard !potentials.isEmpty else { throw SimulatoError.invalidScan("no potential") }
+        for p in potentials where !p.grid.matches(probe.grid) { throw SimulatoError.gridMismatch }
+        try checkMemory(probe: probe, scan: scan, detector: detector, limit: memoryLimit, configurations: potentials.count)
+        return try potentials.map { potential in
+            try collect(probe: probe, scan: scan, detector: detector, options: options) { incidents in
+                try Multislice.runBatch(incidents, through: potential, backend: backend, options: options)
+            }
+        }
+    }
+
+    /// The same through unbuilt potentials: `.cpu` builds each, `.metal` builds each slice on the GPU.
+    public static func scanFrozenPhonons(probe: Probe, potentials: [Potential], scan: GridScan,
+                                         detector: WavesDetector, backend: Backend = .cpu,
+                                         options: ExecutionOptions = .standard,
+                                         memoryLimit: Int = WavesDetector.defaultMemoryLimit) throws -> [ScanWaves] {
+        guard !potentials.isEmpty else { throw SimulatoError.invalidScan("no potential") }
+        for p in potentials where !p.grid.matches(probe.grid) { throw SimulatoError.gridMismatch }
+        try checkMemory(probe: probe, scan: scan, detector: detector, limit: memoryLimit, configurations: potentials.count)
+        return try potentials.map { potential in
+            try collect(probe: probe, scan: scan, detector: detector, options: options) { incidents in
+                try Multislice.runBatch(incidents, through: potential, backend: backend, options: options)
+            }
+        }
+    }
+
+    private static func checkMemory(probe: Probe, scan: GridScan, detector: WavesDetector, limit: Int,
+                                    configurations: Int = 1) throws {
         let r = detector.rows ?? probe.grid.nx, c = detector.columns ?? probe.grid.ny
-        let (positions, overflow) = scan.nx.multipliedReportingOverflow(by: scan.ny)
+        let (perScan, o1) = scan.nx.multipliedReportingOverflow(by: scan.ny)
+        let (positions, o2) = perScan.multipliedReportingOverflow(by: configurations)
+        let overflow = o1 || o2
         guard !overflow else {
             throw WavesDetectorError.tooLarge(positions: .max, rows: r, columns: c, required: .max, limit: limit)
         }
