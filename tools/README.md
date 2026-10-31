@@ -39,6 +39,7 @@ git status --short Tests/   # no change to an *-arrays.bin: the fixtures reprodu
 | `pins/waves/pins.py` | `waves-pins.json`, `waves-arrays.bin` |
 | `pins/linescan/pins.py` | `linescan-pins.json`, `linescan-arrays.bin` |
 | `pins/icom/pins.py` | `icom-pins.json`, `icom-arrays.bin` |
+| `pins/potential-project-tile/pins.py` | none: prints the numbers `SimulatoMultisliceTests/PotentialProjectTileTests.swift` holds inline |
 | `pins/polar/pins.py` | none: prints the numbers `SimulatoDetectorTests/PolarMeasurementTests.swift` holds inline |
 
 ## Other tools
