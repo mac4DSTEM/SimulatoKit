@@ -93,7 +93,7 @@ for f, per in by.items():
         out.append(f"| {f} | {why} | |")
         continue
     if not both:
-        why = "CPU only: no Metal path yet (see open-items.md if it is a work item), or the work is CPU-side by nature"
+        why = "CPU only: no Metal path yet (see the issues if it is a work item), or the work is CPU-side by nature"
         out.append(f"| {f} | {why} | |")
         continue
     wins = [s for s in sorted(both) if both[s]["metal"] < both[s]["cpu"] * 0.9]
