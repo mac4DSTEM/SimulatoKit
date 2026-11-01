@@ -235,3 +235,22 @@ counterparts are its `max_batch` and dask settings, which are not counted as mis
 - The constants of the CTF closed forms as parameters (`factor:` of `scherzerDefocus`, 1.5 by default as abTEM; `divisor:` of
   `pointResolution`, 6; `oversampling:` of `nyquistSampling`, 4).
 - `LobatoParameterization.PiConstant`: the exact π by default, abTEM's float32 π on request.
+## Known limits and decisions
+
+Open work is in the [issues](https://github.com/mac4DSTEM/SimulatoKit/issues), including the ones closed as *not planned*
+and parked for later (quiet-run benchmarks #5, real cells #6, FFT path #43). Speed against abTEM and NumPy is in
+`docs/benchmarks.md`.
+
+- **FFT with a prime factor above 7:** lengths off vDSP that factor into 2, 3, 5 and 7 run a mixed-radix FFT; 506²
+  (2 × 11 × 23) stays on Bluestein, 1.6x slower than NumPy. The numbers are right (rtol 1e−7).
+- **Rows measured on a loaded machine:** `fft2+ifft2` at 192² to 512², multislice and frozen phonons at 192², the probe build
+  at 192² to 512² against abTEM float32; re-measure in a quiet run before changing anything.
+- **Metal:** the bounds hold to 100 slices and grids to 1024²; past 300 slices with the renormalisation is not measured.
+- **Not ported:** `CrystalPotential` (a unit potential repeated, frozen phonons per cell; its API is undecided); non-orthogonal
+  and rotated cells, `periodic=False`, `orthogonalize_cell` (the kit keeps its own structure type,
+  `docs/adr/0001-standalone-structure-types.md`); finite projection; the Kirkland, Peng and Ewald parametrisations;
+  Debye–Waller tables; `PolarMeasurements.to_diffraction_patterns` and `azimuthal_limits`.
+- **Lobato π:** the pins use `LobatoParameterization(piConstant: .abTEMFloat32)`; with the default `.exact` results differ by
+  about 2.6e−8 of the maximum.
+- **`WavesDetector` pins:** abTEM 1.0.10's own `probe.scan(..., WavesDetector(gpts=...))` raises a broadcast error; the pins
+  use `probe.multislice` then `WavesDetector(gpts).detect`, abTEM's per-wave code.

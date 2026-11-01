@@ -125,11 +125,11 @@ The smallest measured size at which Metal beats the CPU path. The break-even is 
 
 | function | decision | measured |
 |---|---|---|
-| fft2+ifft2 | CPU only: no Metal path yet (see open-items.md if it is a work item), or the work is CPU-side by nature | |
-| potential build (infinite) | CPU only: no Metal path yet (see open-items.md if it is a work item), or the work is CPU-side by nature | |
+| fft2+ifft2 | CPU only: no Metal path yet (see the issues if it is a work item), or the work is CPU-side by nature | |
+| potential build (infinite) | CPU only: no Metal path yet (see the issues if it is a work item), or the work is CPU-side by nature | |
 | multislice 10 slices (plane wave, built potential) | Metal above 128² (break-even between 64² and 128²) | 64²: cpu 0.929 ms / metal 4.99 ms, 128²: cpu 11.6 ms / metal 6.53 ms, 192²: cpu 25.9 ms / metal 7.84 ms, 256²: cpu 60.1 ms / metal 10.3 ms, 512²: cpu 299 ms / metal 10.2 ms |
-| transmission functions | CPU only: no Metal path yet (see open-items.md if it is a work item), or the work is CPU-side by nature | |
-| probe build | CPU only: no Metal path yet (see open-items.md if it is a work item), or the work is CPU-side by nature | |
+| transmission functions | CPU only: no Metal path yet (see the issues if it is a work item), or the work is CPU-side by nature | |
+| probe build | CPU only: no Metal path yet (see the issues if it is a work item), or the work is CPU-side by nature | |
 | STEM scan 8x8, annular | Metal above 64² (break-even between <64² and 64²) | 64²: cpu 27.9 ms / metal 9.39 ms, 128²: cpu 176 ms / metal 13.8 ms, 192²: cpu 459 ms / metal 35.3 ms, 256²: cpu 714 ms / metal 50.6 ms, 512²: cpu 3.01e+03 ms / metal 176 ms |
-| frozen phonons 4 x multislice, built per configuration | CPU only: no Metal path yet (see open-items.md if it is a work item), or the work is CPU-side by nature | |
+| frozen phonons 4 x multislice, built per configuration | CPU only: no Metal path yet (see the issues if it is a work item), or the work is CPU-side by nature | |
 | multislice 10 slices (plane wave, potential built on the GPU) | Metal only (the GPU build of the Metal row above; its CPU counterpart is potential build + multislice) | |
