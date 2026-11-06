@@ -26,7 +26,6 @@ enum MetalSliceSource: Hashable {
 final class MetalExecutable: @unchecked Sendable {
     let executable: MPSGraphExecutable
     let feeds: [MPSGraphTensor]
-    let output: [Int]
 
     init(_ graph: MPSGraph, device: MPSGraphDevice, feeds: [(MPSGraphTensor, [Int], MPSDataType)],
          targets: [MPSGraphTensor]) {
@@ -37,7 +36,6 @@ final class MetalExecutable: @unchecked Sendable {
         executable = graph.compile(with: device, feeds: shaped, targetTensors: targets, targetOperations: nil,
                                    compilationDescriptor: nil)
         self.feeds = executable.feedTensors ?? feeds.map(\.0)
-        output = []
     }
 
     /// The inputs in the executable's order.

@@ -5,7 +5,6 @@
 //        weak-phase contrast at Scherzer, the textbook values).
 //
 
-import SimulatoKitTestSupport
 import CryptoKit
 import Foundation
 import Testing

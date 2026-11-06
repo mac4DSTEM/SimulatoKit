@@ -5,7 +5,6 @@
 //        truth 2 (σ = 0 is the static structure).
 //
 
-import SimulatoKitTestSupport
 import Foundation
 import Testing
 import SimulatoCore

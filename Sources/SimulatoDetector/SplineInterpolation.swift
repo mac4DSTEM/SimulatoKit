@@ -7,7 +7,6 @@
 //
 
 import Foundation
-import SimulatoCore
 
 enum SplineInterpolation {
     static let orders = 0...5
