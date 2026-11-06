@@ -2,9 +2,9 @@
 
 # SimulatoKit
 
-[![CI](https://github.com/mac4DSTEM/SimulatoKit/actions/workflows/ci.yml/badge.svg)](https://github.com/mac4DSTEM/SimulatoKit/actions/workflows/ci.yml)
-[![Docs](https://github.com/mac4DSTEM/SimulatoKit/actions/workflows/docs.yml/badge.svg)](https://mac4dstem.github.io/SimulatoKit/documentation/)
-[![Release](https://img.shields.io/github/v/tag/mac4DSTEM/SimulatoKit?label=release&sort=semver)](https://github.com/mac4DSTEM/SimulatoKit/tags)
+[![CI](https://github.com/macEMSuite/SimulatoKit/actions/workflows/ci.yml/badge.svg)](https://github.com/macEMSuite/SimulatoKit/actions/workflows/ci.yml)
+[![Docs](https://github.com/macEMSuite/SimulatoKit/actions/workflows/docs.yml/badge.svg)](https://macemsuite.github.io/SimulatoKit/documentation/)
+[![Release](https://img.shields.io/github/v/tag/macEMSuite/SimulatoKit?label=release&sort=semver)](https://github.com/macEMSuite/SimulatoKit/tags)
 [![Licence: GPL-3.0-only](https://img.shields.io/badge/licence-GPL--3.0--only-blue)](LICENSE)
 
 A Swift package for simulating electron scattering on Apple platforms: projected potentials, multislice propagation,
@@ -16,7 +16,7 @@ SimulatoKit must be GPL-compatible. It is a library of numbers, not an applicati
 depends on no other package, and no other package depends on it yet.
 
 Current release: **0.5.0**. API reference (DocC, one catalogue per module):
-[mac4dstem.github.io/SimulatoKit](https://mac4dstem.github.io/SimulatoKit/documentation/), published from every tag.
+[macemsuite.github.io/SimulatoKit](https://macemsuite.github.io/SimulatoKit/documentation/), published from every tag.
 
 ## Modules
 
@@ -30,7 +30,7 @@ Current release: **0.5.0**. API reference (DocC, one catalogue per module):
 ## Installation
 
 ```swift
-.package(url: "https://github.com/mac4DSTEM/SimulatoKit", from: "0.5.0")
+.package(url: "https://github.com/macEMSuite/SimulatoKit", from: "0.5.0")
 // target dependencies, as needed:
 .product(name: "SimulatoMultislice", package: "SimulatoKit")  // also SimulatoCore, SimulatoProbe, SimulatoDetector
 ```
