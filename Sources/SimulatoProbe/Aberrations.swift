@@ -5,7 +5,6 @@
 //
 
 import Foundation
-import SimulatoCore
 
 /// Polar aberration coefficients (Krivanek's notation, abTEM's symbols). Lengths in Å, angles in rad.
 public struct Aberrations: Sendable, Hashable {

@@ -4,7 +4,6 @@
 //        against the recorded sha256), the cases' structures, displacements, probes and detectors.
 //
 
-import SimulatoKitTestSupport
 import CryptoKit
 import Foundation
 import SimulatoCore

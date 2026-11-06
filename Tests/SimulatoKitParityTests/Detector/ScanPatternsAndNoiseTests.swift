@@ -5,7 +5,6 @@
 //        the Gaussian filter is float64 (assert_allclose's default, rtol 1e-7). Poisson noise is statistical.
 //
 
-import SimulatoKitTestSupport
 import CryptoKit
 import Foundation
 import Testing

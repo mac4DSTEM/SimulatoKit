@@ -27,9 +27,9 @@ extension ScanMeasurement {
         let nx = scanShape[0], ny = scanShape[1], v = valueCount
         var data = values
         // Along y (the second scan axis) then x, each with its own kernel; scipy filters the axes in order.
-        Self.filterAxis(&data, count: nx * ny * v, length: ny, stride: v, outer: nx, outerStride: ny * v, inner: v,
+        Self.filterAxis(&data, length: ny, stride: v, outer: nx, outerStride: ny * v, inner: v,
                         sigma: sigmaY / samplingY)
-        Self.filterAxis(&data, count: nx * ny * v, length: nx, stride: ny * v, outer: 1, outerStride: 0, inner: ny * v,
+        Self.filterAxis(&data, length: nx, stride: ny * v, outer: 1, outerStride: 0, inner: ny * v,
                         sigma: sigmaX / samplingX)
         return ScanMeasurement(scanShape: scanShape, valueShape: valueShape, values: data)
     }
@@ -48,7 +48,7 @@ extension ScanMeasurement {
         return w
     }
 
-    private static func filterAxis(_ data: inout [Double], count: Int, length: Int, stride: Int, outer: Int, outerStride: Int,
+    private static func filterAxis(_ data: inout [Double], length: Int, stride: Int, outer: Int, outerStride: Int,
                                    inner: Int, sigma: Double) {
         guard sigma > 0 else { return }
         let kernel = gaussianKernel(sigmaInPixels: sigma)

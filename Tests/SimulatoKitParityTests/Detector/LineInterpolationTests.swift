@@ -9,7 +9,6 @@ import Foundation
 import Testing
 import SimulatoCore
 import SimulatoDetector
-import SimulatoProbe
 
 @Suite("interpolate_line against abTEM 1.0.10")
 struct LineInterpolationTests {

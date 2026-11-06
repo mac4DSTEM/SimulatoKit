@@ -8,7 +8,6 @@
 
 import Foundation
 import Testing
-import SimulatoCore
 import SimulatoDetector
 import SimulatoProbe
 
