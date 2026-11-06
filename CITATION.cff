@@ -8,7 +8,7 @@ authors:
 license: GPL-3.0-only
 version: "0.5.0" # x-release-please-version
 date-released: "2026-10-31" # x-release-please-date
-repository-code: "https://github.com/mac4DSTEM/SimulatoKit"
+repository-code: "https://github.com/macEMSuite/SimulatoKit"
 abstract: "A Swift library for electron-scattering simulation on Apple platforms (projected potentials, multislice, frozen phonons, probes, STEM scans, detectors and the HRTEM contrast transfer function), ported from abTEM and checked against it."
 keywords:
   - electron microscopy

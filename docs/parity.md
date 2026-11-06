@@ -237,7 +237,7 @@ counterparts are its `max_batch` and dask settings, which are not counted as mis
 - `LobatoParameterization.PiConstant`: the exact π by default, abTEM's float32 π on request.
 ## Known limits and decisions
 
-Open work is in the [issues](https://github.com/mac4DSTEM/SimulatoKit/issues), including the ones closed as *not planned*
+Open work is in the [issues](https://github.com/macEMSuite/SimulatoKit/issues), including the ones closed as *not planned*
 and parked for later (quiet-run benchmarks #5, real cells #6, FFT path #43). Speed against abTEM and NumPy is in
 `docs/benchmarks.md`.
 
